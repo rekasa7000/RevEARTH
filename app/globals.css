@@ -120,3 +120,106 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Custom Fonts */
+@font-face {
+  font-family: "Gilroy";
+  src: url("/assets/fonts/subset-Gilroy-Light.woff2") format("woff2"),
+    url("/assets/fonts/subset-Gilroy-Light.woff") format("woff");
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Gilroy-Bold";
+  src: url("/assets/fonts/subset-Gilroy-ExtraBold.woff2") format("woff2"),
+    url("/assets/fonts/subset-Gilroy-ExtraBold.woff") format("woff");
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Gotham";
+  src: url("/assets/fonts/subset-HomepageBaukasten-Book.woff2") format("woff2"),
+    url("/assets/fonts/subset-HomepageBaukasten-Book.woff") format("woff");
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Tailwind v4 Theme Configuration */
+@theme {
+  --font-gotham: "Gotham", ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+  --font-gilroy: "Gilroy", ui-sans-serif, system-ui, sans-serif;
+  --font-gilroy-bold: "Gilroy-Bold", ui-sans-serif, system-ui, sans-serif;
+
+  --color-revearth-green: #a5c046;
+  --color-revearth-green-light: #c5db6f;
+  --color-revearth-green-40: rgba(164, 194, 70, 0.4);
+  --color-revearth-dark: #0c5a4d;
+  --color-revearth-gray: #343434;
+
+  --breakpoint-xs: 30rem;
+  --breakpoint-sm: 40rem;
+  --breakpoint-md: 48rem;
+  --breakpoint-lg: 64rem;
+  --breakpoint-xl: 80rem;
+  --breakpoint-2xl: 96rem;
+}
+
+/* Custom Component Classes */
+@layer components {
+  .nav-link {
+    @apply text-gray-900 hover:text-revearth-green transition-colors duration-200;
+  }
+
+  .font-gotham {
+    font-family: var(--font-gotham);
+  }
+
+  .font-gilroy {
+    font-family: var(--font-gilroy);
+  }
+
+  .font-gilroy-bold {
+    font-family: var(--font-gilroy-bold);
+  }
+
+  .text-revearth-green {
+    color: var(--color-revearth-green);
+  }
+
+  .text-revearth-green-light {
+    color: var(--color-revearth-green-light);
+  }
+
+  .text-revearth-dark {
+    color: var(--color-revearth-dark);
+  }
+
+  .bg-revearth-green {
+    background-color: var(--color-revearth-green-light);
+  }
+
+  .bg-revearth-green\/40 {
+    background-color: var(--color-revearth-green-40);
+  }
+
+  .bg-revearth-dark {
+    background-color: var(--color-revearth-dark);
+  }
+
+  .hover\:bg-revearth-green\/70:hover {
+    background-color: rgba(197, 219, 111, 0.7);
+  }
+
+  .hover\:text-revearth-green:hover {
+    color: var(--color-revearth-green);
+  }
+}
+
+/* Custom Utilities */
+@layer utilities {
+  .overflow-x-hidden {
+    overflow-x: hidden;
+  }
+}
