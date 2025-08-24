@@ -8,148 +8,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Menu, X, User, Lock, ChevronDown, Facebook, Linkedin, Instagram, Home, Mail, Phone } from "lucide-react";
+import { Facebook, Linkedin, Instagram, Home, Mail, Phone } from "lucide-react";
+import Navigation from "@/components/navigation";
 
 export default function RevEarthPage() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [loginOpen, setLoginOpen] = useState(false);
   const [signupOpen, setSignupOpen] = useState(false);
   const [lawModalOpen, setLawModalOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-white font-gotham overflow-x-hidden">
-      {/* Navigation */}
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b">
-        <nav className="container mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            {/* Logo */}
-            <Link href="#home" className="flex items-center space-x-2">
-              <Image src="/assets/logo2.png" alt="RevEarth Logo" width={50} height={50} />
-              <span className="text-2xl">
-                <span className="text-revearth-green font-gilroy-bold">Rev</span>
-                <span className="text-revearth-dark font-gilroy-bold">EARTH</span>
-              </span>
-            </Link>
-
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-8">
-              <Link href="#home" className="nav-link">
-                Home
-              </Link>
-              <Link href="#service" className="nav-link">
-                Service
-              </Link>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger className="nav-link flex items-center">
-                  About <ChevronDown className="ml-1 h-4 w-4" />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem>
-                    <Link href="#about">What we do</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Link href="#customersbenefit">Customer's benefit</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Link href="#RevEarth">About revEARTH</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Link href="#team">Our Team</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Link href="#partnership">Partnership</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Link href="#contacts">Contacts</Link>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              <Dialog open={loginOpen} onOpenChange={setLoginOpen}>
-                <DialogTrigger asChild>
-                  <Button className="rounded-full bg-revearth-dark hover:bg-revearth-green/70 transition-colors">
-                    Log in
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
-                  <DialogHeader>
-                    <div className="flex items-center space-x-4">
-                      <Image src="/assets/logo2.png" alt="" width={50} height={50} />
-                      <DialogTitle className="text-2xl text-revearth-dark font-gilroy-bold">LOG IN</DialogTitle>
-                    </div>
-                  </DialogHeader>
-                  <form className="space-y-4">
-                    <div className="flex items-center space-x-3">
-                      <User className="text-gray-500" />
-                      <Input type="text" placeholder="Enter Username" className="flex-1" />
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <Lock className="text-gray-500" />
-                      <Input type="password" placeholder="Enter Password" className="flex-1" />
-                    </div>
-                    <Button type="submit" className="w-full bg-revearth-dark hover:bg-revearth-green/70">
-                      Log in
-                    </Button>
-                    <div className="text-center">
-                      <Link href="#" className="text-sm text-gray-600 hover:underline">
-                        Forgot Password?
-                      </Link>
-                    </div>
-                    <div className="text-center text-sm">
-                      Create an account?{" "}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setLoginOpen(false);
-                          setSignupOpen(true);
-                        }}
-                        className="text-revearth-dark hover:underline"
-                      >
-                        Sign up
-                      </button>
-                    </div>
-                  </form>
-                </DialogContent>
-              </Dialog>
-            </div>
-
-            {/* Mobile menu button */}
-            <Button variant="ghost" size="sm" className="md:hidden" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-              {mobileMenuOpen ? <X /> : <Menu />}
-            </Button>
-          </div>
-
-          {/* Mobile Navigation */}
-          {mobileMenuOpen && (
-            <div className="md:hidden mt-4 pb-4 border-t pt-4">
-              <div className="flex flex-col space-y-4">
-                <Link href="#home" className="nav-link">
-                  Home
-                </Link>
-                <Link href="#service" className="nav-link">
-                  Service
-                </Link>
-                <Link href="#about" className="nav-link">
-                  About
-                </Link>
-                <Button
-                  onClick={() => setLoginOpen(true)}
-                  className="w-fit bg-revearth-dark hover:bg-revearth-green/70"
-                >
-                  Log in
-                </Button>
-              </div>
-            </div>
-          )}
-        </nav>
-      </header>
+      <Navigation />
 
       {/* Sign up Modal */}
       <Dialog open={signupOpen} onOpenChange={setSignupOpen}>
@@ -203,7 +71,7 @@ export default function RevEarthPage() {
                 type="button"
                 onClick={() => {
                   setSignupOpen(false);
-                  setLoginOpen(true);
+                  window.location.href = "/auth/signin";
                 }}
                 className="text-revearth-dark hover:underline"
               >
