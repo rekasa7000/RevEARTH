@@ -1,52 +1,20 @@
-"use client"
+"use client";
 
-import { useSession } from "next-auth/react"
-import { useEffect } from "react"
-import { useRouter } from "next/navigation"
-import Navigation from "@/components/navigation"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Navigation from "@/components/navigation";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function Dashboard() {
-  const { data: session, status } = useSession()
-  const router = useRouter()
-
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/auth/signin")
-    }
-  }, [status, router])
-
-  if (status === "loading") {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <Navigation />
-        <div className="max-w-7xl mx-auto py-6 px-4">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-300 rounded w-1/4 mb-4"></div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="h-32 bg-gray-300 rounded"></div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (!session) {
-    return null // Will redirect via useEffect
-  }
+  const router = useRouter();
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Navigation />
-      
+
       <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Welcome back, {session.user?.name || session.user?.email}!
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Welcome back, dummy!</h1>
           <p className="mt-2 text-gray-600 dark:text-gray-300">
             This is your protected dashboard. Only authenticated users can see this page.
           </p>
@@ -60,9 +28,15 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <p><strong>Email:</strong> {session.user?.email}</p>
-                <p><strong>Name:</strong> {session.user?.name || "Not provided"}</p>
-                <p><strong>Provider:</strong> {session.user?.image ? "OAuth" : "Credentials"}</p>
+                <p>
+                  <strong>Email:</strong> dummy@dummy.com
+                </p>
+                <p>
+                  <strong>Name:</strong> dummy
+                </p>
+                <p>
+                  <strong>Provider:</strong> Credentials
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -74,9 +48,15 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <p><strong>Login Count:</strong> 1</p>
-                <p><strong>Last Login:</strong> Just now</p>
-                <p><strong>Account Status:</strong> Active</p>
+                <p>
+                  <strong>Login Count:</strong> 1
+                </p>
+                <p>
+                  <strong>Last Login:</strong> Just now
+                </p>
+                <p>
+                  <strong>Account Status:</strong> Active
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -126,5 +106,5 @@ export default function Dashboard() {
         </Card>
       </div>
     </div>
-  )
+  );
 }
