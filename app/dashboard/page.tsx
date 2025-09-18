@@ -1,18 +1,92 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import Navigation from "@/components/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AppBarChart } from "@/components/AppBarChart";
+import { AppDonutChart } from "@/components/AppDonutChart";
+import { AppLineChart } from "@/components/AppLineChart";
+import { AppPieChart } from "@/components/AppPieChart";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 export default function Dashboard() {
-  const router = useRouter();
-
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Navigation />
+      <div className="mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          Emissions Dashboard
+        </h1>
+      </div>
 
-      <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto grid grid-cols-1 md:grid-cols-4 gap-3 mb-4 px-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg font-medium text-gray-600 dark:text-gray-300">
+              Total CO₂e Emissions
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex justify-center">
+            <p className="text-2xl font-bold">10,000 tCO₂e</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg font-medium text-gray-600 dark:text-gray-300">
+              Emissions per Employee
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex justify-center">
+            <p className="text-2xl font-bold">1.23</p>
+            <span className="ml-1 text-gray-600 dark:text-gray-400">
+              tCO₂e/employee
+            </span>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg font-medium text-gray-600 dark:text-gray-300">
+              Largest Source
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex justify-center">
+            <p className="text-2xl font-bold">Electricity</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg font-medium text-gray-600 dark:text-gray-300">
+              Employees
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex justify-center">
+            <p className="text-2xl font-bold">10,000</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="mmx-auto grid grid-cols-1 md:grid-cols-2 gap-3 px-4 mb-4">
+        <div>
+          <AppPieChart />
+        </div>
+
+        <div>
+          <AppLineChart />
+        </div>
+
+        <div>
+          <AppBarChart />
+        </div>
+
+        <div>
+          <AppDonutChart />
+        </div>
+      </div>
+      {/* <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Welcome back, dummy!</h1>
           <p className="mt-2 text-gray-600 dark:text-gray-300">
@@ -104,7 +178,7 @@ export default function Dashboard() {
             </div>
           </CardContent>
         </Card>
-      </div>
+      </div> */}
     </div>
   );
 }

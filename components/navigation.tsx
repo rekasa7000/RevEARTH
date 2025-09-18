@@ -1,13 +1,6 @@
 "use client";
 
-import { useSession, signIn, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import Link from "next/link";
 
 export default function Navigation() {
