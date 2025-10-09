@@ -1,73 +1,42 @@
-import { NextAuthOptions } from "next-auth"
-import { Adapter } from "next-auth/adapters"
-import CredentialsProvider from "next-auth/providers/credentials"
-import GoogleProvider from "next-auth/providers/google"
-import GitHubProvider from "next-auth/providers/github"
+import { betterAuth } from "better-auth";
+import { prismaAdapter } from "better-auth/adapters/prisma";
+import { PrismaClient } from "@prisma/client";
 
-export const authOptions: NextAuthOptions = {
-  providers: [
-    // Credentials Provider - for learning purposes (username/password)
-    CredentialsProvider({
-      name: "credentials",
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" }
-      },
-      async authorize(credentials) {
-        // In a real app, you would verify credentials against a database
-        // For learning purposes, we'll use hardcoded values
-        if (credentials?.email === "demo@example.com" && credentials?.password === "password123") {
-          return {
-            id: "1",
-            email: "demo@example.com",
-            name: "Demo User",
-            image: null,
-          }
-        }
-        return null
-      }
-    }),
-    
-    // Google OAuth Provider
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID ?? "",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
-    }),
-    
-    // GitHub OAuth Provider  
-    GitHubProvider({
-      clientId: process.env.GITHUB_CLIENT_ID ?? "",
-      clientSecret: process.env.GITHUB_CLIENT_SECRET ?? "",
-    })
-  ],
-  
-  pages: {
-    signIn: "/auth/signin",
-    signUp: "/auth/signup",
-    error: "/auth/error",
+const prisma = new PrismaClient();
+
+export const auth = betterAuth({
+  database: prismaAdapter(prisma, {
+    provider: "postgresql",
+  }),
+  emailAndPassword: {
+    enabled: true,
+    requireEmailVerification: false, // Set to true in production with email service
   },
-  
-  callbacks: {
-    async jwt({ token, user }) {
-      // Persist the OAuth access_token to the token right after signin
-      if (user) {
-        token.id = user.id
-      }
-      return token
-    },
-    
-    async session({ session, token }) {
-      // Send properties to the client
-      if (session?.user && token?.id) {
-        session.user.id = token.id as string
-      }
-      return session
-    },
+  socialProviders: {
+    // Add OAuth providers as needed
+    // github: {
+    //   clientId: process.env.GITHUB_CLIENT_ID as string,
+    //   clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
+    // },
+    // google: {
+    //   clientId: process.env.GOOGLE_CLIENT_ID as string,
+    //   clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+    // },
   },
-  
   session: {
-    strategy: "jwt",
+    expiresIn: 60 * 60 * 24 * 7, // 7 days
+    updateAge: 60 * 60 * 24, // 1 day (session will be updated if it's older than this)
   },
-  
-  secret: process.env.NEXTAUTH_SECRET,
-}
+  user: {
+    additionalFields: {
+      // Add any additional user fields here
+    },
+  },
+  advanced: {
+    cookiePrefix: "revearth",
+    useSecureCookies: process.env.NODE_ENV === "production",
+  },
+});
+
+export type Session = typeof auth.$Infer.Session.session;
+export type User = typeof auth.$Infer.Session.user;

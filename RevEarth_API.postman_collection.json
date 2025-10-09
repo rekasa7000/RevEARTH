@@ -1,0 +1,843 @@
+{
+  "info": {
+    "name": "RevEarth GHG Inventory API",
+    "description": "Complete API collection for RevEarth GHG emissions tracking platform",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "sessionToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "organizationId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "facilityId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "emissionRecordId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Authentication",
+      "item": [
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.user_id) {",
+                  "        pm.collectionVariables.set('userId', response.user_id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"SecurePassword123!\",\n  \"name\": \"Test User\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/sign-up/email",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "sign-up", "email"]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.user) {",
+                  "        pm.collectionVariables.set('userId', response.user.id);",
+                  "    }",
+                  "    // Session token will be in cookies",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"SecurePassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/sign-in/email",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "sign-in", "email"]
+            }
+          }
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "me"]
+            }
+          }
+        },
+        {
+          "name": "Verify Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"verification_token_here\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/verify-email",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "verify-email"]
+            }
+          }
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/forgot-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "forgot-password"]
+            }
+          }
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"reset_token_here\",\n  \"newPassword\": \"NewSecurePassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/reset-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "reset-password"]
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/sign-out",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "sign-out"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Organizations",
+      "item": [
+        {
+          "name": "Create Organization",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('organizationId', response.organization.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"ABC Corporation\",\n  \"industrySector\": \"Manufacturing\",\n  \"occupancyType\": \"industrial\",\n  \"reportingBoundaries\": {\n    \"description\": \"Main facility and warehouse\"\n  },\n  \"applicableScopes\": {\n    \"scope1\": true,\n    \"scope2\": true,\n    \"scope3\": true\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/organizations",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "organizations"]
+            }
+          }
+        },
+        {
+          "name": "Get My Organization",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/organizations",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "organizations"]
+            }
+          }
+        },
+        {
+          "name": "Get Organization by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/organizations/{{organizationId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "organizations", "{{organizationId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Organization",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"ABC Corporation Ltd.\",\n  \"industrySector\": \"Manufacturing & Distribution\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/organizations/{{organizationId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "organizations", "{{organizationId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Organization",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/organizations/{{organizationId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "organizations", "{{organizationId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Facilities",
+      "item": [
+        {
+          "name": "Create Facility",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('facilityId', response.facility.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"organizationId\": \"{{organizationId}}\",\n  \"name\": \"Main Office\",\n  \"location\": \"Makati City\",\n  \"address\": \"123 Ayala Avenue, Makati\",\n  \"areaSqm\": 5000.50,\n  \"employeeCount\": 150\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/facilities",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "facilities"]
+            }
+          }
+        },
+        {
+          "name": "Get All Facilities",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/facilities?organizationId={{organizationId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "facilities"],
+              "query": [
+                {
+                  "key": "organizationId",
+                  "value": "{{organizationId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Facility by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/facilities/{{facilityId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "facilities", "{{facilityId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Facility",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employeeCount\": 175,\n  \"areaSqm\": 5500.75\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/facilities/{{facilityId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "facilities", "{{facilityId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Facility",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/facilities/{{facilityId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "facilities", "{{facilityId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Emission Records",
+      "item": [
+        {
+          "name": "Create Emission Record",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    pm.collectionVariables.set('emissionRecordId', response.emissionRecord.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"organizationId\": \"{{organizationId}}\",\n  \"facilityId\": \"{{facilityId}}\",\n  \"reportingPeriodStart\": \"2025-01-01\",\n  \"reportingPeriodEnd\": \"2025-01-31\",\n  \"scopeSelection\": {\n    \"scope1\": true,\n    \"scope2\": true,\n    \"scope3\": false\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/emission-records",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "emission-records"]
+            }
+          }
+        },
+        {
+          "name": "Get All Emission Records",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/emission-records?organizationId={{organizationId}}&page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "emission-records"],
+              "query": [
+                {
+                  "key": "organizationId",
+                  "value": "{{organizationId}}"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Emission Record by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/emission-records/{{emissionRecordId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "emission-records", "{{emissionRecordId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Emission Record",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"submitted\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/emission-records/{{emissionRecordId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "emission-records", "{{emissionRecordId}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Emission Record",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/emission-records/{{emissionRecordId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "emission-records", "{{emissionRecordId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Fuel Usage (Scope 1)",
+      "item": [
+        {
+          "name": "Add Fuel Usage",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"emissionRecordId\": \"{{emissionRecordId}}\",\n  \"fuelType\": \"natural_gas\",\n  \"quantity\": 1500.00,\n  \"unit\": \"cubic_meters\",\n  \"entryDate\": \"2025-01-15\",\n  \"metadata\": {\n    \"supplier\": \"Manila Gas\",\n    \"invoiceNumber\": \"INV-12345\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/fuel-usage",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fuel-usage"]
+            }
+          }
+        },
+        {
+          "name": "Get Fuel Usage",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/fuel-usage?emissionRecordId={{emissionRecordId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "fuel-usage"],
+              "query": [
+                {
+                  "key": "emissionRecordId",
+                  "value": "{{emissionRecordId}}"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Vehicle Usage (Scope 1)",
+      "item": [
+        {
+          "name": "Add Vehicle Usage",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"emissionRecordId\": \"{{emissionRecordId}}\",\n  \"vehicleId\": \"ABC-123\",\n  \"vehicleType\": \"sedan\",\n  \"fuelType\": \"gasoline\",\n  \"fuelConsumed\": 45.50,\n  \"mileage\": 500.00,\n  \"unit\": \"liters\",\n  \"entryDate\": \"2025-01-15\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/vehicle-usage",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vehicle-usage"]
+            }
+          }
+        },
+        {
+          "name": "Get Vehicle Usage",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/vehicle-usage?emissionRecordId={{emissionRecordId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "vehicle-usage"],
+              "query": [
+                {
+                  "key": "emissionRecordId",
+                  "value": "{{emissionRecordId}}"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Electricity Usage (Scope 2)",
+      "item": [
+        {
+          "name": "Add Electricity Usage",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"emissionRecordId\": \"{{emissionRecordId}}\",\n  \"facilityId\": \"{{facilityId}}\",\n  \"meterNumber\": \"123456789\",\n  \"kwhConsumption\": 15000.00,\n  \"peakHoursKwh\": 9000.00,\n  \"offpeakHoursKwh\": 6000.00,\n  \"billingPeriodStart\": \"2025-01-01\",\n  \"billingPeriodEnd\": \"2025-01-31\",\n  \"utilityBillData\": {\n    \"provider\": \"Meralco\",\n    \"accountNumber\": \"9876543210\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/electricity-usage",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "electricity-usage"]
+            }
+          }
+        },
+        {
+          "name": "Get Electricity Usage",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/electricity-usage?emissionRecordId={{emissionRecordId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "electricity-usage"],
+              "query": [
+                {
+                  "key": "emissionRecordId",
+                  "value": "{{emissionRecordId}}"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Commuting Data (Scope 3)",
+      "item": [
+        {
+          "name": "Add Commuting Data",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"emissionRecordId\": \"{{emissionRecordId}}\",\n  \"employeeCount\": 150,\n  \"avgDistanceKm\": 12.50,\n  \"transportMode\": \"car\",\n  \"daysPerWeek\": 5,\n  \"wfhDays\": 1,\n  \"surveyDate\": \"2025-01-15\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/commuting-data",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "commuting-data"]
+            }
+          }
+        },
+        {
+          "name": "Get Commuting Data",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/commuting-data?emissionRecordId={{emissionRecordId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "commuting-data"],
+              "query": [
+                {
+                  "key": "emissionRecordId",
+                  "value": "{{emissionRecordId}}"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "9. Calculations",
+      "item": [
+        {
+          "name": "Calculate Emissions",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"emissionRecordId\": \"{{emissionRecordId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/calculations",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "calculations"]
+            }
+          }
+        },
+        {
+          "name": "Get Calculation Results",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/calculations/{{emissionRecordId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "calculations", "{{emissionRecordId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "10. Dashboard & Analytics",
+      "item": [
+        {
+          "name": "Get Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/dashboard?organizationId={{organizationId}}&period=year",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "dashboard"],
+              "query": [
+                {
+                  "key": "organizationId",
+                  "value": "{{organizationId}}"
+                },
+                {
+                  "key": "period",
+                  "value": "year"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Trends",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/analytics/trends?organizationId={{organizationId}}&months=12",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "analytics", "trends"],
+              "query": [
+                {
+                  "key": "organizationId",
+                  "value": "{{organizationId}}"
+                },
+                {
+                  "key": "months",
+                  "value": "12"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Comparison (By Scope)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/analytics/comparison?organizationId={{organizationId}}&compareBy=scope",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "analytics", "comparison"],
+              "query": [
+                {
+                  "key": "organizationId",
+                  "value": "{{organizationId}}"
+                },
+                {
+                  "key": "compareBy",
+                  "value": "scope"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Comparison (By Facility)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/analytics/comparison?organizationId={{organizationId}}&compareBy=facility",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "analytics", "comparison"],
+              "query": [
+                {
+                  "key": "organizationId",
+                  "value": "{{organizationId}}"
+                },
+                {
+                  "key": "compareBy",
+                  "value": "facility"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Comparison (By Category)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/analytics/comparison?organizationId={{organizationId}}&compareBy=category",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "analytics", "comparison"],
+              "query": [
+                {
+                  "key": "organizationId",
+                  "value": "{{organizationId}}"
+                },
+                {
+                  "key": "compareBy",
+                  "value": "category"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
