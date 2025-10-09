@@ -5,7 +5,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Facebook, Linkedin, Instagram, Home, Mail, Phone } from "lucide-react";
@@ -17,7 +23,38 @@ export default function RevEarthPage() {
 
   return (
     <div className="min-h-screen bg-white font-gotham overflow-x-hidden">
-      <Navigation />
+      <nav className="border-b bg-background fixed top-0 right-0 left-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            <div className="flex items-center">
+              <Image src="/assets/logo2.png" alt="Logo" width={40} height={40} />
+              <Link href="/" className="text-xl font-bold pl-3.5">
+                RevEarth
+              </Link>
+            </div>
+
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <Button asChild variant="ghost">
+                  <Link href="#offers">HOME</Link>
+                </Button>
+
+                <Button asChild variant="ghost">
+                  <Link href="#customersbenefit">SERVICES</Link>
+                </Button>
+
+                <Button asChild variant="ghost">
+                  <Link href="/auth/signin">ABOUT</Link>
+                </Button>
+
+                <Button asChild>
+                  <Link href="/auth/signin">Get Started</Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </nav>
 
       {/* Sign up Modal */}
       <Dialog open={signupOpen} onOpenChange={setSignupOpen}>
@@ -25,7 +62,9 @@ export default function RevEarthPage() {
           <DialogHeader>
             <div className="flex items-center space-x-4">
               <Image src="/assets/logo2.png" alt="" width={50} height={50} />
-              <DialogTitle className="text-2xl text-revearth-dark font-gilroy-bold">REGISTRATION</DialogTitle>
+              <DialogTitle className="text-2xl text-revearth-dark font-gilroy-bold">
+                REGISTRATION
+              </DialogTitle>
             </div>
           </DialogHeader>
           <form className="space-y-4">
@@ -35,7 +74,11 @@ export default function RevEarthPage() {
                 <Input type="text" placeholder="Enter your Firstname" />
               </div>
               <div>
-                <Input type="text" placeholder="Enter your Lastname" className="mt-6" />
+                <Input
+                  type="text"
+                  placeholder="Enter your Lastname"
+                  className="mt-6"
+                />
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -62,7 +105,10 @@ export default function RevEarthPage() {
                 <Input type="password" placeholder="Enter Confirm Password" />
               </div>
             </div>
-            <Button type="submit" className="w-full bg-revearth-dark hover:bg-revearth-green/70">
+            <Button
+              type="submit"
+              className="w-full bg-revearth-dark hover:bg-revearth-green/70"
+            >
               Sign Up
             </Button>
             <div className="text-center text-sm">
@@ -95,7 +141,7 @@ export default function RevEarthPage() {
 
       <main>
         {/* What We Do Section */}
-        <section id="about" className="py-16">
+        <section id="offer" className="py-16">
           <div className="container mx-auto px-4">
             <div className="space-y-16">
               {/* GHG Emission Inventory */}
@@ -110,12 +156,17 @@ export default function RevEarthPage() {
                   />
                 </div>
                 <div className="order-1 lg:order-2 text-center lg:text-left">
-                  <h2 className="text-3xl font-bold text-revearth-dark mb-4">GHG EMISSION INVENTORY</h2>
+                  <h2 className="text-3xl font-bold text-revearth-dark mb-4">
+                    GHG EMISSION INVENTORY
+                  </h2>
                   <p className="text-gray-700 leading-relaxed">
-                    GHG emission inventory quantifies the emitted GHG in a certain period of time. It tracks the sources
-                    of the emission, assesses the carbon footprint, and monitors the progress of the reduction target.
-                    GHG emissions can be calculated through different sectors like the energy sector which calculates
-                    the emission from energy produced and consumed, and the transportation sector which calculates the
+                    GHG emission inventory quantifies the emitted GHG in a
+                    certain period of time. It tracks the sources of the
+                    emission, assesses the carbon footprint, and monitors the
+                    progress of the reduction target. GHG emissions can be
+                    calculated through different sectors like the energy sector
+                    which calculates the emission from energy produced and
+                    consumed, and the transportation sector which calculates the
                     emission from vehicles used.
                   </p>
                 </div>
@@ -125,12 +176,17 @@ export default function RevEarthPage() {
               <div className="bg-gray-50 rounded-3xl p-8">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
                   <div className="text-center lg:text-left">
-                    <h2 className="text-3xl font-bold text-revearth-dark mb-4">ENERGY AUDITING</h2>
+                    <h2 className="text-3xl font-bold text-revearth-dark mb-4">
+                      ENERGY AUDITING
+                    </h2>
                     <p className="text-gray-700 leading-relaxed">
-                      Energy auditing evaluates the efficiency of a building or faculty by assessing its energy
-                      consumption and consumption pattern. It provides solution and recommendations based on the
-                      analyzed data. Energy auditing contributes to energy conservation, cost-effectiveness, and energy
-                      management plan of the building or facility.
+                      Energy auditing evaluates the efficiency of a building or
+                      faculty by assessing its energy consumption and
+                      consumption pattern. It provides solution and
+                      recommendations based on the analyzed data. Energy
+                      auditing contributes to energy conservation,
+                      cost-effectiveness, and energy management plan of the
+                      building or facility.
                     </p>
                   </div>
                   <div>
@@ -157,11 +213,16 @@ export default function RevEarthPage() {
                   />
                 </div>
                 <div className="order-1 lg:order-2 text-center lg:text-left">
-                  <h2 className="text-3xl font-bold text-revearth-dark mb-4">RA 11285</h2>
-                  <h3 className="text-xl font-bold text-revearth-dark mb-4">Energy Efficiency and Conservation Act</h3>
+                  <h2 className="text-3xl font-bold text-revearth-dark mb-4">
+                    RA 11285
+                  </h2>
+                  <h3 className="text-xl font-bold text-revearth-dark mb-4">
+                    Energy Efficiency and Conservation Act
+                  </h3>
                   <p className="text-gray-700 leading-relaxed mb-6">
-                    The Energy Efficient and Conservation Act makes energy conservation essential and institutionalizes
-                    in order to ensure that energy use becomes sustainable.
+                    The Energy Efficient and Conservation Act makes energy
+                    conservation essential and institutionalizes in order to
+                    ensure that energy use becomes sustainable.
                   </p>
                   <Dialog open={lawModalOpen} onOpenChange={setLawModalOpen}>
                     <DialogTrigger asChild>
@@ -187,22 +248,32 @@ export default function RevEarthPage() {
                         </div>
                         <div className="space-y-4 text-sm">
                           <p>
-                            Republic Act No. 11285, the Energy Efficient and Conservation Act, outlines its policy in
-                            Section 2. This declaration commits to institutionalizing energy efficiency and conservation
-                            practices, emphasizing their integration into established institutions and systems.
+                            Republic Act No. 11285, the Energy Efficient and
+                            Conservation Act, outlines its policy in Section 2.
+                            This declaration commits to institutionalizing
+                            energy efficiency and conservation practices,
+                            emphasizing their integration into established
+                            institutions and systems.
                           </p>
                           <p>
-                            Furthermore, the act seeks to actively promote and encourage the development of efficient
-                            renewable technologies, recognizing the crucial role they play in sustainable energy
-                            practices. Additionally, it aims to reinforce existing laws, ensuring a comprehensive
-                            approach to energy efficiency and conservation.
+                            Furthermore, the act seeks to actively promote and
+                            encourage the development of efficient renewable
+                            technologies, recognizing the crucial role they play
+                            in sustainable energy practices. Additionally, it
+                            aims to reinforce existing laws, ensuring a
+                            comprehensive approach to energy efficiency and
+                            conservation.
                           </p>
                           <p>
-                            Finally, the act advocates for a market-driven approach, highlighting the importance of
-                            economic mechanisms in fostering effective energy efficiency and conservation initiatives.
-                            Section 2 establishes the framework for a strategic and well-coordinated approach to energy
-                            management, highlighting the government's unwavering dedication to cultivating a resilient
-                            and sustainable energy future for the Philippines.
+                            Finally, the act advocates for a market-driven
+                            approach, highlighting the importance of economic
+                            mechanisms in fostering effective energy efficiency
+                            and conservation initiatives. Section 2 establishes
+                            the framework for a strategic and well-coordinated
+                            approach to energy management, highlighting the
+                            government's unwavering dedication to cultivating a
+                            resilient and sustainable energy future for the
+                            Philippines.
                           </p>
                         </div>
                       </div>
@@ -217,7 +288,9 @@ export default function RevEarthPage() {
         {/* Customer Benefits */}
         <section id="customersbenefit" className="py-16 bg-revearth-green/40">
           <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center text-revearth-dark mb-12 uppercase">Customer's Benefit</h2>
+            <h2 className="text-3xl font-bold text-center text-revearth-dark mb-12 uppercase">
+              Customer's Benefit
+            </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
               {[
                 {
@@ -237,9 +310,18 @@ export default function RevEarthPage() {
                   title: "Reduce Environmental Impact",
                 },
               ].map((benefit, index) => (
-                <Card key={index} className="text-center border-0 bg-transparent">
+                <Card
+                  key={index}
+                  className="text-center border-0 bg-transparent"
+                >
                   <CardContent className="pt-6">
-                    <Image src={benefit.icon} alt="" width={100} height={100} className="mx-auto mb-4" />
+                    <Image
+                      src={benefit.icon}
+                      alt=""
+                      width={100}
+                      height={100}
+                      className="mx-auto mb-4"
+                    />
                     <p className="font-bold text-sm">{benefit.title}</p>
                   </CardContent>
                 </Card>
@@ -263,13 +345,19 @@ export default function RevEarthPage() {
               </div>
               <div className="text-center lg:text-left">
                 <h1 className="text-4xl mb-6">
-                  <span className="text-revearth-green font-gilroy-bold">Rev</span>
-                  <span className="text-revearth-dark font-gilroy-bold">EARTH</span>
+                  <span className="text-revearth-green font-gilroy-bold">
+                    Rev
+                  </span>
+                  <span className="text-revearth-dark font-gilroy-bold">
+                    EARTH
+                  </span>
                 </h1>
                 <p className="text-gray-700 leading-relaxed">
-                  revEARTH is a startup company in the province of Bataan offering a web-based tool for energy auditing
-                  and greenhouse gas emission calculation for institutions and small-to-medium enterprises – providing
-                  them with energy management solutions and cost-cutting strategies.
+                  revEARTH is a startup company in the province of Bataan
+                  offering a web-based tool for energy auditing and greenhouse
+                  gas emission calculation for institutions and small-to-medium
+                  enterprises – providing them with energy management solutions
+                  and cost-cutting strategies.
                 </p>
               </div>
             </div>
@@ -277,27 +365,35 @@ export default function RevEarthPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
               <Card className="text-center border-0 bg-transparent">
                 <CardHeader>
-                  <CardTitle className="text-2xl font-bold text-revearth-dark uppercase">Mission</CardTitle>
+                  <CardTitle className="text-2xl font-bold text-revearth-dark uppercase">
+                    Mission
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-gray-700 leading-relaxed">
-                    revEARTH provides a user-friendly tool for energy consumption and GHG emissions calculation to
-                    institutions and small-to-medium enterprises in the province of Bataan, and empower them with
-                    effective and sustainable energy management plans by providing them with the necessary information
-                    regarding their energy usage and GHG emissions.
+                    revEARTH provides a user-friendly tool for energy
+                    consumption and GHG emissions calculation to institutions
+                    and small-to-medium enterprises in the province of Bataan,
+                    and empower them with effective and sustainable energy
+                    management plans by providing them with the necessary
+                    information regarding their energy usage and GHG emissions.
                   </p>
                 </CardContent>
               </Card>
 
               <Card className="text-center border-0 bg-transparent">
                 <CardHeader>
-                  <CardTitle className="text-2xl font-bold text-revearth-dark uppercase">Vision</CardTitle>
+                  <CardTitle className="text-2xl font-bold text-revearth-dark uppercase">
+                    Vision
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-gray-700 leading-relaxed">
-                    revEARTH aims to contribute to the total reduction of the Philippine carbon footprint within the
-                    industry and transport sector and its environmental impacts, as well as to promote a more
-                    sustainable, efficient, and responsible energy consumption in line with the Energy Efficiency and
+                    revEARTH aims to contribute to the total reduction of the
+                    Philippine carbon footprint within the industry and
+                    transport sector and its environmental impacts, as well as
+                    to promote a more sustainable, efficient, and responsible
+                    energy consumption in line with the Energy Efficiency and
                     Conservation Act of the Philippines.
                   </p>
                 </CardContent>
@@ -305,7 +401,9 @@ export default function RevEarthPage() {
             </div>
 
             <div className="text-center">
-              <h1 className="text-4xl font-bold text-revearth-green/80">"Unravel your Trace"</h1>
+              <h1 className="text-4xl font-bold text-revearth-green/80">
+                "Unravel your Trace"
+              </h1>
             </div>
           </div>
         </section>
@@ -313,10 +411,12 @@ export default function RevEarthPage() {
         {/* Subscription Plans */}
         <section className="py-16 bg-revearth-green">
           <div className="container mx-auto px-4">
-            <h1 className="text-3xl font-bold text-center text-revearth-dark mb-4 uppercase">Subscription Plan</h1>
+            <h1 className="text-3xl font-bold text-center text-revearth-dark mb-4 uppercase">
+              Subscription Plan
+            </h1>
             <p className="text-center text-gray-700 mb-12">
-              Take your desired plan to get access to our service easily, we like to offer special license offer our
-              users.
+              Take your desired plan to get access to our service easily, we
+              like to offer special license offer our users.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
@@ -364,13 +464,16 @@ export default function RevEarthPage() {
               ].map((plan, index) => (
                 <Card key={index} className="bg-gray-50 h-full">
                   <CardHeader>
-                    <CardTitle className="text-2xl font-bold text-center text-revearth-dark">{plan.title}</CardTitle>
+                    <CardTitle className="text-2xl font-bold text-center text-revearth-dark">
+                      {plan.title}
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="flex flex-col h-full">
                     <div className="space-y-3 flex-1">
                       {plan.features.map((feature, featureIndex) => (
                         <div key={featureIndex}>
-                          {feature.includes("Energy Auditing") || feature.includes("GHG Inventory") ? (
+                          {feature.includes("Energy Auditing") ||
+                          feature.includes("GHG Inventory") ? (
                             <p className="font-bold text-sm">{feature}</p>
                           ) : (
                             <p className="text-sm text-gray-600">{feature}</p>
@@ -392,7 +495,9 @@ export default function RevEarthPage() {
         <section id="partnership" className="py-16">
           <div className="container mx-auto px-4">
             <div className="text-center">
-              <h2 className="text-2xl font-bold text-gray-800 mb-8">INCUBATED BY</h2>
+              <h2 className="text-2xl font-bold text-gray-800 mb-8">
+                INCUBATED BY
+              </h2>
               <Card className="max-w-md mx-auto text-center border-0 bg-transparent">
                 <CardContent className="pt-6">
                   <Image
@@ -402,7 +507,9 @@ export default function RevEarthPage() {
                     height={100}
                     className="mx-auto mb-4"
                   />
-                  <h5 className="text-lg font-bold text-gray-900">NEW ENERGY NEXUS PHILIPPINES</h5>
+                  <h5 className="text-lg font-bold text-gray-900">
+                    NEW ENERGY NEXUS PHILIPPINES
+                  </h5>
                 </CardContent>
               </Card>
             </div>
@@ -416,15 +523,26 @@ export default function RevEarthPage() {
         <section className="bg-revearth-dark py-4">
           <div className="container mx-auto px-4">
             <div className="flex flex-col md:flex-row justify-between items-center text-white">
-              <h6 className="mb-4 md:mb-0">Get connected with us on social networks:</h6>
+              <h6 className="mb-4 md:mb-0">
+                Get connected with us on social networks:
+              </h6>
               <div className="flex space-x-4">
-                <Link href="#" className="text-white hover:text-revearth-green transition-colors">
+                <Link
+                  href="#"
+                  className="text-white hover:text-revearth-green transition-colors"
+                >
                   <Facebook size={32} />
                 </Link>
-                <Link href="#" className="text-white hover:text-revearth-green transition-colors">
+                <Link
+                  href="#"
+                  className="text-white hover:text-revearth-green transition-colors"
+                >
                   <Linkedin size={32} />
                 </Link>
-                <Link href="#" className="text-white hover:text-revearth-green transition-colors">
+                <Link
+                  href="#"
+                  className="text-white hover:text-revearth-green transition-colors"
+                >
                   <Instagram size={32} />
                 </Link>
               </div>
@@ -450,12 +568,18 @@ export default function RevEarthPage() {
 
               <div>
                 <h5 className="font-bold mb-4">
-                  <Link href="#home" className="text-gray-900 hover:text-revearth-green">
+                  <Link
+                    href="#home"
+                    className="text-gray-900 hover:text-revearth-green"
+                  >
                     Home
                   </Link>
                 </h5>
                 <h5 className="font-bold">
-                  <Link href="#service" className="text-gray-900 hover:text-revearth-green">
+                  <Link
+                    href="#service"
+                    className="text-gray-900 hover:text-revearth-green"
+                  >
                     Service
                   </Link>
                 </h5>
@@ -463,33 +587,51 @@ export default function RevEarthPage() {
 
               <div>
                 <h5 className="font-bold mb-4">
-                  <Link href="#about" className="text-gray-900 hover:text-revearth-green">
+                  <Link
+                    href="#about"
+                    className="text-gray-900 hover:text-revearth-green"
+                  >
                     About
                   </Link>
                 </h5>
                 <div className="space-y-2 text-sm">
                   <div>
-                    <Link href="#about" className="text-gray-700 hover:text-revearth-green">
+                    <Link
+                      href="#about"
+                      className="text-gray-700 hover:text-revearth-green"
+                    >
                       What we do
                     </Link>
                   </div>
                   <div>
-                    <Link href="#customersbenefit" className="text-gray-700 hover:text-revearth-green">
+                    <Link
+                      href="#customersbenefit"
+                      className="text-gray-700 hover:text-revearth-green"
+                    >
                       Customer's benefit
                     </Link>
                   </div>
                   <div>
-                    <Link href="#RevEarth" className="text-gray-700 hover:text-revearth-green">
+                    <Link
+                      href="#RevEarth"
+                      className="text-gray-700 hover:text-revearth-green"
+                    >
                       About RevEARTH
                     </Link>
                   </div>
                   <div>
-                    <Link href="#team" className="text-gray-700 hover:text-revearth-green">
+                    <Link
+                      href="#team"
+                      className="text-gray-700 hover:text-revearth-green"
+                    >
                       Our Team
                     </Link>
                   </div>
                   <div>
-                    <Link href="#partnership" className="text-gray-700 hover:text-revearth-green">
+                    <Link
+                      href="#partnership"
+                      className="text-gray-700 hover:text-revearth-green"
+                    >
                       Partnership
                     </Link>
                   </div>
