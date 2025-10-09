@@ -12,6 +12,7 @@ export const auth = betterAuth({
     enabled: true,
     requireEmailVerification: false, // Set to true in production with email service
   },
+  trustedOrigins: ["http://localhost:3000"],
   socialProviders: {
     // Add OAuth providers as needed
     // github: {
@@ -26,11 +27,6 @@ export const auth = betterAuth({
   session: {
     expiresIn: 60 * 60 * 24 * 7, // 7 days
     updateAge: 60 * 60 * 24, // 1 day (session will be updated if it's older than this)
-  },
-  user: {
-    additionalFields: {
-      // Add any additional user fields here
-    },
   },
   advanced: {
     cookiePrefix: "revearth",
