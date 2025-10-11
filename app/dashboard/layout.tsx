@@ -1,13 +1,16 @@
 import { AppSidebar } from "@/components/sidebar";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import { ProtectedRoute } from "@/components/auth/protected-route";
 
 export default function AppLayout ({ children }: { children: React.ReactNode }){
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        {children}
-      </SidebarInset>
-    </SidebarProvider>
+    <ProtectedRoute>
+      <SidebarProvider>
+        <AppSidebar />
+        <SidebarInset>
+          {children}
+        </SidebarInset>
+      </SidebarProvider>
+    </ProtectedRoute>
   )
 }

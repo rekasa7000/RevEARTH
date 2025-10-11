@@ -5,6 +5,7 @@ import { Calendar, Home, Inbox, Search, Settings } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarMenu,
@@ -12,6 +13,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import Image from "next/image";
+import { UserMenu } from "@/components/auth/user-menu";
 
 // Menu items.
 const items = [
@@ -42,7 +44,7 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarContent>
         <SidebarGroup>
-          <Image 
+          <Image
             src="/assets/logo.png"
             width={200}
             height={200}
@@ -64,6 +66,11 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter>
+        <div className="p-4 border-t">
+          <UserMenu />
+        </div>
+      </SidebarFooter>
     </Sidebar>
   );
 }
