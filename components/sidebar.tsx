@@ -19,22 +19,22 @@ import { UserMenu } from "@/components/auth/user-menu";
 const items = [
   {
     title: "Dashboard",
-    url: "./",
+    url: "/dashboard",
     icon: Home,
   },
   {
     title: "Calculation",
-    url: "./dashboard/calculation",
+    url: "/calculation",
     icon: Inbox,
   },
   {
     title: "Reports",
-    url: "./dashboard/reports",
+    url: "/reports",
     icon: Calendar,
   },
   {
     title: "Settings",
-    url: "./dashboard/settings",
+    url: "/settings",
     icon: Settings,
   },
 ];
