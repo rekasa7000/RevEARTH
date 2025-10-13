@@ -930,24 +930,36 @@ Create React Query hooks for all API endpoints to provide type-safe, cached data
 
 ---
 
-## Phase 4: Calculation Page Implementation 🔴 NOT STARTED
+## Phase 4: Calculation Page Implementation 🔄 IN PROGRESS
 
-**Status:** 0% Complete
+**Status:** 0% Complete (Planning complete, ready to implement)
 **Current State:** Uses fake data, doesn't persist
 **Estimated Time:** 16-20 hours
 **Priority:** ⚠️ CRITICAL - Core feature
+**Started:** 2025-10-12
 
-### Current Problems
-1. Uses `getSampleDataForScope()` - fake data generator
-2. Modal form submissions don't call API
-3. Data only lives in component state
-4. No integration with calculation engine
-5. No validation or error handling
+### Analysis Complete - Current Problems Identified:
+1. **Fake Data**: Uses `getSampleDataForScope()` - returns hardcoded sample data
+2. **No API Integration**: Modal form submissions only update local component state
+3. **Wrong Data Model**: UI structure doesn't match backend API endpoints
+4. **No Emission Record Context**: Page doesn't track which reporting period is being edited
+5. **Manual Calculations**: Users manually enter CO2e values instead of using calculation engine
+6. **No Validation**: No form validation or error handling
+7. **Type Mismatches**: UI types (Scope1StationaryData, etc.) don't match API types (FuelUsage, VehicleUsage, etc.)
 
-### File to Modify
-- `app/calculation/page.tsx` (867 lines - major refactor)
-- `app/calculation/columns.tsx` (table column definitions)
-- `app/calculation/data-table.tsx` (table component)
+### Files to Modify
+- `app/calculation/page.tsx` (867 lines - major refactor required)
+- `app/calculation/columns.tsx` (373 lines - update to match API types)
+- `app/calculation/data-table.tsx` (table component - minimal changes)
+
+### Refactoring Strategy:
+1. Add emission record selector (dropdown to choose reporting period)
+2. Replace fake data with React Query hooks (useFuelUsage, useVehicleUsage, etc.)
+3. Update forms to match backend API structure (remove manual CO2e entry fields)
+4. Integrate mutation hooks for create/update/delete operations
+5. Add "Calculate Emissions" button that triggers calculation engine
+6. Update TypeScript types to match API interfaces
+7. Add proper error handling and loading states
 
 ---
 
