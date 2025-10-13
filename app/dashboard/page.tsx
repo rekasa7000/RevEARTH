@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { AppBarChart } from "@/components/AppBarChart";
 import { AppDonutChart } from "@/components/AppDonutChart";
 import { AppLineChart } from "@/components/AppLineChart";
@@ -10,10 +11,19 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useOrganizationCheck } from "@/lib/hooks/use-organization-check";
+import { useDashboard, DashboardPeriod } from "@/lib/api/queries/dashboard";
 
 export default function Dashboard() {
-  const { organization, isLoading } = useOrganizationCheck();
+  const [period, setPeriod] = useState<DashboardPeriod>("year");
+  const { organization, isLoading: orgLoading } = useOrganizationCheck();
+  const { data: dashboardData, isLoading: dashboardLoading } = useDashboard(
+    organization?.id || "",
+    period
+  );
+
+  const isLoading = orgLoading || dashboardLoading;
 
   if (isLoading) {
     return (
@@ -52,7 +62,14 @@ export default function Dashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent className="flex justify-center">
-            <p className="text-2xl font-bold">10,000 tCO₂e</p>
+            <p className="text-2xl font-bold">
+              {dashboardData?.summary.totalCo2eYtd
+                ? `${(dashboardData.summary.totalCo2eYtd / 1000).toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })} tCO₂e`
+                : "0.00 tCO₂e"}
+            </p>
           </CardContent>
         </Card>
 
@@ -63,7 +80,11 @@ export default function Dashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent className="flex justify-center">
-            <p className="text-2xl font-bold">1.23</p>
+            <p className="text-2xl font-bold">
+              {dashboardData?.summary.emissionsPerEmployee
+                ? (dashboardData.summary.emissionsPerEmployee / 1000).toFixed(2)
+                : "0.00"}
+            </p>
             <span className="ml-1 text-gray-600 dark:text-gray-400">
               tCO₂e/employee
             </span>
@@ -77,7 +98,11 @@ export default function Dashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent className="flex justify-center">
-            <p className="text-2xl font-bold">Electricity</p>
+            <p className="text-2xl font-bold">
+              {dashboardData?.topSources && dashboardData.topSources.length > 0
+                ? dashboardData.topSources[0].category
+                : "N/A"}
+            </p>
           </CardContent>
         </Card>
 
@@ -88,7 +113,9 @@ export default function Dashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent className="flex justify-center">
-            <p className="text-2xl font-bold">10,000</p>
+            <p className="text-2xl font-bold">
+              {dashboardData?.organization.totalEmployees?.toLocaleString() || "0"}
+            </p>
           </CardContent>
         </Card>
       </div>

@@ -7,6 +7,13 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { DataTable } from "./data-table";
 import {
   getColumnsForScope,
@@ -19,7 +26,29 @@ import {
   Scope3Data,
 } from "./columns";
 import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { X } from "lucide-react";
+import { useOrganizationCheck } from "@/lib/hooks/use-organization-check";
+import {
+  fuelUsageSchema,
+  vehicleUsageSchema,
+  electricityUsageSchema,
+  commutingDataSchema,
+  getSchemaForScope,
+  type FuelUsageFormData,
+  type VehicleUsageFormData,
+  type ElectricityUsageFormData,
+  type CommutingDataFormData,
+} from "@/lib/validations/emission-forms";
+import { useEmissionRecords } from "@/lib/api/queries/emission-records";
+import { useFuelUsage, useCreateFuelUsage, useUpdateFuelUsage, useDeleteFuelUsage } from "@/lib/api/queries/fuel-usage";
+import { useVehicleUsage, useCreateVehicleUsage, useUpdateVehicleUsage, useDeleteVehicleUsage } from "@/lib/api/queries/vehicle-usage";
+import { useElectricityUsage, useCreateElectricityUsage, useUpdateElectricityUsage, useDeleteElectricityUsage } from "@/lib/api/queries/electricity-usage";
+import { useCommutingData, useCreateCommutingData, useUpdateCommutingData, useDeleteCommutingData } from "@/lib/api/queries/commuting-data";
+import { useCalculation, useTriggerCalculation } from "@/lib/api/queries/calculations";
+import { format } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
 
 // Content configurations for all scopes
 const contentConfigs = {
@@ -90,137 +119,280 @@ const contentConfigs = {
 };
 
 export default function Calculation() {
-  const [data, setData] = useState<EmissionData[]>([]);
-  const [currentScope, setCurrentScope] = useState<string>("stationary");
-  
-  useEffect(() => {
-    // Load initial data for the default scope
-    loadData("stationary");
-  }, []);
+  // Toast for notifications
+  const { toast } = useToast();
 
-  const [isLoading, setIsLoading] = useState(false);
+  // Organization and emission record state
+  const { organization, isLoading: orgLoading } = useOrganizationCheck();
+  const [currentEmissionRecordId, setCurrentEmissionRecordId] = useState<string>("");
+  const [currentScope, setCurrentScope] = useState<string>("stationary");
+
+  // Fetch emission records for the organization
+  const { data: emissionRecordsData, isLoading: recordsLoading } = useEmissionRecords(
+    organization?.id || "",
+    { page: 1, limit: 50 }
+  );
+
+  // Fetch data based on current scope and emission record
+  const { data: fuelData, isLoading: fuelLoading } = useFuelUsage(currentEmissionRecordId);
+  const { data: vehicleData, isLoading: vehicleLoading } = useVehicleUsage(currentEmissionRecordId);
+  const { data: electricityData, isLoading: electricityLoading } = useElectricityUsage(currentEmissionRecordId);
+  const { data: commutingData, isLoading: commutingLoading } = useCommutingData(currentEmissionRecordId);
+
+  // Mutation hooks for creating records
+  const createFuelUsage = useCreateFuelUsage();
+  const createVehicleUsage = useCreateVehicleUsage();
+  const createElectricityUsage = useCreateElectricityUsage();
+  const createCommutingData = useCreateCommutingData();
+
+  // Mutation hooks for updating records
+  const updateFuelUsage = useUpdateFuelUsage();
+  const updateVehicleUsage = useUpdateVehicleUsage();
+  const updateElectricityUsage = useUpdateElectricityUsage();
+  const updateCommutingData = useUpdateCommutingData();
+
+  // Mutation hooks for deleting records
+  const deleteFuelUsage = useDeleteFuelUsage();
+  const deleteVehicleUsage = useDeleteVehicleUsage();
+  const deleteElectricityUsage = useDeleteElectricityUsage();
+  const deleteCommutingData = useDeleteCommutingData();
+
+  // Calculation hooks
+  const { data: calculation, isLoading: calculationLoading } = useCalculation(currentEmissionRecordId);
+  const triggerCalculation = useTriggerCalculation();
+
+  // Select first emission record by default
+  useEffect(() => {
+    if (emissionRecordsData?.records && emissionRecordsData.records.length > 0 && !currentEmissionRecordId) {
+      setCurrentEmissionRecordId(emissionRecordsData.records[0].id);
+    }
+  }, [emissionRecordsData, currentEmissionRecordId]);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState<Record<string, string>>({});
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<{ id: string; emissionRecordId: string } | null>(null);
 
-  // Load data based on the current scope selection
-  const loadData = async (scopeSelection: string) => {
-    setIsLoading(true);
-    try {
-      const fetchedData = getSampleDataForScope(scopeSelection);
-      setData(fetchedData);
-    } catch (error) {
-      console.error("Error loading data:", error);
-    } finally {
-      setIsLoading(false);
+  // Get data and loading state based on current scope
+  const getCurrentData = (): EmissionData[] => {
+    switch (currentScope) {
+      case "stationary":
+        return fuelData || [];
+      case "mobile":
+        return vehicleData || [];
+      case "refrigeration":
+        return []; // Refrigerant usage not implemented yet
+      case "scope2":
+        return electricityData || [];
+      case "scope3":
+        return commutingData || [];
+      default:
+        return [];
+    }
+  };
+
+  const isCurrentLoading = (): boolean => {
+    switch (currentScope) {
+      case "stationary":
+        return fuelLoading;
+      case "mobile":
+        return vehicleLoading;
+      case "refrigeration":
+        return false;
+      case "scope2":
+        return electricityLoading;
+      case "scope3":
+        return commutingLoading;
+      default:
+        return false;
     }
   };
 
   // Handle scope selection
   const handleScopeSelection = (scope: string) => {
     setCurrentScope(scope);
-    loadData(scope);
+    // Data will be loaded automatically by query hooks based on currentScope
   };
 
   // Handle opening add record modal
   const handleAddRecord = () => {
     setFormData({});
+    setFormErrors({});
     setIsModalOpen(true);
   };
 
   // Handle form field changes
   const handleFieldChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    // Clear error for this field when user starts typing
+    if (formErrors[field]) {
+      setFormErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+  };
+
+  // Validate form data before submission
+  const validateForm = (): boolean => {
+    const schema = getSchemaForScope(currentScope);
+    if (!schema) return true;
+
+    try {
+      schema.parse(formData);
+      setFormErrors({});
+      return true;
+    } catch (error: any) {
+      const errors: Record<string, string> = {};
+      if (error.errors) {
+        error.errors.forEach((err: any) => {
+          if (err.path && err.path.length > 0) {
+            errors[err.path[0]] = err.message;
+          }
+        });
+      }
+      setFormErrors(errors);
+      return false;
+    }
   };
 
   // Handle form submission
-  const handleSubmit = () => {
-    if (!currentScope) return;
+  const handleSubmit = async () => {
+    if (!currentScope || !currentEmissionRecordId) return;
 
-    // Generate new ID
-    const newId = data.length > 0 ? Math.max(...data.map((d) => d.id)) + 1 : 1;
-
-    // Create new record based on scope
-    let newRecord: EmissionData;
-
-    switch (currentScope) {
-      case "stationary":
-        newRecord = {
-          id: newId,
-          sourceDescription: formData.sourceDescription || "",
-          fuelState: (formData.fuelState as "Solid" | "Liquid" | "Gas") || "Solid",
-          fuelType: formData.fuelType || "",
-          fuelConsumption: parseFloat(formData.fuelConsumption) || 0,
-          unit: formData.unit || "",
-          co2Emissions: parseFloat(formData.co2Emissions) || 0,
-          ch4Emissions: parseFloat(formData.ch4Emissions) || 0,
-          n2oEmissions: parseFloat(formData.n2oEmissions) || 0,
-          totalEmissions: parseFloat(formData.totalEmissions) || 0,
-        } as Scope1StationaryData;
-        break;
-
-      case "mobile":
-        newRecord = {
-          id: newId,
-          vehicleDescription: formData.vehicleDescription || "",
-          fuelState: (formData.fuelState as "Solid" | "Liquid" | "Gas") || "Liquid",
-          fuelType: formData.fuelType || "",
-          fuelConsumption: parseFloat(formData.fuelConsumption) || 0,
-          unit: formData.unit || "",
-          co2Emissions: parseFloat(formData.co2Emissions) || 0,
-          ch4Emissions: parseFloat(formData.ch4Emissions) || 0,
-          n2oEmissions: parseFloat(formData.n2oEmissions) || 0,
-          totalEmissions: parseFloat(formData.totalEmissions) || 0,
-        } as Scope1MobileData;
-        break;
-
-      case "refrigeration":
-        newRecord = {
-          id: newId,
-          equipmentDescription: formData.equipmentDescription || "",
-          refrigerantType: formData.refrigerantType || "",
-          equipmentCapacity: parseFloat(formData.equipmentCapacity) || 0,
-          refrigerantLeakage: parseFloat(formData.refrigerantLeakage) || 0,
-          unit: formData.unit || "",
-          co2Emissions: parseFloat(formData.co2Emissions) || 0,
-          totalEmissions: parseFloat(formData.totalEmissions) || 0,
-        } as Scope1RefrigerationData;
-        break;
-
-      case "scope2":
-        newRecord = {
-          id: newId,
-          energySourceDescription: formData.energySourceDescription || "",
-          energyType: (formData.energyType as "Electricity" | "Steam" | "Heating" | "Cooling") || "Electricity",
-          energyConsumption: parseFloat(formData.energyConsumption) || 0,
-          unit: formData.unit || "",
-          gridFactor: parseFloat(formData.gridFactor) || 0,
-          renewableCertificates: formData.renewableCertificates || "None",
-          co2Emissions: parseFloat(formData.co2Emissions) || 0,
-          totalEmissions: parseFloat(formData.totalEmissions) || 0,
-        } as Scope2Data;
-        break;
-
-      case "scope3":
-        newRecord = {
-          id: newId,
-          activityDescription: formData.activityDescription || "",
-          activityCategory: formData.activityCategory || "",
-          activityData: parseFloat(formData.activityData) || 0,
-          unit: formData.unit || "",
-          emissionFactor: parseFloat(formData.emissionFactor) || 0,
-          dataQuality: (formData.dataQuality as "High" | "Medium" | "Low") || "Medium",
-          co2Emissions: parseFloat(formData.co2Emissions) || 0,
-          totalEmissions: parseFloat(formData.totalEmissions) || 0,
-        } as Scope3Data;
-        break;
-
-      default:
-        return;
+    // Validate form before submission
+    if (!validateForm()) {
+      toast({
+        title: "Validation Error",
+        description: "Please fix the errors in the form before submitting.",
+        variant: "destructive",
+      });
+      return;
     }
 
-    setData((prev) => [...prev, newRecord]);
-    setIsModalOpen(false);
-    setFormData({});
+    try {
+      // Get today's date in ISO format for entryDate
+      const today = new Date().toISOString();
+
+      switch (currentScope) {
+        case "stationary":
+          // Scope 1 - Stationary Combustion (Fuel Usage)
+          await createFuelUsage.mutateAsync({
+            emissionRecordId: currentEmissionRecordId,
+            fuelType: formData.fuelType as any,  // Type will be validated by backend
+            quantity: parseFloat(formData.fuelConsumption) || 0,
+            unit: formData.unit || "L",
+            entryDate: today,
+            metadata: {
+              sourceDescription: formData.sourceDescription || "",
+            },
+          });
+          toast({
+            title: "Success",
+            description: "Fuel usage record created successfully",
+          });
+          break;
+
+        case "mobile":
+          // Scope 1 - Mobile Combustion (Vehicle Usage)
+          await createVehicleUsage.mutateAsync({
+            emissionRecordId: currentEmissionRecordId,
+            vehicleType: formData.vehicleType as any,  // Type will be validated by backend
+            fuelType: formData.fuelType as any,
+            fuelConsumed: parseFloat(formData.fuelConsumption),
+            mileage: formData.mileage ? parseFloat(formData.mileage) : undefined,
+            unit: formData.unit || "L",
+            entryDate: today,
+            vehicleId: formData.vehicleDescription || undefined,
+          });
+          toast({
+            title: "Success",
+            description: "Vehicle usage record created successfully",
+          });
+          break;
+
+        case "refrigeration":
+          // Scope 1 - Refrigeration (Not implemented yet)
+          toast({
+            title: "Not Implemented",
+            description: "Refrigerant usage tracking is not yet implemented",
+            variant: "destructive",
+          });
+          return;
+
+        case "scope2":
+          // Scope 2 - Electricity Usage
+          await createElectricityUsage.mutateAsync({
+            emissionRecordId: currentEmissionRecordId,
+            kwhConsumption: parseFloat(formData.energyConsumption) || 0,
+            billingPeriodStart: today,
+            billingPeriodEnd: today,
+            facilityId: formData.facilityId || undefined,
+            meterNumber: formData.meterNumber || undefined,
+          });
+          toast({
+            title: "Success",
+            description: "Electricity usage record created successfully",
+          });
+          break;
+
+        case "scope3":
+          // Scope 3 - Commuting Data
+          await createCommutingData.mutateAsync({
+            emissionRecordId: currentEmissionRecordId,
+            employeeCount: parseInt(formData.employeeCount) || 1,
+            avgDistanceKm: parseFloat(formData.activityData),
+            transportMode: formData.transportMode as any,  // Type will be validated by backend
+            daysPerWeek: formData.daysPerWeek ? parseInt(formData.daysPerWeek) : undefined,
+            wfhDays: formData.wfhDays ? parseInt(formData.wfhDays) : undefined,
+            surveyDate: today,
+          });
+          toast({
+            title: "Success",
+            description: "Commuting data record created successfully",
+          });
+          break;
+
+        default:
+          return;
+      }
+
+      // Close modal and reset form on success
+      setIsModalOpen(false);
+      setFormData({});
+      setFormErrors({});
+    } catch (error: any) {
+      console.error("Failed to create record:", error);
+      toast({
+        title: "Error",
+        description: error?.message || "Failed to create record. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handle calculation trigger
+  const handleCalculate = async () => {
+    if (!currentEmissionRecordId) return;
+
+    try {
+      await triggerCalculation.mutateAsync({ emissionRecordId: currentEmissionRecordId });
+      toast({
+        title: "Success",
+        description: "Emissions calculated successfully",
+      });
+    } catch (error: any) {
+      console.error("Failed to calculate emissions:", error);
+      toast({
+        title: "Error",
+        description: error?.message || "Failed to calculate emissions. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   // Render form fields based on current scope
@@ -228,22 +400,31 @@ export default function Calculation() {
     if (!currentScope) return null;
 
     const inputClass = "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100";
+    const inputErrorClass = "w-full px-3 py-2 border border-red-500 dark:border-red-400 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100";
     const labelClass = "block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300";
+    const errorClass = "text-sm text-red-600 dark:text-red-400 mt-1";
+
+    const getInputClass = (fieldName: string) => {
+      return formErrors[fieldName] ? inputErrorClass : inputClass;
+    };
 
     switch (currentScope) {
       case "stationary":
         return (
           <div className="grid gap-4">
             <div>
-              <label htmlFor="sourceDescription" className={labelClass}>Source Description</label>
+              <label htmlFor="sourceDescription" className={labelClass}>Source Description *</label>
               <input
                 id="sourceDescription"
                 type="text"
                 value={formData.sourceDescription || ""}
                 onChange={(e) => handleFieldChange("sourceDescription", e.target.value)}
                 placeholder="e.g., Single-burner stove"
-                className={inputClass}
+                className={getInputClass("sourceDescription")}
               />
+              {formErrors.sourceDescription && (
+                <p className={errorClass}>{formErrors.sourceDescription}</p>
+              )}
             </div>
             <div>
               <label htmlFor="fuelState" className={labelClass}>Fuel State</label>
@@ -260,36 +441,45 @@ export default function Calculation() {
               </select>
             </div>
             <div>
-              <label htmlFor="fuelType" className={labelClass}>Fuel Type</label>
+              <label htmlFor="fuelType" className={labelClass}>Fuel Type *</label>
               <input
                 id="fuelType"
                 type="text"
                 value={formData.fuelType || ""}
                 onChange={(e) => handleFieldChange("fuelType", e.target.value)}
                 placeholder="e.g., Wood, Coal"
-                className={inputClass}
+                className={getInputClass("fuelType")}
               />
+              {formErrors.fuelType && (
+                <p className={errorClass}>{formErrors.fuelType}</p>
+              )}
             </div>
             <div>
-              <label htmlFor="fuelConsumption" className={labelClass}>Quantity Combusted</label>
+              <label htmlFor="fuelConsumption" className={labelClass}>Quantity Combusted *</label>
               <input
                 id="fuelConsumption"
                 type="number"
                 value={formData.fuelConsumption || ""}
                 onChange={(e) => handleFieldChange("fuelConsumption", e.target.value)}
-                className={inputClass}
+                className={getInputClass("fuelConsumption")}
               />
+              {formErrors.fuelConsumption && (
+                <p className={errorClass}>{formErrors.fuelConsumption}</p>
+              )}
             </div>
             <div>
-              <label htmlFor="unit" className={labelClass}>Unit</label>
+              <label htmlFor="unit" className={labelClass}>Unit *</label>
               <input
                 id="unit"
                 type="text"
                 value={formData.unit || ""}
                 onChange={(e) => handleFieldChange("unit", e.target.value)}
                 placeholder="e.g., kg, L"
-                className={inputClass}
+                className={getInputClass("unit")}
               />
+              {formErrors.unit && (
+                <p className={errorClass}>{formErrors.unit}</p>
+              )}
             </div>
             <div>
               <label htmlFor="co2Emissions" className={labelClass}>CO2 Emissions (kg)</label>
@@ -710,6 +900,20 @@ export default function Calculation() {
     }
   };
 
+  // Show loading state while organization is being fetched
+  if (orgLoading) {
+    return (
+      <div className="p-6 w-full container mx-auto max-w-[100rem]">
+        <div className="flex justify-center items-center min-h-[400px]">
+          <div className="text-gray-600 dark:text-gray-400">Loading...</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show message if no emission records exist
+  const hasEmissionRecords = emissionRecordsData && emissionRecordsData.records.length > 0;
+
   return (
     <div className="p-6 w-full container mx-auto max-w-[100rem]">
       <div className="mb-6">
@@ -725,7 +929,42 @@ export default function Calculation() {
           </h1>
         </div>
 
-        <div className="flex justify-center mt-4 gap-3.5">
+        {/* Emission Record Selector */}
+        <div className="flex justify-center mt-6">
+          <div className="w-full max-w-md">
+            <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+              Select Reporting Period
+            </label>
+            {recordsLoading ? (
+              <div className="text-center text-gray-600 dark:text-gray-400">
+                Loading emission records...
+              </div>
+            ) : !hasEmissionRecords ? (
+              <div className="text-center text-gray-600 dark:text-gray-400">
+                No emission records found. Please create one first.
+              </div>
+            ) : (
+              <Select
+                value={currentEmissionRecordId}
+                onValueChange={setCurrentEmissionRecordId}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select reporting period" />
+                </SelectTrigger>
+                <SelectContent>
+                  {emissionRecordsData.records.map((record) => (
+                    <SelectItem key={record.id} value={record.id}>
+                      {format(new Date(record.reportingPeriodStart), "MMM yyyy")} -{" "}
+                      {format(new Date(record.reportingPeriodEnd), "MMM yyyy")} ({record.status})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+        </div>
+
+        <div className="flex justify-center mt-6 gap-3.5">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -799,29 +1038,90 @@ export default function Calculation() {
           </div>
         )}
 
-        {currentScope && (
+        {currentScope && currentEmissionRecordId && (
           <div className="mt-6 px-4">
-            {isLoading ? (
+            {isCurrentLoading() ? (
               <div className="flex justify-center py-8">
                 <div className="text-gray-600 dark:text-gray-400">
-                  Loading...
+                  Loading data...
                 </div>
               </div>
             ) : (
               <DataTable
                 columns={getColumnsForScope(currentScope) as ColumnDef<EmissionData>[]}
-                data={data}
+                data={getCurrentData()}
                 searchPlaceholder={`Search ${currentScope} data...`}
               />
             )}
           </div>
         )}
 
-        {currentScope && (
-          <div className="mt-6 px-4">
-            <Button onClick={handleAddRecord} disabled={isLoading}>
+        {currentScope && currentEmissionRecordId && (
+          <div className="mt-6 px-4 flex gap-3">
+            <Button onClick={handleAddRecord} disabled={isCurrentLoading()}>
               Add Record
             </Button>
+            <Button
+              onClick={handleCalculate}
+              disabled={isCurrentLoading() || triggerCalculation.isPending}
+              variant="secondary"
+            >
+              {triggerCalculation.isPending ? "Calculating..." : "Calculate Emissions"}
+            </Button>
+          </div>
+        )}
+
+        {/* Calculation Results Display */}
+        {calculation && currentEmissionRecordId && (
+          <div className="mt-8 px-4">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border border-gray-200 dark:border-gray-700">
+              <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
+                Calculation Results
+              </h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total CO2e</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {calculation.totalCo2e?.toLocaleString() || "0"} kg
+                  </p>
+                </div>
+
+                <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Scope 1</p>
+                  <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                    {calculation.totalScope1Co2e?.toLocaleString() || "0"} kg
+                  </p>
+                </div>
+
+                <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Scope 2</p>
+                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                    {calculation.totalScope2Co2e?.toLocaleString() || "0"} kg
+                  </p>
+                </div>
+
+                <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Scope 3</p>
+                  <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                    {calculation.totalScope3Co2e?.toLocaleString() || "0"} kg
+                  </p>
+                </div>
+              </div>
+
+              {calculation.emissionsPerEmployee && (
+                <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 mb-6">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Emissions Per Employee</p>
+                  <p className="text-xl font-bold text-gray-900 dark:text-white">
+                    {calculation.emissionsPerEmployee.toLocaleString()} kg CO2e
+                  </p>
+                </div>
+              )}
+
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                Last calculated: {format(new Date(calculation.calculatedAt), "PPpp")}
+              </div>
+            </div>
           </div>
         )}
 
@@ -851,11 +1151,30 @@ export default function Calculation() {
                 <Button
                   variant="outline"
                   onClick={() => setIsModalOpen(false)}
+                  disabled={
+                    createFuelUsage.isPending ||
+                    createVehicleUsage.isPending ||
+                    createElectricityUsage.isPending ||
+                    createCommutingData.isPending
+                  }
                 >
                   Cancel
                 </Button>
-                <Button onClick={handleSubmit}>
-                  Add Record
+                <Button
+                  onClick={handleSubmit}
+                  disabled={
+                    createFuelUsage.isPending ||
+                    createVehicleUsage.isPending ||
+                    createElectricityUsage.isPending ||
+                    createCommutingData.isPending
+                  }
+                >
+                  {(createFuelUsage.isPending ||
+                    createVehicleUsage.isPending ||
+                    createElectricityUsage.isPending ||
+                    createCommutingData.isPending)
+                    ? "Creating..."
+                    : "Add Record"}
                 </Button>
               </div>
             </div>
