@@ -12,7 +12,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { useOrganizationCheck } from "@/lib/hooks/use-organization-check";
-import { useDashboard } from "@/lib/api/queries/dashboard";
+import { useDashboard, DashboardPeriod } from "@/lib/api/queries/dashboard";
 
 export const description = "Emissions by category bar chart";
 
@@ -23,11 +23,15 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export function AppBarChart() {
+interface AppBarChartProps {
+  period?: DashboardPeriod;
+}
+
+export function AppBarChart({ period = "year" }: AppBarChartProps) {
   const { organization } = useOrganizationCheck();
   const { data: dashboardData, isLoading } = useDashboard(
     organization?.id || "",
-    "year"
+    period
   );
 
   // Convert API data to chart format

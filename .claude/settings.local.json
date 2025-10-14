@@ -3,7 +3,9 @@
     "allow": [
       "mcp__ide__getDiagnostics",
       "Bash(npm install:*)",
-      "Bash(npx shadcn@latest add tabs)"
+      "Bash(npx shadcn@latest add tabs)",
+      "Bash(npx shadcn@latest add:*)",
+      "Bash(printf \"n\\n\")"
     ],
     "deny": [],
     "ask": []

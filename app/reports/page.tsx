@@ -1,390 +1,725 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
+import { useOrganizationCheck } from "@/lib/hooks/use-organization-check";
+import { useDashboard, DashboardPeriod } from "@/lib/api/queries/dashboard";
 import {
-  Pie,
-  PieChart,
-  Cell,
-  Legend,
-  Tooltip,
-  ResponsiveContainer,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { FileText, Download, FileSpreadsheet, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { generateEmissionsReportPDF } from "@/components/reports/report-generator";
+import { generateEmissionsCSV } from "@/components/reports/export-csv";
+import { useToast } from "@/hooks/use-toast";
+import {
   LineChart,
-  CartesianGrid,
-  XAxis,
-  YAxis,
   Line,
   BarChart,
   Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
 } from "recharts";
-import { MoreVertical } from "lucide-react";
 
-const monthlyData = [
-  { month: "Jan", scope1: 20, scope2: 15, scope3: 18 },
-  { month: "Feb", scope1: 22, scope2: 17, scope3: 16 },
-  { month: "Mar", scope1: 25, scope2: 18, scope3: 19 },
-  { month: "Apr", scope1: 23, scope2: 16, scope3: 17 },
-  { month: "May", scope1: 24, scope2: 19, scope3: 15 },
-  { month: "Jun", scope1: 26, scope2: 20, scope3: 16 },
-  { month: "Jul", scope1: 28, scope2: 21, scope3: 18 },
-  { month: "Aug", scope1: 27, scope2: 19, scope3: 17 },
-  { month: "Sep", scope1: 25, scope2: 18, scope3: 16 },
-  { month: "Oct", scope1: 23, scope2: 17, scope3: 15 },
-  { month: "Nov", scope1: 22, scope2: 16, scope3: 14 },
-  { month: "Dec", scope1: 20, scope2: 15, scope3: 13 },
-];
+export default function ReportsPage() {
+  const [period, setPeriod] = useState<DashboardPeriod>("year");
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [isGeneratingCSV, setIsGeneratingCSV] = useState(false);
+  const { toast } = useToast();
+  const { organization, isLoading: orgLoading } = useOrganizationCheck();
+  const { data: dashboardData, isLoading: dashboardLoading } = useDashboard(
+    organization?.id || "",
+    period
+  );
 
-const scope1Categories: Record<string, { description: string; data: Array<{ source: string; value: number }> }> = {
-  "Stationary Combustion": {
-    description:
-      "Emissions from stationary combustion represent the release of greenhouse gases resulting from the burning of fuels in fixed or stationary sources such as various equipment and machinery, including boilers, heaters, furnaces, kilns, ovens, flares, thermal oxidizers, dryers, and any other devices that combust carbon-bearing fuels or waste stream materials.",
-    data: [
-      { source: "Boilers", value: 400 },
-      { source: "Furnaces", value: 350 },
-      { source: "Heaters", value: 200 },
-      { source: "Ovens", value: 250 },
-    ],
-  },
-  "Mobile Combustion": {
-    description:
-      "Mobile combustion emissions come from transportation sources owned or controlled by the organization, including vehicles, aircraft, ships, and other mobile equipment that burn fuel.",
-    data: [
-      { source: "Vehicles", value: 500 },
-      { source: "Aircraft", value: 200 },
-      { source: "Ships", value: 100 },
-    ],
-  },
-  "Refrigeration & AC": {
-    description:
-      "Emissions from refrigeration and air conditioning systems result from the release of refrigerant gases, which are potent greenhouse gases that can leak from cooling equipment during operation, maintenance, or disposal.",
-    data: [
-      { source: "HVAC Systems", value: 300 },
-      { source: "Cold Storage", value: 250 },
-      { source: "Leak Events", value: 150 },
-    ],
-  },
-} as const satisfies Record<string, { description: string; data: Array<{ source: string; value: number }> }>;
+  const isLoading = orgLoading || dashboardLoading;
 
-const scope2Categories = {
-  "Purchased Electricity": {
-    description:
-      "Purchased electricity includes the indirect release of greenhouse gases resulting from the generation of electricity that an organization uses from the grid of a supplier. This category is important in evaluating the environmental impact of an entity's electricity consumption, offering valuable information on the indirect emissions associated with the electricity usage.",
-  },
-};
+  // Get period label for display
+  const getPeriodLabel = (period: DashboardPeriod) => {
+    switch (period) {
+      case "month":
+        return "This Month";
+      case "quarter":
+        return "This Quarter";
+      case "year":
+        return "This Year";
+      default:
+        return "This Year";
+    }
+  };
 
-const scope3Categories = {
-  "Employee Commuting": {
-    description:
-      "Emissions from employees traveling to and from work in personal vehicles or public transportation.",
-  },
-};
+  // Format trend icon
+  const getTrendIcon = (direction?: string) => {
+    switch (direction) {
+      case "increase":
+        return <TrendingUp className="h-4 w-4 text-red-500" />;
+      case "decrease":
+        return <TrendingDown className="h-4 w-4 text-green-500" />;
+      default:
+        return <Minus className="h-4 w-4 text-gray-500" />;
+    }
+  };
 
-const categoryValues = {
-  "Stationary Combustion": 1000,
-  "Mobile Combustion": 1000,
-  "Refrigeration & AC": 1000,
-  "Purchased Electricity": 1000,
-  "Employee Commuting": 1000,
-};
+  const getTrendColor = (direction?: string) => {
+    switch (direction) {
+      case "increase":
+        return "text-red-600";
+      case "decrease":
+        return "text-green-600";
+      default:
+        return "text-gray-600";
+    }
+  };
 
-export default function Reports() {
-  const [activeScope1Tab, setActiveScope1Tab] = useState("Stationary Combustion");
+  // Export handlers
+  const handleExportPDF = async () => {
+    if (!dashboardData || !organization) {
+      toast({
+        title: "Error",
+        description: "No data available to generate report",
+        variant: "destructive",
+      });
+      return;
+    }
 
-  const chartData = [
-    { name: "Direct", value: 275, color: "#3b82f6" },
-    { name: "Indirect", value: 200, color: "#a855f7" },
-    { name: "Other Indirect", value: 187, color: "#06b6d4" },
-  ];
+    setIsGeneratingPDF(true);
+    try {
+      await generateEmissionsReportPDF(dashboardData, period, organization.name);
+      toast({
+        title: "Success",
+        description: "PDF report generated successfully",
+      });
+    } catch (error) {
+      console.error("PDF generation error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to generate PDF report",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
 
-  const colors = ["#3b82f6", "#a855f7", "#06b6d4", "#f59e0b"];
+  const handleExportCSV = async () => {
+    if (!dashboardData || !organization) {
+      toast({
+        title: "Error",
+        description: "No data available to export",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsGeneratingCSV(true);
+    try {
+      generateEmissionsCSV(dashboardData, period, organization.name);
+      toast({
+        title: "Success",
+        description: "CSV report exported successfully",
+      });
+    } catch (error) {
+      console.error("CSV export error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to export CSV report",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingCSV(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="p-6 w-full container mx-auto max-w-[100rem]">
+        <div className="animate-pulse space-y-6">
+          <div className="h-8 bg-gray-300 dark:bg-gray-700 rounded w-1/3"></div>
+          <div className="h-64 bg-gray-300 dark:bg-gray-700 rounded"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          Emissions Summary
-        </h1>
-      </div>
+    <div className="p-6 w-full container mx-auto max-w-[100rem]">
+      {/* Page Header */}
+      <div className="mb-6 flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <FileText className="h-8 w-8" />
+            Emissions Reports
+          </h1>
+          {organization && (
+            <p className="mt-2 text-gray-600 dark:text-gray-400">
+              {organization.name} - {getPeriodLabel(period)}
+            </p>
+          )}
+        </div>
 
-      {/* Title */}
-      <div className="px-6 py-2">
-        <h2 className="text-xl font-semibold text-gray-900 text-center">
-          ABC Company&apos;s total estimated greenhouse gas emissions is:
-        </h2>
-      </div>
+        <div className="flex items-center gap-3">
+          {/* Export Buttons */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportPDF}
+            disabled={isGeneratingPDF || isLoading}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            {isGeneratingPDF ? "Generating..." : "Export PDF"}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportCSV}
+            disabled={isGeneratingCSV || isLoading}
+          >
+            <FileSpreadsheet className="h-4 w-4 mr-2" />
+            {isGeneratingCSV ? "Exporting..." : "Export CSV"}
+          </Button>
 
-      {/* Total Emissions Banner */}
-      <div className="flex justify-center py-6">
-        <div className="bg-gray-200 rounded-lg px-6 py-4 border border-gray-400 flex items-center gap-4">
-          <span className="text-4xl font-bold text-gray-900">10,000</span>
-          <span className="text-sm text-gray-700">
-            Metric tons of carbon dioxide equivalent (tCO2e)
-          </span>
+          {/* Period Selector */}
+          <Tabs value={period} onValueChange={(value) => setPeriod(value as DashboardPeriod)}>
+            <TabsList>
+              <TabsTrigger value="month">This Month</TabsTrigger>
+              <TabsTrigger value="quarter">This Quarter</TabsTrigger>
+              <TabsTrigger value="year">This Year</TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
       </div>
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 px-6 py-4">
-        {/* Left: Pie Chart */}
-        <div className="lg:col-span-1">
-          <div className="bg-gray-50 rounded-lg border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Emission Summary (by scope)
-              </h3>
-              <button className="text-gray-400 hover:text-gray-600" title="More options">
-                <MoreVertical size={20} />
-              </button>
-            </div>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={chartData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={80}
-                  label
-                >
-                  {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Right: Categories and Line Chart */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Categories Box */}
-          <div className="bg-gray-50 rounded-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Emission Categories
-            </h3>
-            <div className="space-y-3">
-              {Object.entries(categoryValues).map(([category, value]) => (
-                <div
-                  key={category}
-                  className="flex items-center justify-between p-3"
-                >
-                  <span className="text-sm font-medium text-gray-700">
-                    {category}
-                  </span>
-                  <span className="text-sm font-bold text-gray-900">
-                    {value.toLocaleString()}{" "}
-                    <span className="text-gray-500 font-normal">(tCO2e)</span>
+      {/* Summary Banner */}
+      <Card className="mb-6 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950 border-2">
+        <CardContent className="pt-6">
+          <div className="text-center">
+            <p className="text-lg text-gray-700 dark:text-gray-300 mb-2">
+              {organization?.name}&apos;s total estimated greenhouse gas emissions for {getPeriodLabel(period).toLowerCase()}:
+            </p>
+            <div className="flex items-center justify-center gap-4">
+              <div>
+                <span className="text-5xl font-bold text-gray-900 dark:text-white">
+                  {dashboardData?.summary.totalCo2eYtd
+                    ? (dashboardData.summary.totalCo2eYtd / 1000).toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })
+                    : "0.00"}
+                </span>
+                <span className="text-xl text-gray-600 dark:text-gray-400 ml-2">
+                  tCO₂e
+                </span>
+              </div>
+              {dashboardData?.summary.trend && (
+                <div className="flex items-center gap-2 text-sm">
+                  {getTrendIcon(dashboardData.summary.trend.direction)}
+                  <span className={getTrendColor(dashboardData.summary.trend.direction)}>
+                    {dashboardData.summary.trend.percentage.toFixed(1)}%
+                    <br />
+                    vs {dashboardData.summary.trend.comparedTo}
                   </span>
                 </div>
-              ))}
+              )}
             </div>
           </div>
+        </CardContent>
+      </Card>
 
-          {/* Monthly Trend Chart */}
-          <div className="bg-gray-50 rounded-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Monthly Emissions Trend
-            </h3>
-            <ResponsiveContainer width="100%" height={280}>
-              <LineChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="month" stroke="#6b7280" fontSize={12} />
-                <YAxis stroke="#6b7280" fontSize={12} />
-                <Tooltip />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="scope1"
-                  stroke="#3b82f6"
-                  strokeWidth={2}
-                  dot={false}
-                  name="Direct"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="scope2"
-                  stroke="#a855f7"
-                  strokeWidth={2}
-                  dot={false}
-                  name="Indirect"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="scope3"
-                  stroke="#06b6d4"
-                  strokeWidth={2}
-                  dot={false}
-                  name="Other Indirect"
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
+              Scope 1 (Direct)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+              {dashboardData?.summary.totalScope1
+                ? (dashboardData.summary.totalScope1 / 1000).toFixed(2)
+                : "0.00"}{" "}
+              tCO₂e
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Stationary, Mobile, Refrigerants
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
+              Scope 2 (Indirect)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+              {dashboardData?.summary.totalScope2
+                ? (dashboardData.summary.totalScope2 / 1000).toFixed(2)
+                : "0.00"}{" "}
+              tCO₂e
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Purchased Electricity
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
+              Scope 3 (Other Indirect)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold text-cyan-600 dark:text-cyan-400">
+              {dashboardData?.summary.totalScope3
+                ? (dashboardData.summary.totalScope3 / 1000).toFixed(2)
+                : "0.00"}{" "}
+              tCO₂e
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Employee Commuting
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-400">
+              Per Employee
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              {dashboardData?.summary.emissionsPerEmployee
+                ? (dashboardData.summary.emissionsPerEmployee / 1000).toFixed(2)
+                : "0.00"}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              tCO₂e/employee
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Scope 1 Section */}
-      <div className="px-6 py-8 ">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">
-            Scope 1: Direct Emissions
-          </h2>
-          <button
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            aria-label="Export report"
-            title="Download report"
-          >
-            <MoreVertical className="w-5 h-5 text-gray-400" />
-          </button>
-        </div>
+      {/* Category Breakdown */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Emissions by Category</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Category</TableHead>
+                <TableHead>Scope</TableHead>
+                <TableHead className="text-right">Emissions (tCO₂e)</TableHead>
+                <TableHead className="text-right">Percentage</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {dashboardData?.breakdown && (
+                <>
+                  <TableRow>
+                    <TableCell className="font-medium">Stationary Combustion (Fuel)</TableCell>
+                    <TableCell>
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
+                        Scope 1
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {(dashboardData.breakdown.fuel / 1000).toFixed(2)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {dashboardData.summary.totalCo2eYtd > 0
+                        ? ((dashboardData.breakdown.fuel / dashboardData.summary.totalCo2eYtd) * 100).toFixed(1)
+                        : "0.0"}%
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="font-medium">Mobile Combustion (Vehicles)</TableCell>
+                    <TableCell>
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
+                        Scope 1
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {(dashboardData.breakdown.vehicles / 1000).toFixed(2)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {dashboardData.summary.totalCo2eYtd > 0
+                        ? ((dashboardData.breakdown.vehicles / dashboardData.summary.totalCo2eYtd) * 100).toFixed(1)
+                        : "0.0"}%
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="font-medium">Refrigerants & AC</TableCell>
+                    <TableCell>
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
+                        Scope 1
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {(dashboardData.breakdown.refrigerants / 1000).toFixed(2)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {dashboardData.summary.totalCo2eYtd > 0
+                        ? ((dashboardData.breakdown.refrigerants / dashboardData.summary.totalCo2eYtd) * 100).toFixed(1)
+                        : "0.0"}%
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="font-medium">Purchased Electricity</TableCell>
+                    <TableCell>
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300">
+                        Scope 2
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {(dashboardData.breakdown.electricity / 1000).toFixed(2)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {dashboardData.summary.totalCo2eYtd > 0
+                        ? ((dashboardData.breakdown.electricity / dashboardData.summary.totalCo2eYtd) * 100).toFixed(1)
+                        : "0.0"}%
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="font-medium">Employee Commuting</TableCell>
+                    <TableCell>
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-300">
+                        Scope 3
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {(dashboardData.breakdown.commuting / 1000).toFixed(2)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {dashboardData.summary.totalCo2eYtd > 0
+                        ? ((dashboardData.breakdown.commuting / dashboardData.summary.totalCo2eYtd) * 100).toFixed(1)
+                        : "0.0"}%
+                    </TableCell>
+                  </TableRow>
+                  <TableRow className="font-bold bg-gray-50 dark:bg-gray-800">
+                    <TableCell>Total Emissions</TableCell>
+                    <TableCell>All Scopes</TableCell>
+                    <TableCell className="text-right">
+                      {(dashboardData.summary.totalCo2eYtd / 1000).toFixed(2)}
+                    </TableCell>
+                    <TableCell className="text-right">100.0%</TableCell>
+                  </TableRow>
+                </>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
 
-        {/* Tabs */}
-        <div className="flex gap-3 mb-6 flex-wrap">
-          {Object.keys(scope1Categories).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveScope1Tab(tab)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                activeScope1Tab === tab
-                  ? "bg-gray-900 text-white"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
-
-        {/* Description */}
-        <p className="text-sm text-gray-700 leading-relaxed mb-6">
-          {scope1Categories[activeScope1Tab].description}
-        </p>
-
-        {/* Charts */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-gray-50 rounded-lg border border-gray-200 p-4">
-            <ResponsiveContainer width="100%" height={280}>
-              <PieChart>
-                <Pie
-                  data={scope1Categories[activeScope1Tab].data}
-                  dataKey="value"
-                  nameKey="source"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={80}
-                  label
-                >
-                  {scope1Categories[activeScope1Tab].data.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="bg-gray-50 rounded-lg border border-gray-200 p-4">
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={scope1Categories[activeScope1Tab].data}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="source" stroke="#6b7280" fontSize={12} />
-                <YAxis stroke="#6b7280" fontSize={12} />
-                <Tooltip />
-                <Bar dataKey="value" fill="#3b82f6" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </div>
-
-      {/* Scope 2 Section */}
-      <div className="px-6 py-8 ">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">
-            Scope 2: Indirect Emissions
-          </h2>
-          <button
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            aria-label="Export report"
-            title="Download report"
-          >
-            <MoreVertical className="w-5 h-5 text-gray-400" />
-          </button>
-        </div>
-
-        {/* Description */}
-        <p className="text-sm text-gray-700 leading-relaxed mb-6">
-          {scope2Categories["Purchased Electricity"].description}
-        </p>
-
-        {/* Charts */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-gray-50 rounded-lg border border-gray-200 p-4">
-            <ResponsiveContainer width="100%" height={280}>
-              <LineChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="month" stroke="#6b7280" fontSize={12} />
-                <YAxis stroke="#6b7280" fontSize={12} />
-                <Tooltip />
-                <Line
-                  type="monotone"
-                  dataKey="scope2"
-                  stroke="#a855f7"
-                  strokeWidth={2}
-                  dot={false}
-                  name="Purchased Electricity"
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="bg-gray-50 rounded-lg border border-gray-200 p-4">
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="month" stroke="#6b7280" fontSize={12} />
-                <YAxis stroke="#6b7280" fontSize={12} />
-                <Tooltip />
-                <Bar dataKey="scope2" fill="#a855f7" name="Purchased Electricity" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </div>
-
-      {/* Scope 3 Section */}
-      <div className="px-6 py-8">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">
-            Scope 3: Other Indirect Emissions
-          </h2>
-          <button
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            aria-label="Export report"
-            title="Download report"
-          >
-            <MoreVertical className="w-5 h-5 text-gray-400" />
-          </button>
-        </div>
-
-        {/* Categories as static list */}
-        <div className="space-y-4">
-          {Object.entries(scope3Categories).map(([category, data]) => (
-            <div key={category} className="pb-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                {category}
-              </h3>
-              <p className="text-sm text-gray-700 leading-relaxed mb-4">
-                {data.description}
+      {/* Top Emission Sources */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Top Emission Sources</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {!dashboardData?.topSources || dashboardData.topSources.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-gray-600 dark:text-gray-400">
+                No emission sources data available for this period
               </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-gray-50 rounded-lg border border-gray-200 h-48" />
-                <div className="bg-gray-50 rounded-lg border border-gray-200 h-48" />
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Rank</TableHead>
+                  <TableHead>Source Category</TableHead>
+                  <TableHead className="text-right">Emissions (tCO₂e)</TableHead>
+                  <TableHead className="text-right">Percentage of Total</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {dashboardData.topSources.map((source, index) => (
+                  <TableRow key={source.category}>
+                    <TableCell className="font-medium">#{index + 1}</TableCell>
+                    <TableCell>{source.category}</TableCell>
+                    <TableCell className="text-right">
+                      {(source.value / 1000).toFixed(2)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <div className="w-24 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                          <div
+                            className="bg-blue-600 h-2 rounded-full"
+                            style={{ width: `${source.percentage}%` }}
+                          />
+                        </div>
+                        <span>{source.percentage.toFixed(1)}%</span>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Analytics Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        {/* Monthly Trends Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Emissions Trend</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {!dashboardData?.trends.monthly || dashboardData.trends.monthly.length === 0 ? (
+              <div className="h-[300px] flex items-center justify-center text-gray-600 dark:text-gray-400">
+                No trend data available for this period
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={dashboardData.trends.monthly}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis
+                    dataKey="month"
+                    stroke="#6b7280"
+                    fontSize={12}
+                    tickFormatter={(value) => {
+                      const date = new Date(value + "-01");
+                      return date.toLocaleDateString("en-US", { month: "short" });
+                    }}
+                  />
+                  <YAxis stroke="#6b7280" fontSize={12} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "#fff",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "6px",
+                    }}
+                    formatter={(value: number) => [(value / 1000).toFixed(2) + " tCO₂e", ""]}
+                  />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="scope1"
+                    stroke="#3b82f6"
+                    strokeWidth={2}
+                    dot={false}
+                    name="Scope 1"
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="scope2"
+                    stroke="#a855f7"
+                    strokeWidth={2}
+                    dot={false}
+                    name="Scope 2"
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="scope3"
+                    stroke="#06b6d4"
+                    strokeWidth={2}
+                    dot={false}
+                    name="Scope 3"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Scope Comparison Pie Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Emissions by Scope</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {!dashboardData?.summary ? (
+              <div className="h-[300px] flex items-center justify-center text-gray-600 dark:text-gray-400">
+                No data available
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={[
+                      {
+                        name: "Scope 1",
+                        value: dashboardData.summary.totalScope1 / 1000,
+                        color: "#3b82f6",
+                      },
+                      {
+                        name: "Scope 2",
+                        value: dashboardData.summary.totalScope2 / 1000,
+                        color: "#a855f7",
+                      },
+                      {
+                        name: "Scope 3",
+                        value: dashboardData.summary.totalScope3 / 1000,
+                        color: "#06b6d4",
+                      },
+                    ]}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {[
+                      { color: "#3b82f6" },
+                      { color: "#a855f7" },
+                      { color: "#06b6d4" },
+                    ].map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "#fff",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "6px",
+                    }}
+                    formatter={(value: number) => [value.toFixed(2) + " tCO₂e", ""]}
+                  />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Category Breakdown Bar Chart */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>Emissions by Category</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {!dashboardData?.breakdown ? (
+              <div className="h-[300px] flex items-center justify-center text-gray-600 dark:text-gray-400">
+                No breakdown data available
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart
+                  data={[
+                    {
+                      category: "Fuel",
+                      value: dashboardData.breakdown.fuel / 1000,
+                      fill: "#3b82f6",
+                    },
+                    {
+                      category: "Vehicles",
+                      value: dashboardData.breakdown.vehicles / 1000,
+                      fill: "#3b82f6",
+                    },
+                    {
+                      category: "Refrigerants",
+                      value: dashboardData.breakdown.refrigerants / 1000,
+                      fill: "#3b82f6",
+                    },
+                    {
+                      category: "Electricity",
+                      value: dashboardData.breakdown.electricity / 1000,
+                      fill: "#a855f7",
+                    },
+                    {
+                      category: "Commuting",
+                      value: dashboardData.breakdown.commuting / 1000,
+                      fill: "#06b6d4",
+                    },
+                  ]}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="category" stroke="#6b7280" fontSize={12} />
+                  <YAxis stroke="#6b7280" fontSize={12} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "#fff",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "6px",
+                    }}
+                    formatter={(value: number) => [value.toFixed(2) + " tCO₂e", "Emissions"]}
+                  />
+                  <Bar dataKey="value" radius={[8, 8, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Organization Info */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Organization Information</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Organization</p>
+              <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                {dashboardData?.organization.name || "N/A"}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Occupancy Type</p>
+              <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                {dashboardData?.organization.occupancyType || "N/A"}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Facilities</p>
+              <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                {dashboardData?.organization.facilitiesCount || 0}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Total Employees</p>
+              <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                {dashboardData?.organization.totalEmployees?.toLocaleString() || 0}
+              </p>
+            </div>
+          </div>
+          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Total Records</p>
+                <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                  {dashboardData?.summary.totalRecords || 0}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Records with Calculations</p>
+                <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                  {dashboardData?.summary.recordsWithCalculations || 0}
+                </p>
               </div>
             </div>
-          ))}
-        </div>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

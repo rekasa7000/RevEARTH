@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/chart";
 import { ChartSpline } from "lucide-react";
 import { useOrganizationCheck } from "@/lib/hooks/use-organization-check";
-import { useDashboard } from "@/lib/api/queries/dashboard";
+import { useDashboard, DashboardPeriod } from "@/lib/api/queries/dashboard";
 
 export const description = "A multiple line chart";
 
@@ -31,11 +31,15 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export function AppLineChart() {
+interface AppLineChartProps {
+  period?: DashboardPeriod;
+}
+
+export function AppLineChart({ period = "year" }: AppLineChartProps) {
   const { organization } = useOrganizationCheck();
   const { data: dashboardData, isLoading } = useDashboard(
     organization?.id || "",
-    "year"
+    period
   );
 
   // Convert API data to chart format

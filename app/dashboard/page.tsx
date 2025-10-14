@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { RefreshCw } from "lucide-react";
 import { AppBarChart } from "@/components/AppBarChart";
 import { AppDonutChart } from "@/components/AppDonutChart";
 import { AppLineChart } from "@/components/AppLineChart";
@@ -11,19 +13,25 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useOrganizationCheck } from "@/lib/hooks/use-organization-check";
 import { useDashboard, DashboardPeriod } from "@/lib/api/queries/dashboard";
 
 export default function Dashboard() {
   const [period, setPeriod] = useState<DashboardPeriod>("year");
+  const queryClient = useQueryClient();
   const { organization, isLoading: orgLoading } = useOrganizationCheck();
-  const { data: dashboardData, isLoading: dashboardLoading } = useDashboard(
+  const { data: dashboardData, isLoading: dashboardLoading, isFetching } = useDashboard(
     organization?.id || "",
     period
   );
 
   const isLoading = orgLoading || dashboardLoading;
+
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+  };
 
   if (isLoading) {
     return (
@@ -43,15 +51,37 @@ export default function Dashboard() {
 
   return (
     <div className="p-6 w-full container mx-auto max-w-[100rem]">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          Emissions Dashboard
-        </h1>
-        {organization && (
-          <p className="mt-2 text-gray-600 dark:text-gray-400">
-            {organization.name}
-          </p>
-        )}
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            Emissions Dashboard
+          </h1>
+          {organization && (
+            <p className="mt-2 text-gray-600 dark:text-gray-400">
+              {organization.name}
+            </p>
+          )}
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={isFetching}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+
+          <Tabs value={period} onValueChange={(value) => setPeriod(value as DashboardPeriod)}>
+            <TabsList>
+              <TabsTrigger value="month">This Month</TabsTrigger>
+              <TabsTrigger value="quarter">This Quarter</TabsTrigger>
+              <TabsTrigger value="year">This Year</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
@@ -122,19 +152,19 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
         <div>
-          <AppPieChart />
+          <AppPieChart period={period} />
         </div>
 
         <div>
-          <AppLineChart />
+          <AppLineChart period={period} />
         </div>
 
         <div>
-          <AppBarChart />
+          <AppBarChart period={period} />
         </div>
 
         <div>
-          <AppDonutChart />
+          <AppDonutChart period={period} />
         </div>
       </div>
       {/* <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">

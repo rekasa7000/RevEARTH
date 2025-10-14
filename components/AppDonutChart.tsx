@@ -16,7 +16,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 import { useOrganizationCheck } from "@/lib/hooks/use-organization-check";
-import { useDashboard } from "@/lib/api/queries/dashboard";
+import { useDashboard, DashboardPeriod } from "@/lib/api/queries/dashboard";
 import { Target } from "lucide-react";
 
 export const description = "A donut chart showing top emission sources"
@@ -29,11 +29,15 @@ const CHART_COLORS = [
   "var(--chart-5)",
 ];
 
-export function AppDonutChart() {
+interface AppDonutChartProps {
+  period?: DashboardPeriod;
+}
+
+export function AppDonutChart({ period = "year" }: AppDonutChartProps) {
   const { organization } = useOrganizationCheck();
   const { data: dashboardData, isLoading } = useDashboard(
     organization?.id || "",
-    "year"
+    period
   );
 
   // Convert API data to chart format

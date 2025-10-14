@@ -23,7 +23,7 @@ import {
   ChartConfig,
 } from "@/components/ui/chart";
 import { useOrganizationCheck } from "@/lib/hooks/use-organization-check";
-import { useDashboard } from "@/lib/api/queries/dashboard";
+import { useDashboard, DashboardPeriod } from "@/lib/api/queries/dashboard";
 
 // Config required by ChartContainer
 const chartConfig: ChartConfig = {
@@ -32,11 +32,15 @@ const chartConfig: ChartConfig = {
   scope3: { label: "Scope 3", color: "#fbbf24" },
 };
 
-export function AppPieChart() {
+interface AppPieChartProps {
+  period?: DashboardPeriod;
+}
+
+export function AppPieChart({ period = "year" }: AppPieChartProps) {
   const { organization } = useOrganizationCheck();
   const { data: dashboardData, isLoading } = useDashboard(
     organization?.id || "",
-    "year"
+    period
   );
 
   // Convert API data to chart format
