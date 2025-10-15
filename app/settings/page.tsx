@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Settings, Building2, Shield, Check, X } from "lucide-react";
+import { PageErrorBoundary } from "@/components/error-boundary";
+import { SettingsSkeleton } from "@/components/skeletons";
 
 type OccupancyType = "residential" | "commercial" | "industrial" | "lgu" | "academic";
 
@@ -51,7 +53,7 @@ const SCOPE_CONFIGURATIONS: Record<
   academic: { scope1: false, scope2: true, scope3: true },
 };
 
-export default function SettingsPage() {
+function SettingsContent() {
   const { data: organization, isLoading } = useOrganization();
   const updateOrganization = useUpdateOrganization();
   const { toast } = useToast();
@@ -74,6 +76,15 @@ export default function SettingsPage() {
       });
     }
   }, [organization]);
+
+  // Keyboard shortcut handler for Ctrl/Cmd+S to save
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+      e.preventDefault();
+      const form = e.currentTarget.closest("form");
+      form?.requestSubmit();
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -150,14 +161,7 @@ export default function SettingsPage() {
       formData.occupancyType !== organization.occupancyType);
 
   if (isLoading) {
-    return (
-      <div className="p-6 w-full container mx-auto max-w-[100rem]">
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-gray-300 dark:bg-gray-700 rounded w-1/4"></div>
-          <div className="h-96 bg-gray-300 dark:bg-gray-700 rounded"></div>
-        </div>
-      </div>
-    );
+    return <SettingsSkeleton />;
   }
 
   if (!organization) {
@@ -203,7 +207,7 @@ export default function SettingsPage() {
 
         {/* Organization Settings Tab */}
         <TabsContent value="organization">
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} onKeyDown={handleKeyDown}>
             <Card>
               <CardHeader>
                 <CardTitle>Organization Information</CardTitle>
@@ -525,5 +529,13 @@ export default function SettingsPage() {
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+export default function SettingsPage() {
+  return (
+    <PageErrorBoundary>
+      <SettingsContent />
+    </PageErrorBoundary>
   );
 }

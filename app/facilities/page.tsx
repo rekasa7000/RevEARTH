@@ -9,6 +9,7 @@ import {
   useDeleteFacility,
   type Facility,
 } from "@/lib/api/queries/facilities";
+import { PageErrorBoundary } from "@/components/error-boundary";
 import {
   Table,
   TableBody,
@@ -47,8 +48,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Building2, Plus, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { TableSkeleton } from "@/components/skeletons";
+import { EmptyState } from "@/components/empty-state";
 
-export default function FacilitiesPage() {
+function FacilitiesContent() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingFacility, setEditingFacility] = useState<Facility | null>(null);
   const [deletingFacilityId, setDeletingFacilityId] = useState<string | null>(null);
@@ -101,6 +104,15 @@ export default function FacilitiesPage() {
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
     setTimeout(resetForm, 200); // Reset after animation
+  };
+
+  // Keyboard shortcut handler for Ctrl/Cmd+S to save
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+      e.preventDefault();
+      const form = e.currentTarget.closest("form");
+      form?.requestSubmit();
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -185,14 +197,7 @@ export default function FacilitiesPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="p-6 w-full container mx-auto max-w-[100rem]">
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-gray-300 dark:bg-gray-700 rounded w-1/4"></div>
-          <div className="h-64 bg-gray-300 dark:bg-gray-700 rounded"></div>
-        </div>
-      </div>
-    );
+    return <TableSkeleton />;
   }
 
   return (
@@ -224,15 +229,15 @@ export default function FacilitiesPage() {
         </CardHeader>
         <CardContent>
           {!facilities || facilities.length === 0 ? (
-            <div className="text-center py-12">
-              <Building2 className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                No facilities yet
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">
-                Get started by adding your first facility
-              </p>
-            </div>
+            <EmptyState
+              icon={Building2}
+              title="No facilities yet"
+              description="Get started by adding your first facility to track emissions data"
+              action={{
+                label: "Add Facility",
+                onClick: () => handleOpenDialog(),
+              }}
+            />
           ) : (
             <Table>
               <TableHeader>
@@ -316,7 +321,7 @@ export default function FacilitiesPage() {
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} onKeyDown={handleKeyDown}>
             <div className="space-y-4 py-4">
               {/* Facility Name */}
               <div className="space-y-2">
@@ -374,6 +379,9 @@ export default function FacilitiesPage() {
                   }
                   placeholder="e.g., 5000"
                 />
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  The total floor area of this facility in square meters
+                </p>
               </div>
 
               {/* Employee Count */}
@@ -389,6 +397,9 @@ export default function FacilitiesPage() {
                   }
                   placeholder="e.g., 100"
                 />
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Number of employees working at this facility
+                </p>
               </div>
             </div>
 
@@ -439,5 +450,13 @@ export default function FacilitiesPage() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+  );
+}
+
+export default function FacilitiesPage() {
+  return (
+    <PageErrorBoundary>
+      <FacilitiesContent />
+    </PageErrorBoundary>
   );
 }

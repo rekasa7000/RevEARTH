@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useOrganizationCheck } from "@/lib/hooks/use-organization-check";
 import { useDashboard, DashboardPeriod } from "@/lib/api/queries/dashboard";
+import { PageErrorBoundary } from "@/components/error-boundary";
 import {
   Card,
   CardContent,
@@ -23,6 +24,8 @@ import { FileText, Download, FileSpreadsheet, TrendingUp, TrendingDown, Minus } 
 import { generateEmissionsReportPDF } from "@/components/reports/report-generator";
 import { generateEmissionsCSV } from "@/components/reports/export-csv";
 import { useToast } from "@/hooks/use-toast";
+import { ReportsSkeleton } from "@/components/skeletons";
+import { EmptyStateInline } from "@/components/empty-state";
 import {
   LineChart,
   Line,
@@ -39,7 +42,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-export default function ReportsPage() {
+function ReportsContent() {
   const [period, setPeriod] = useState<DashboardPeriod>("year");
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [isGeneratingCSV, setIsGeneratingCSV] = useState(false);
@@ -149,14 +152,7 @@ export default function ReportsPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="p-6 w-full container mx-auto max-w-[100rem]">
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-gray-300 dark:bg-gray-700 rounded w-1/3"></div>
-          <div className="h-64 bg-gray-300 dark:bg-gray-700 rounded"></div>
-        </div>
-      </div>
-    );
+    return <ReportsSkeleton />;
   }
 
   return (
@@ -441,11 +437,9 @@ export default function ReportsPage() {
         </CardHeader>
         <CardContent>
           {!dashboardData?.topSources || dashboardData.topSources.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-gray-600 dark:text-gray-400">
-                No emission sources data available for this period
-              </p>
-            </div>
+            <EmptyStateInline
+              message="No emission sources data available for this period"
+            />
           ) : (
             <Table>
               <TableHeader>
@@ -492,8 +486,11 @@ export default function ReportsPage() {
           </CardHeader>
           <CardContent>
             {!dashboardData?.trends.monthly || dashboardData.trends.monthly.length === 0 ? (
-              <div className="h-[300px] flex items-center justify-center text-gray-600 dark:text-gray-400">
-                No trend data available for this period
+              <div className="h-[300px]">
+                <EmptyStateInline
+                  message="No trend data available for this period"
+                  className="h-full"
+                />
               </div>
             ) : (
               <ResponsiveContainer width="100%" height={300}>
@@ -555,8 +552,11 @@ export default function ReportsPage() {
           </CardHeader>
           <CardContent>
             {!dashboardData?.summary ? (
-              <div className="h-[300px] flex items-center justify-center text-gray-600 dark:text-gray-400">
-                No data available
+              <div className="h-[300px]">
+                <EmptyStateInline
+                  message="No data available"
+                  className="h-full"
+                />
               </div>
             ) : (
               <ResponsiveContainer width="100%" height={300}>
@@ -617,8 +617,11 @@ export default function ReportsPage() {
           </CardHeader>
           <CardContent>
             {!dashboardData?.breakdown ? (
-              <div className="h-[300px] flex items-center justify-center text-gray-600 dark:text-gray-400">
-                No breakdown data available
+              <div className="h-[300px]">
+                <EmptyStateInline
+                  message="No breakdown data available"
+                  className="h-full"
+                />
               </div>
             ) : (
               <ResponsiveContainer width="100%" height={300}>
@@ -721,5 +724,13 @@ export default function ReportsPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function ReportsPage() {
+  return (
+    <PageErrorBoundary>
+      <ReportsContent />
+    </PageErrorBoundary>
   );
 }

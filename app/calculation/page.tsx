@@ -1,5 +1,6 @@
 "use client";
 
+import { PageErrorBoundary } from "@/components/error-boundary";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -49,6 +50,9 @@ import { useCommutingData, useCreateCommutingData, useUpdateCommutingData, useDe
 import { useCalculation, useTriggerCalculation } from "@/lib/api/queries/calculations";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { CalculationSkeleton } from "@/components/skeletons";
+import { EmptyState, EmptyStateInline } from "@/components/empty-state";
+import { FileX, Plus } from "lucide-react";
 
 // Content configurations for all scopes
 const contentConfigs = {
@@ -118,7 +122,7 @@ const contentConfigs = {
   },
 };
 
-export default function Calculation() {
+function CalculationContent() {
   // Toast for notifications
   const { toast } = useToast();
 
@@ -222,6 +226,14 @@ export default function Calculation() {
     setFormData({});
     setFormErrors({});
     setIsModalOpen(true);
+  };
+
+  // Keyboard shortcut handler for modal
+  const handleModalKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      setIsModalOpen(false);
+    }
   };
 
   // Handle form field changes
@@ -902,13 +914,7 @@ export default function Calculation() {
 
   // Show loading state while organization is being fetched
   if (orgLoading) {
-    return (
-      <div className="p-6 w-full container mx-auto max-w-[100rem]">
-        <div className="flex justify-center items-center min-h-[400px]">
-          <div className="text-gray-600 dark:text-gray-400">Loading...</div>
-        </div>
-      </div>
-    );
+    return <CalculationSkeleton />;
   }
 
   // Show message if no emission records exist
@@ -936,13 +942,13 @@ export default function Calculation() {
               Select Reporting Period
             </label>
             {recordsLoading ? (
-              <div className="text-center text-gray-600 dark:text-gray-400">
-                Loading emission records...
-              </div>
+              <EmptyStateInline message="Loading emission records..." />
             ) : !hasEmissionRecords ? (
-              <div className="text-center text-gray-600 dark:text-gray-400">
-                No emission records found. Please create one first.
-              </div>
+              <EmptyState
+                icon={FileX}
+                title="No emission records found"
+                description="Create an emission record to start tracking and calculating your organization's greenhouse gas emissions"
+              />
             ) : (
               <Select
                 value={currentEmissionRecordId}
@@ -1126,8 +1132,8 @@ export default function Calculation() {
         )}
 
         {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col m-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" onClick={() => setIsModalOpen(false)}>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col m-4" onClick={(e) => e.stopPropagation()} onKeyDown={handleModalKeyDown} tabIndex={-1}>
               <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
@@ -1182,5 +1188,13 @@ export default function Calculation() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function Calculation() {
+  return (
+    <PageErrorBoundary>
+      <CalculationContent />
+    </PageErrorBoundary>
   );
 }
