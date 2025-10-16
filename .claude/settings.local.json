@@ -9,7 +9,8 @@
       "Bash(ls:*)",
       "Bash(test -f \"app/facilities/page.tsx\")",
       "Bash(tree:*)",
-      "Bash(npm run build)"
+      "Bash(npm run build)",
+      "Bash(npm run dev)"
     ],
     "deny": [],
     "ask": []

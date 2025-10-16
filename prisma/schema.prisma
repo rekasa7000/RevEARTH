@@ -178,6 +178,15 @@ enum FuelType {
   propane
   diesel
   gasoline
+  coal
+  wood
+  biomass
+  lpg
+  kerosene
+  fuel_oil
+  biodiesel
+  ethanol
+  other
 }
 
 // Vehicle Usage (Scope 1)

@@ -134,7 +134,8 @@ function CalculationContent() {
   // Fetch emission records for the organization
   const { data: emissionRecordsData, isLoading: recordsLoading } = useEmissionRecords(
     organization?.id || "",
-    { page: 1, limit: 50 }
+    1,
+    50
   );
 
   // Create emission record mutation
@@ -346,7 +347,7 @@ function CalculationContent() {
             emissionRecordId: currentEmissionRecordId,
             employeeCount: parseInt(formData.employeeCount) || 1,
             avgDistanceKm: parseFloat(formData.activityData),
-            transportMode: formData.transportMode as any,  // Type will be validated by backend
+            transportMode: formData.transportMode,
             daysPerWeek: formData.daysPerWeek ? parseInt(formData.daysPerWeek) : undefined,
             wfhDays: formData.wfhDays ? parseInt(formData.wfhDays) : undefined,
             surveyDate: today,
@@ -365,11 +366,12 @@ function CalculationContent() {
       setIsModalOpen(false);
       setFormData({});
       setFormErrors({});
-    } catch (error: any) {
+    } catch (error) {
       console.error("Failed to create record:", error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to create record. Please try again.";
       toast({
         title: "Error",
-        description: error?.message || "Failed to create record. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -385,11 +387,12 @@ function CalculationContent() {
         title: "Success",
         description: "Emissions calculated successfully",
       });
-    } catch (error: any) {
+    } catch (error) {
       console.error("Failed to calculate emissions:", error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to calculate emissions. Please try again.";
       toast({
         title: "Error",
-        description: error?.message || "Failed to calculate emissions. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -422,11 +425,12 @@ function CalculationContent() {
 
       setIsCreateRecordDialogOpen(false);
       setNewRecordData({ reportingPeriodStart: "", reportingPeriodEnd: "" });
-    } catch (error: any) {
+    } catch (error) {
       console.error("Failed to create emission record:", error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to create emission record. Please try again.";
       toast({
         title: "Error",
-        description: error?.message || "Failed to create emission record. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -436,7 +440,7 @@ function CalculationContent() {
   const isScopeApplicable = (scope: string): boolean => {
     if (!organization?.applicableScopes) return true; // Default to showing all if not set
 
-    const scopes = organization.applicableScopes as any;
+    const scopes = organization.applicableScopes as { scope1?: boolean; scope2?: boolean; scope3?: boolean };
 
     if (scope === "stationary" || scope === "mobile" || scope === "refrigeration") {
       return scopes.scope1 === true;
@@ -498,14 +502,28 @@ function CalculationContent() {
             </div>
             <div>
               <label htmlFor="fuelType" className={labelClass}>Fuel Type *</label>
-              <input
+              <select
                 id="fuelType"
-                type="text"
                 value={formData.fuelType || ""}
                 onChange={(e) => handleFieldChange("fuelType", e.target.value)}
-                placeholder="e.g., Wood, Coal"
                 className={getInputClass("fuelType")}
-              />
+              >
+                <option value="">Select fuel type</option>
+                <option value="natural_gas">Natural Gas</option>
+                <option value="heating_oil">Heating Oil</option>
+                <option value="propane">Propane</option>
+                <option value="diesel">Diesel</option>
+                <option value="gasoline">Gasoline</option>
+                <option value="coal">Coal</option>
+                <option value="wood">Wood</option>
+                <option value="biomass">Biomass</option>
+                <option value="lpg">LPG</option>
+                <option value="kerosene">Kerosene</option>
+                <option value="fuel_oil">Fuel Oil</option>
+                <option value="biodiesel">Biodiesel</option>
+                <option value="ethanol">Ethanol</option>
+                <option value="other">Other</option>
+              </select>
               {formErrors.fuelType && (
                 <p className={errorClass}>{formErrors.fuelType}</p>
               )}
@@ -609,15 +627,29 @@ function CalculationContent() {
               </select>
             </div>
             <div>
-              <label htmlFor="fuelType" className={labelClass}>Fuel Type</label>
-              <input
+              <label htmlFor="fuelType" className={labelClass}>Fuel Type *</label>
+              <select
                 id="fuelType"
-                type="text"
                 value={formData.fuelType || ""}
                 onChange={(e) => handleFieldChange("fuelType", e.target.value)}
-                placeholder="e.g., Gasoline"
                 className={inputClass}
-              />
+              >
+                <option value="">Select fuel type</option>
+                <option value="natural_gas">Natural Gas</option>
+                <option value="heating_oil">Heating Oil</option>
+                <option value="propane">Propane</option>
+                <option value="diesel">Diesel</option>
+                <option value="gasoline">Gasoline</option>
+                <option value="coal">Coal</option>
+                <option value="wood">Wood</option>
+                <option value="biomass">Biomass</option>
+                <option value="lpg">LPG</option>
+                <option value="kerosene">Kerosene</option>
+                <option value="fuel_oil">Fuel Oil</option>
+                <option value="biodiesel">Biodiesel</option>
+                <option value="ethanol">Ethanol</option>
+                <option value="other">Other</option>
+              </select>
             </div>
             <div>
               <label htmlFor="fuelConsumption" className={labelClass}>Fuel Consumed</label>

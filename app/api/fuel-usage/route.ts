@@ -27,7 +27,22 @@ export const POST = withAuth(async (request, { user }) => {
     }
 
     // Validate fuel type
-    const validFuelTypes = ["natural_gas", "heating_oil", "propane", "diesel", "gasoline"];
+    const validFuelTypes = [
+      "natural_gas",
+      "heating_oil",
+      "propane",
+      "diesel",
+      "gasoline",
+      "coal",
+      "wood",
+      "biomass",
+      "lpg",
+      "kerosene",
+      "fuel_oil",
+      "biodiesel",
+      "ethanol",
+      "other"
+    ];
     if (!validFuelTypes.includes(fuelType)) {
       return NextResponse.json(
         { error: "Invalid fuel type" },
