@@ -88,6 +88,30 @@ export function AppPieChart({ period = "year" }: AppPieChartProps) {
       </Card>
     );
   }
+
+  // Check if there's any data
+  const hasData = chartData.some(d => d.value > 0);
+
+  if (!hasData) {
+    return (
+      <Card className="flex flex-col">
+        <CardHeader className="items-center pb-0">
+          <CardTitle className="flex items-center gap-2">
+            <ChartPie className="h-5 w-5" /> Emission Breakdown by Scope
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[300px] flex items-center justify-center">
+            <div className="text-center text-gray-400">
+              <p>No data available</p>
+              <p className="text-sm mt-2">Add emission records to see the breakdown</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="flex flex-col">
       <CardHeader className="items-center pb-0">

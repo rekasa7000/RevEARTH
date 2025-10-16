@@ -2,7 +2,7 @@ import { AppSidebar } from "@/components/sidebar";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { ProtectedRoute } from "@/components/auth/protected-route";
 
-export default function ProfileLayout ({ children }: { children: React.ReactNode }){
+export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
   return (
     <ProtectedRoute>
       <SidebarProvider>
@@ -12,5 +12,5 @@ export default function ProfileLayout ({ children }: { children: React.ReactNode
         </SidebarInset>
       </SidebarProvider>
     </ProtectedRoute>
-  )
+  );
 }

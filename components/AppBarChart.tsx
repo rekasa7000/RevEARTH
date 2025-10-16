@@ -66,6 +66,30 @@ export function AppBarChart({ period = "year" }: AppBarChartProps) {
       </Card>
     );
   }
+
+  // Check if there's any data
+  const hasData = chartData.length > 0;
+
+  if (!hasData) {
+    return (
+      <Card className="flex flex-col">
+        <CardHeader className="items-center pb-0">
+          <CardTitle className="flex items-center gap-2">
+            <BarChart4 className="h-5 w-5" /> Emissions by Category
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-50 flex items-center justify-center">
+            <div className="text-center text-gray-400">
+              <p>No data available</p>
+              <p className="text-sm mt-2">Add emission records to see category breakdown</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="flex flex-col">
       <CardHeader className="items-center pb-0">

@@ -15,44 +15,39 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { DataTable } from "./data-table";
+import type { ColumnDef } from "@tanstack/react-table";
 import {
   getColumnsForScope,
-  getSampleDataForScope,
   EmissionData,
-  Scope1StationaryData,
-  Scope1MobileData,
-  Scope1RefrigerationData,
-  Scope2Data,
-  Scope3Data,
 } from "./columns";
 import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { X } from "lucide-react";
+import { X, Plus } from "lucide-react";
 import { useOrganizationCheck } from "@/lib/hooks/use-organization-check";
 import {
-  fuelUsageSchema,
-  vehicleUsageSchema,
-  electricityUsageSchema,
-  commutingDataSchema,
   getSchemaForScope,
-  type FuelUsageFormData,
-  type VehicleUsageFormData,
-  type ElectricityUsageFormData,
-  type CommutingDataFormData,
 } from "@/lib/validations/emission-forms";
-import { useEmissionRecords } from "@/lib/api/queries/emission-records";
-import { useFuelUsage, useCreateFuelUsage, useUpdateFuelUsage, useDeleteFuelUsage } from "@/lib/api/queries/fuel-usage";
-import { useVehicleUsage, useCreateVehicleUsage, useUpdateVehicleUsage, useDeleteVehicleUsage } from "@/lib/api/queries/vehicle-usage";
-import { useElectricityUsage, useCreateElectricityUsage, useUpdateElectricityUsage, useDeleteElectricityUsage } from "@/lib/api/queries/electricity-usage";
-import { useCommutingData, useCreateCommutingData, useUpdateCommutingData, useDeleteCommutingData } from "@/lib/api/queries/commuting-data";
+import { useEmissionRecords, useCreateEmissionRecord } from "@/lib/api/queries/emission-records";
+import { useFuelUsage, useCreateFuelUsage } from "@/lib/api/queries/fuel-usage";
+import { useVehicleUsage, useCreateVehicleUsage } from "@/lib/api/queries/vehicle-usage";
+import { useElectricityUsage, useCreateElectricityUsage } from "@/lib/api/queries/electricity-usage";
+import { useCommutingData, useCreateCommutingData } from "@/lib/api/queries/commuting-data";
 import { useCalculation, useTriggerCalculation } from "@/lib/api/queries/calculations";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { CalculationSkeleton } from "@/components/skeletons";
 import { EmptyState, EmptyStateInline } from "@/components/empty-state";
-import { FileX, Plus } from "lucide-react";
+import { FileX } from "lucide-react";
 
 // Content configurations for all scopes
 const contentConfigs = {
@@ -130,12 +125,20 @@ function CalculationContent() {
   const { organization, isLoading: orgLoading } = useOrganizationCheck();
   const [currentEmissionRecordId, setCurrentEmissionRecordId] = useState<string>("");
   const [currentScope, setCurrentScope] = useState<string>("stationary");
+  const [isCreateRecordDialogOpen, setIsCreateRecordDialogOpen] = useState(false);
+  const [newRecordData, setNewRecordData] = useState({
+    reportingPeriodStart: "",
+    reportingPeriodEnd: "",
+  });
 
   // Fetch emission records for the organization
   const { data: emissionRecordsData, isLoading: recordsLoading } = useEmissionRecords(
     organization?.id || "",
     { page: 1, limit: 50 }
   );
+
+  // Create emission record mutation
+  const createEmissionRecord = useCreateEmissionRecord();
 
   // Fetch data based on current scope and emission record
   const { data: fuelData, isLoading: fuelLoading } = useFuelUsage(currentEmissionRecordId);
@@ -149,20 +152,8 @@ function CalculationContent() {
   const createElectricityUsage = useCreateElectricityUsage();
   const createCommutingData = useCreateCommutingData();
 
-  // Mutation hooks for updating records
-  const updateFuelUsage = useUpdateFuelUsage();
-  const updateVehicleUsage = useUpdateVehicleUsage();
-  const updateElectricityUsage = useUpdateElectricityUsage();
-  const updateCommutingData = useUpdateCommutingData();
-
-  // Mutation hooks for deleting records
-  const deleteFuelUsage = useDeleteFuelUsage();
-  const deleteVehicleUsage = useDeleteVehicleUsage();
-  const deleteElectricityUsage = useDeleteElectricityUsage();
-  const deleteCommutingData = useDeleteCommutingData();
-
   // Calculation hooks
-  const { data: calculation, isLoading: calculationLoading } = useCalculation(currentEmissionRecordId);
+  const { data: calculation } = useCalculation(currentEmissionRecordId);
   const triggerCalculation = useTriggerCalculation();
 
   // Select first emission record by default
@@ -175,10 +166,6 @@ function CalculationContent() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<{ id: string; emissionRecordId: string } | null>(null);
 
   // Get data and loading state based on current scope
   const getCurrentData = (): EmissionData[] => {
@@ -258,10 +245,11 @@ function CalculationContent() {
       schema.parse(formData);
       setFormErrors({});
       return true;
-    } catch (error: any) {
+    } catch (error) {
       const errors: Record<string, string> = {};
-      if (error.errors) {
-        error.errors.forEach((err: any) => {
+      if (error && typeof error === 'object' && 'errors' in error) {
+        const zodError = error as { errors: Array<{ path: string[]; message: string }> };
+        zodError.errors.forEach((err) => {
           if (err.path && err.path.length > 0) {
             errors[err.path[0]] = err.message;
           }
@@ -295,7 +283,7 @@ function CalculationContent() {
           // Scope 1 - Stationary Combustion (Fuel Usage)
           await createFuelUsage.mutateAsync({
             emissionRecordId: currentEmissionRecordId,
-            fuelType: formData.fuelType as any,  // Type will be validated by backend
+            fuelType: formData.fuelType,
             quantity: parseFloat(formData.fuelConsumption) || 0,
             unit: formData.unit || "L",
             entryDate: today,
@@ -313,8 +301,8 @@ function CalculationContent() {
           // Scope 1 - Mobile Combustion (Vehicle Usage)
           await createVehicleUsage.mutateAsync({
             emissionRecordId: currentEmissionRecordId,
-            vehicleType: formData.vehicleType as any,  // Type will be validated by backend
-            fuelType: formData.fuelType as any,
+            vehicleType: formData.vehicleType,
+            fuelType: formData.fuelType,
             fuelConsumed: parseFloat(formData.fuelConsumption),
             mileage: formData.mileage ? parseFloat(formData.mileage) : undefined,
             unit: formData.unit || "L",
@@ -405,6 +393,62 @@ function CalculationContent() {
         variant: "destructive",
       });
     }
+  };
+
+  // Handle creating a new emission record
+  const handleCreateEmissionRecord = async () => {
+    if (!organization?.id) return;
+    if (!newRecordData.reportingPeriodStart || !newRecordData.reportingPeriodEnd) {
+      toast({
+        title: "Validation Error",
+        description: "Please provide both start and end dates",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await createEmissionRecord.mutateAsync({
+        organizationId: organization.id,
+        reportingPeriodStart: new Date(newRecordData.reportingPeriodStart).toISOString(),
+        reportingPeriodEnd: new Date(newRecordData.reportingPeriodEnd).toISOString(),
+        status: "draft",
+      });
+
+      toast({
+        title: "Success",
+        description: "Emission record created successfully",
+      });
+
+      setIsCreateRecordDialogOpen(false);
+      setNewRecordData({ reportingPeriodStart: "", reportingPeriodEnd: "" });
+    } catch (error: any) {
+      console.error("Failed to create emission record:", error);
+      toast({
+        title: "Error",
+        description: error?.message || "Failed to create emission record. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Check if a scope is applicable for the organization
+  const isScopeApplicable = (scope: string): boolean => {
+    if (!organization?.applicableScopes) return true; // Default to showing all if not set
+
+    const scopes = organization.applicableScopes as any;
+
+    if (scope === "stationary" || scope === "mobile" || scope === "refrigeration") {
+      return scopes.scope1 === true;
+    }
+    if (scope === "scope2") {
+      return scopes.scope2 === true;
+    }
+    if (scope === "scope3") {
+      return scopes.scope3 === true;
+    }
+
+    return true;
   };
 
   // Render form fields based on current scope
@@ -922,21 +966,19 @@ function CalculationContent() {
 
   return (
     <div className="p-6 w-full container mx-auto max-w-[100rem]">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+      {/* Page Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
           Data Calculation
         </h1>
+        <p className="text-lg text-[#A5C046] font-semibold">
+          Energy Auditing Tool
+        </p>
       </div>
 
-      <div>
+      {/* Emission Record Selector */}
+      <div className="mb-8">
         <div className="flex justify-center">
-          <h1 className="text-xl font-bold text-[#A4C246]">
-            Energy Auditing Tool
-          </h1>
-        </div>
-
-        {/* Emission Record Selector */}
-        <div className="flex justify-center mt-6">
           <div className="w-full max-w-md">
             <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
               Select Reporting Period
@@ -948,6 +990,10 @@ function CalculationContent() {
                 icon={FileX}
                 title="No emission records found"
                 description="Create an emission record to start tracking and calculating your organization's greenhouse gas emissions"
+                action={{
+                  label: "Create Emission Record",
+                  onClick: () => setIsCreateRecordDialogOpen(true),
+                }}
               />
             ) : (
               <Select
@@ -969,224 +1015,287 @@ function CalculationContent() {
             )}
           </div>
         </div>
+      </div>
 
-        <div className="flex justify-center mt-6 gap-3.5">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+      {/* Scope Selection Tabs */}
+      {hasEmissionRecords && (
+        <div className="mb-8">
+          <div className="flex justify-center gap-3.5">
+            {isScopeApplicable("stationary") && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant={
+                      ["stationary", "mobile", "refrigeration"].includes(
+                        currentScope || ""
+                      )
+                        ? "default"
+                        : "outline"
+                    }
+                  >
+                    Scope 1
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="min-w-[220px]">
+                  <DropdownMenuItem
+                    onClick={() => handleScopeSelection("stationary")}
+                  >
+                    Stationary Combustion
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleScopeSelection("mobile")}>
+                    Mobile Combustion
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => handleScopeSelection("refrigeration")}
+                  >
+                    Refrigeration & Air Conditioning
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+
+            {isScopeApplicable("scope2") && (
               <Button
-                variant={
-                  ["stationary", "mobile", "refrigeration"].includes(
-                    currentScope || ""
-                  )
-                    ? "default"
-                    : "outline"
-                }
+                variant={currentScope === "scope2" ? "default" : "outline"}
+                onClick={() => handleScopeSelection("scope2")}
               >
-                Scope 1
+                Scope 2
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="min-w-[220px]">
-              <DropdownMenuItem
-                onClick={() => handleScopeSelection("stationary")}
+            )}
+
+            {isScopeApplicable("scope3") && (
+              <Button
+                variant={currentScope === "scope3" ? "default" : "outline"}
+                onClick={() => handleScopeSelection("scope3")}
               >
-                Stationary Combustion
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleScopeSelection("mobile")}>
-                Mobile Combustion
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => handleScopeSelection("refrigeration")}
-              >
-                Refrigeration & Air Conditioning
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <Button
-            variant={currentScope === "scope2" ? "default" : "outline"}
-            onClick={() => handleScopeSelection("scope2")}
-          >
-            Scope 2
-          </Button>
-
-          <Button
-            variant={currentScope === "scope3" ? "default" : "outline"}
-            onClick={() => handleScopeSelection("scope3")}
-          >
-            Scope 3
-          </Button>
-        </div>
-
-        {currentScope && (
-          <div className="mt-8 p-4">
-            <div>
-              <h1 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-white">
-                {contentConfigs[currentScope as keyof typeof contentConfigs].title}
-              </h1>
-              <div>
-                <h2 className="text-lg font-medium mb-4 text-gray-700 dark:text-gray-300">
-                  {contentConfigs[currentScope as keyof typeof contentConfigs].subtitle}
-                </h2>
-                <div className="space-y-3">
-                  {contentConfigs[currentScope as keyof typeof contentConfigs].instructions.map(
-                    (instruction, index) => (
-                      <p
-                        key={index}
-                        className="text-gray-600 dark:text-gray-400 leading-relaxed"
-                      >
-                        {instruction}
-                      </p>
-                    )
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {currentScope && currentEmissionRecordId && (
-          <div className="mt-6 px-4">
-            {isCurrentLoading() ? (
-              <div className="flex justify-center py-8">
-                <div className="text-gray-600 dark:text-gray-400">
-                  Loading data...
-                </div>
-              </div>
-            ) : (
-              <DataTable
-                columns={getColumnsForScope(currentScope) as ColumnDef<EmissionData>[]}
-                data={getCurrentData()}
-                searchPlaceholder={`Search ${currentScope} data...`}
-              />
+                Scope 3
+              </Button>
             )}
           </div>
-        )}
+        </div>
+      )}
 
-        {currentScope && currentEmissionRecordId && (
-          <div className="mt-6 px-4 flex gap-3">
-            <Button onClick={handleAddRecord} disabled={isCurrentLoading()}>
-              Add Record
+      {/* Scope Instructions */}
+      {hasEmissionRecords && currentScope && (
+        <div className="mb-8">
+          <h2 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-white">
+            {contentConfigs[currentScope as keyof typeof contentConfigs].title}
+          </h2>
+          <p className="text-lg font-medium mb-4 text-gray-700 dark:text-gray-300">
+            {contentConfigs[currentScope as keyof typeof contentConfigs].subtitle}
+          </p>
+          <div className="space-y-3">
+            {contentConfigs[currentScope as keyof typeof contentConfigs].instructions.map(
+              (instruction, index) => (
+                <p
+                  key={index}
+                  className="text-gray-600 dark:text-gray-400 leading-relaxed"
+                >
+                  {instruction}
+                </p>
+              )
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Data Table */}
+      {hasEmissionRecords && currentScope && currentEmissionRecordId && (
+        <div className="mb-8">
+          {isCurrentLoading() ? (
+            <div className="flex justify-center py-8">
+              <div className="text-gray-600 dark:text-gray-400">
+                Loading data...
+              </div>
+            </div>
+          ) : (
+            <DataTable
+              columns={getColumnsForScope(currentScope) as ColumnDef<EmissionData>[]}
+              data={getCurrentData()}
+              searchPlaceholder={`Search ${currentScope} data...`}
+            />
+          )}
+        </div>
+      )}
+
+      {/* Action Buttons */}
+      {hasEmissionRecords && currentScope && currentEmissionRecordId && (
+        <div className="mb-8 flex gap-3">
+          <Button onClick={handleAddRecord} disabled={isCurrentLoading()}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Record
+          </Button>
+          <Button
+            onClick={handleCalculate}
+            disabled={isCurrentLoading() || triggerCalculation.isPending}
+            variant="secondary"
+          >
+            {triggerCalculation.isPending ? "Calculating..." : "Calculate Emissions"}
+          </Button>
+        </div>
+      )}
+
+      {/* Calculation Results Display */}
+      {calculation && currentEmissionRecordId && (
+        <div className="mb-8">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border border-gray-200 dark:border-gray-700">
+            <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
+              Calculation Results
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+              <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total CO2e</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {calculation.totalCo2e?.toLocaleString() || "0"} kg
+                </p>
+              </div>
+
+              <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Scope 1</p>
+                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                  {calculation.totalScope1Co2e?.toLocaleString() || "0"} kg
+                </p>
+              </div>
+
+              <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Scope 2</p>
+                <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                  {calculation.totalScope2Co2e?.toLocaleString() || "0"} kg
+                </p>
+              </div>
+
+              <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Scope 3</p>
+                <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                  {calculation.totalScope3Co2e?.toLocaleString() || "0"} kg
+                </p>
+              </div>
+            </div>
+
+            {calculation.emissionsPerEmployee && (
+              <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 mb-6">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Emissions Per Employee</p>
+                <p className="text-xl font-bold text-gray-900 dark:text-white">
+                  {calculation.emissionsPerEmployee.toLocaleString()} kg CO2e
+                </p>
+              </div>
+            )}
+
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              Last calculated: {format(new Date(calculation.calculatedAt), "PPpp")}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Record Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" onClick={() => setIsModalOpen(false)}>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col m-4" onClick={(e) => e.stopPropagation()} onKeyDown={handleModalKeyDown} tabIndex={-1}>
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  Add New Record
+                </h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  {currentScope && contentConfigs[currentScope as keyof typeof contentConfigs].title}
+                </p>
+              </div>
+              <Button
+                onClick={() => setIsModalOpen(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+              >
+                <X className="h-6 w-6" />
+              </Button>
+            </div>
+            <div className="p-6 overflow-y-auto flex-1">
+              {renderFormFields()}
+            </div>
+            <div className="flex justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700">
+              <Button
+                variant="outline"
+                onClick={() => setIsModalOpen(false)}
+                disabled={
+                  createFuelUsage.isPending ||
+                  createVehicleUsage.isPending ||
+                  createElectricityUsage.isPending ||
+                  createCommutingData.isPending
+                }
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSubmit}
+                disabled={
+                  createFuelUsage.isPending ||
+                  createVehicleUsage.isPending ||
+                  createElectricityUsage.isPending ||
+                  createCommutingData.isPending
+                }
+              >
+                {(createFuelUsage.isPending ||
+                  createVehicleUsage.isPending ||
+                  createElectricityUsage.isPending ||
+                  createCommutingData.isPending)
+                  ? "Creating..."
+                  : "Add Record"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Emission Record Dialog */}
+      <Dialog open={isCreateRecordDialogOpen} onOpenChange={setIsCreateRecordDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Create Emission Record</DialogTitle>
+            <DialogDescription>
+              Create a new reporting period to track emissions data.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="startDate">Reporting Period Start *</Label>
+              <Input
+                id="startDate"
+                type="date"
+                value={newRecordData.reportingPeriodStart}
+                onChange={(e) =>
+                  setNewRecordData({ ...newRecordData, reportingPeriodStart: e.target.value })
+                }
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="endDate">Reporting Period End *</Label>
+              <Input
+                id="endDate"
+                type="date"
+                value={newRecordData.reportingPeriodEnd}
+                onChange={(e) =>
+                  setNewRecordData({ ...newRecordData, reportingPeriodEnd: e.target.value })
+                }
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsCreateRecordDialogOpen(false)}
+              disabled={createEmissionRecord.isPending}
+            >
+              Cancel
             </Button>
             <Button
-              onClick={handleCalculate}
-              disabled={isCurrentLoading() || triggerCalculation.isPending}
-              variant="secondary"
+              onClick={handleCreateEmissionRecord}
+              disabled={createEmissionRecord.isPending}
             >
-              {triggerCalculation.isPending ? "Calculating..." : "Calculate Emissions"}
+              {createEmissionRecord.isPending ? "Creating..." : "Create Record"}
             </Button>
-          </div>
-        )}
-
-        {/* Calculation Results Display */}
-        {calculation && currentEmissionRecordId && (
-          <div className="mt-8 px-4">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border border-gray-200 dark:border-gray-700">
-              <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
-                Calculation Results
-              </h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-                <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total CO2e</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {calculation.totalCo2e?.toLocaleString() || "0"} kg
-                  </p>
-                </div>
-
-                <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Scope 1</p>
-                  <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                    {calculation.totalScope1Co2e?.toLocaleString() || "0"} kg
-                  </p>
-                </div>
-
-                <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Scope 2</p>
-                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                    {calculation.totalScope2Co2e?.toLocaleString() || "0"} kg
-                  </p>
-                </div>
-
-                <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Scope 3</p>
-                  <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                    {calculation.totalScope3Co2e?.toLocaleString() || "0"} kg
-                  </p>
-                </div>
-              </div>
-
-              {calculation.emissionsPerEmployee && (
-                <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 mb-6">
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Emissions Per Employee</p>
-                  <p className="text-xl font-bold text-gray-900 dark:text-white">
-                    {calculation.emissionsPerEmployee.toLocaleString()} kg CO2e
-                  </p>
-                </div>
-              )}
-
-              <div className="text-sm text-gray-500 dark:text-gray-400">
-                Last calculated: {format(new Date(calculation.calculatedAt), "PPpp")}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" onClick={() => setIsModalOpen(false)}>
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col m-4" onClick={(e) => e.stopPropagation()} onKeyDown={handleModalKeyDown} tabIndex={-1}>
-              <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                    Add New Record
-                  </h2>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                    {currentScope && contentConfigs[currentScope as keyof typeof contentConfigs].title}
-                  </p>
-                </div>
-                <Button
-                  onClick={() => setIsModalOpen(false)}
-                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-                >
-                  <X className="h-6 w-6" />
-                </Button>
-              </div>
-              <div className="p-6 overflow-y-auto flex-1">
-                {renderFormFields()}
-              </div>
-              <div className="flex justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsModalOpen(false)}
-                  disabled={
-                    createFuelUsage.isPending ||
-                    createVehicleUsage.isPending ||
-                    createElectricityUsage.isPending ||
-                    createCommutingData.isPending
-                  }
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleSubmit}
-                  disabled={
-                    createFuelUsage.isPending ||
-                    createVehicleUsage.isPending ||
-                    createElectricityUsage.isPending ||
-                    createCommutingData.isPending
-                  }
-                >
-                  {(createFuelUsage.isPending ||
-                    createVehicleUsage.isPending ||
-                    createElectricityUsage.isPending ||
-                    createCommutingData.isPending)
-                    ? "Creating..."
-                    : "Add Record"}
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -5,7 +5,11 @@
       "Bash(npm install:*)",
       "Bash(npx shadcn@latest add tabs)",
       "Bash(npx shadcn@latest add:*)",
-      "Bash(printf \"n\\n\")"
+      "Bash(printf \"n\\n\")",
+      "Bash(ls:*)",
+      "Bash(test -f \"app/facilities/page.tsx\")",
+      "Bash(tree:*)",
+      "Bash(npm run build)"
     ],
     "deny": [],
     "ask": []

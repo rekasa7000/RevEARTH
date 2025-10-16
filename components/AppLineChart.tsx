@@ -78,6 +78,30 @@ export function AppLineChart({ period = "year" }: AppLineChartProps) {
       </Card>
     );
   }
+
+  // Check if there's any data
+  const hasData = chartData.length > 0;
+
+  if (!hasData) {
+    return (
+      <Card className="flex flex-col">
+        <CardHeader className="flex flex-row items-center justify-between pb-0">
+          <CardTitle className="flex items-center gap-2">
+            <ChartSpline className="h-5 w-5" /> Monthly Emissions Trend
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-4">
+          <div className="h-72 flex items-center justify-center">
+            <div className="text-center text-gray-400">
+              <p>No data available</p>
+              <p className="text-sm mt-2">Add emission records to see trends</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between pb-0">
