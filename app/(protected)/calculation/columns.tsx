@@ -4,7 +4,7 @@ import { ColumnDef } from "@tanstack/react-table";
 
 // Base data types for different scopes
 export type Scope1StationaryData = {
-  id: number;
+  id: string | number;
   sourceDescription: string;
   fuelState: "Solid" | "Liquid" | "Gas";
   fuelType: string;
@@ -17,7 +17,7 @@ export type Scope1StationaryData = {
 }
 
 export type Scope1MobileData = {
-  id: number;
+  id: string | number;
   vehicleDescription: string;
   fuelState: "Solid" | "Liquid" | "Gas";
   fuelType: string;
@@ -30,7 +30,7 @@ export type Scope1MobileData = {
 }
 
 export type Scope1RefrigerationData = {
-  id: number;
+  id: string | number;
   equipmentDescription: string;
   refrigerantType: string;
   equipmentCapacity: number;
@@ -41,7 +41,7 @@ export type Scope1RefrigerationData = {
 }
 
 export type Scope2Data = {
-  id: number;
+  id: string | number;
   energySourceDescription: string;
   energyType: "Electricity" | "Steam" | "Heating" | "Cooling";
   energyConsumption: number;
@@ -53,7 +53,7 @@ export type Scope2Data = {
 }
 
 export type Scope3Data = {
-  id: number;
+  id: string | number;
   activityDescription: string;
   activityCategory: string;
   activityData: number;

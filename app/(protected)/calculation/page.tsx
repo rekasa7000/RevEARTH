@@ -172,15 +172,61 @@ function CalculationContent() {
   const getCurrentData = (): EmissionData[] => {
     switch (currentScope) {
       case "stationary":
-        return fuelData || [];
+        // Map FuelUsage to Scope1StationaryData
+        return (fuelData || []).map((fuel) => ({
+          id: fuel.id,
+          sourceDescription: (fuel.metadata as Record<string, unknown>)?.sourceDescription as string || "N/A",
+          fuelState: ((fuel.metadata as Record<string, unknown>)?.fuelState as "Solid" | "Liquid" | "Gas") || "Liquid",
+          fuelType: fuel.fuelType,
+          fuelConsumption: fuel.quantity,
+          unit: fuel.unit,
+          co2Emissions: fuel.co2eCalculated || 0,
+          ch4Emissions: 0, // Not tracked separately in current backend
+          n2oEmissions: 0, // Not tracked separately in current backend
+          totalEmissions: fuel.co2eCalculated || 0,
+        })) as EmissionData[];
       case "mobile":
-        return vehicleData || [];
+        // Map VehicleUsage to Scope1MobileData
+        return (vehicleData || []).map((vehicle) => ({
+          id: vehicle.id,
+          vehicleDescription: vehicle.vehicleId || "N/A",
+          fuelState: "Liquid", // Default, not tracked in backend
+          fuelType: vehicle.fuelType,
+          fuelConsumption: vehicle.fuelConsumed || 0,
+          unit: vehicle.unit,
+          co2Emissions: vehicle.co2eCalculated || 0,
+          ch4Emissions: 0, // Not tracked separately in current backend
+          n2oEmissions: 0, // Not tracked separately in current backend
+          totalEmissions: vehicle.co2eCalculated || 0,
+        })) as EmissionData[];
       case "refrigeration":
         return []; // Refrigerant usage not implemented yet
       case "scope2":
-        return electricityData || [];
+        // Map ElectricityUsage to Scope2Data
+        return (electricityData || []).map((electricity) => ({
+          id: electricity.id,
+          energySourceDescription: electricity.facility?.name || electricity.meterNumber || "N/A",
+          energyType: "Electricity" as const,
+          energyConsumption: electricity.kwhConsumption,
+          unit: "kWh",
+          gridFactor: 0, // Not tracked in current backend
+          renewableCertificates: "N/A",
+          co2Emissions: electricity.co2eCalculated || 0,
+          totalEmissions: electricity.co2eCalculated || 0,
+        })) as EmissionData[];
       case "scope3":
-        return commutingData || [];
+        // Map CommutingData to Scope3Data
+        return (commutingData || []).map((commuting) => ({
+          id: commuting.id,
+          activityDescription: `${commuting.transportMode} commuting (${commuting.employeeCount} employees)`,
+          activityCategory: "Employee Commuting",
+          activityData: commuting.avgDistanceKm || 0,
+          unit: "km",
+          emissionFactor: 0, // Not exposed directly
+          dataQuality: "Medium" as const,
+          co2Emissions: commuting.co2eCalculated || 0,
+          totalEmissions: commuting.co2eCalculated || 0,
+        })) as EmissionData[];
       default:
         return [];
     }
