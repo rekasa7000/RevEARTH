@@ -321,3 +321,38 @@ model EmissionCalculation {
 
   @@map("emission_calculations")
 }
+
+// Error Logging model for custom error monitoring
+model ErrorLog {
+  id            String    @id @default(cuid())
+  message       String
+  stack         String?   @db.Text
+  level         ErrorLevel @default(error)
+  context       String?   // e.g., "api", "client", "server"
+  url           String?
+  userAgent     String?   @map("user_agent")
+  userId        String?   @map("user_id")
+  method        String?   // HTTP method
+  statusCode    Int?      @map("status_code")
+  requestBody   Json?     @map("request_body")
+  metadata      Json?     // Additional context data
+  resolved      Boolean   @default(false)
+  resolvedAt    DateTime? @map("resolved_at")
+  resolvedBy    String?   @map("resolved_by")
+  occurrences   Int       @default(1)
+  firstSeenAt   DateTime  @default(now()) @map("first_seen_at")
+  lastSeenAt    DateTime  @default(now()) @map("last_seen_at")
+  environment   String    @default("production") // development, staging, production
+
+  @@index([level, resolved])
+  @@index([firstSeenAt])
+  @@index([userId])
+  @@map("error_logs")
+}
+
+enum ErrorLevel {
+  error
+  warn
+  info
+  debug
+}
