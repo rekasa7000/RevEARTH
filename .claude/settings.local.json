@@ -10,7 +10,8 @@
       "Bash(test -f \"app/facilities/page.tsx\")",
       "Bash(tree:*)",
       "Bash(npm run build)",
-      "Bash(npm run dev)"
+      "Bash(npm run dev)",
+      "Bash(mkdir -p lib/emails)"
     ],
     "deny": [],
     "ask": []

@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { PrismaClient } from "@prisma/client";
+import { sendVerificationEmail, sendWelcomeEmail } from "./services/email";
 
 const prisma = new PrismaClient();
 
@@ -10,7 +11,12 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
-    requireEmailVerification: false, // Set to true in production with email service
+    requireEmailVerification: true,
+    sendVerificationEmail: async ({ user, url }) => {
+      // Send verification email using our email service
+      const verificationUrl = url;
+      await sendVerificationEmail(user.email, verificationUrl, user.name || undefined);
+    },
   },
   trustedOrigins: ["http://localhost:3000"],
   socialProviders: {

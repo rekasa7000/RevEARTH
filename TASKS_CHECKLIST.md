@@ -6,56 +6,66 @@
 
 ---
 
-## 📊 Progress Overview
+## Progress Overview
 
 ### By Priority
-- **P0 (Critical):** 0/8 completed
+- **P0 (Critical):** 1/8 completed
 - **P1 (High):** 0/8 completed
 - **P2 (Medium):** 0/8 completed
 - **P3 (Nice to Have):** 0/5 completed
 
 ### By Category
-- **Infrastructure:** 0/11 completed
+- **Infrastructure:** 1/11 completed
 - **Security:** 0/6 completed
 - **Features:** 0/8 completed
 - **Testing:** 0/4 completed
 
 ---
 
-## 🔥 P0: Critical (Must Fix Before Production)
+## P0: Critical (Must Fix Before Production)
 
 ### 1. Email Service Integration
-**Priority:** P0 | **Effort:** 4-6 hours | **Status:** ⬜ Not Started
+**Priority:** P0 | **Effort:** 4-6 hours | **Status:** COMPLETED
 
-- [ ] Choose email provider (Resend recommended for simplicity)
-- [ ] Install dependencies
+- [x] Choose email provider (Using nodemailer for free SMTP)
+- [x] Install dependencies
   ```bash
-  npm install resend
+  npm install nodemailer
+  npm install -D @types/nodemailer
   ```
-- [ ] Add environment variables
-  - [ ] `RESEND_API_KEY`
-  - [ ] `EMAIL_FROM` (e.g., noreply@revearth.com)
-- [ ] Create email templates folder `lib/emails/`
-  - [ ] `verification-email.tsx`
-  - [ ] `password-reset-email.tsx`
-  - [ ] `welcome-email.tsx`
-- [ ] Create email service `lib/services/email.ts`
-- [ ] Update forgot password route to send emails
-  - [ ] File: `app/api/auth/forgot-password/route.ts`
-  - [ ] Remove TODO comments
-- [ ] Update email verification flow
-  - [ ] File: `lib/auth.ts`
-  - [ ] Set `requireEmailVerification: true`
+- [x] Add environment variables
+  - [x] `SMTP_HOST`
+  - [x] `SMTP_PORT`
+  - [x] `SMTP_USER`
+  - [x] `SMTP_PASS`
+  - [x] `SMTP_SECURE`
+  - [x] `EMAIL_FROM` (e.g., noreply@revearth.com)
+- [x] Create email templates folder `lib/emails/`
+  - [x] `verification-email.ts`
+  - [x] `password-reset-email.ts`
+  - [x] `welcome-email.ts`
+- [x] Create email service `lib/services/email.ts`
+- [x] Update forgot password route to send emails
+  - [x] File: `app/api/auth/forgot-password/route.ts`
+  - [x] Remove TODO comments
+- [x] Update email verification flow
+  - [x] File: `lib/auth.ts`
+  - [x] Set `requireEmailVerification: true`
 - [ ] Test email delivery in development
 - [ ] Test email delivery in staging
 
-**Blockers:** Need email domain/provider account
+**Blockers:** None (Using free SMTP - can use Gmail, Outlook, or other free providers)
 **Dependencies:** None
+
+**Note:** To use this email service, configure SMTP settings in .env:
+- For Gmail: SMTP_HOST=smtp.gmail.com, SMTP_PORT=587, SMTP_SECURE=false
+- For Outlook: SMTP_HOST=smtp-mail.outlook.com, SMTP_PORT=587, SMTP_SECURE=false
+- Or use any other SMTP provider
 
 ---
 
 ### 2. Request Validation (Zod Schemas)
-**Priority:** P0 | **Effort:** 8-12 hours | **Status:** ⬜ Not Started
+**Priority:** P0 | **Effort:** 8-12 hours | **Status:** Not Started
 
 - [ ] Create validation schemas folder `lib/validations/`
 - [ ] Create schema files:
@@ -88,7 +98,7 @@
 ---
 
 ### 3. Environment Variables Documentation
-**Priority:** P0 | **Effort:** 30 minutes | **Status:** ⬜ Not Started
+**Priority:** P0 | **Effort:** 30 minutes | **Status:** Not Started
 
 - [ ] Create `.env.example` file
 - [ ] Document all required variables:
@@ -110,7 +120,7 @@
 ---
 
 ### 4. Error Monitoring (Sentry)
-**Priority:** P0 | **Effort:** 2-3 hours | **Status:** ⬜ Not Started
+**Priority:** P0 | **Effort:** 2-3 hours | **Status:** Not Started
 
 - [ ] Create Sentry account
 - [ ] Install Sentry SDK
@@ -137,7 +147,7 @@
 ---
 
 ### 5. Database Migrations (Prisma Migrate)
-**Priority:** P0 | **Effort:** 2 hours | **Status:** ⬜ Not Started
+**Priority:** P0 | **Effort:** 2 hours | **Status:** Not Started
 
 - [ ] Create initial migration
   ```bash
@@ -156,7 +166,7 @@
 ---
 
 ### 6. Rate Limiting
-**Priority:** P0 | **Effort:** 3-4 hours | **Status:** ⬜ Not Started
+**Priority:** P0 | **Effort:** 3-4 hours | **Status:** Not Started
 
 - [ ] Choose rate limiting solution (Upstash recommended)
 - [ ] Install dependencies
@@ -184,7 +194,7 @@
 ---
 
 ### 7. Database Indexes
-**Priority:** P0 | **Effort:** 1 hour | **Status:** ⬜ Not Started
+**Priority:** P0 | **Effort:** 1 hour | **Status:** Not Started
 
 - [ ] Update Prisma schema with indexes:
   - [ ] `EmissionRecord` - `@@index([organizationId])`
@@ -208,7 +218,7 @@
 ---
 
 ### 8. Calculation Engine Tests
-**Priority:** P0 | **Effort:** 6-8 hours | **Status:** ⬜ Not Started
+**Priority:** P0 | **Effort:** 6-8 hours | **Status:** Not Started
 
 - [ ] Install testing framework
   ```bash
@@ -241,10 +251,10 @@
 
 ---
 
-## 🟠 P1: High Priority (Within 1 Month)
+## P1: High Priority (Within 1 Month)
 
 ### 9. Refrigerant Usage API
-**Priority:** P1 | **Effort:** 3-4 hours | **Status:** ⬜ Not Started
+**Priority:** P1 | **Effort:** 3-4 hours | **Status:** Not Started
 
 - [ ] Create API route files:
   - [ ] `app/api/refrigerant-usage/route.ts`
@@ -267,7 +277,7 @@
 ---
 
 ### 10. Multi-User Support
-**Priority:** P1 | **Effort:** 12-16 hours | **Status:** ⬜ Not Started
+**Priority:** P1 | **Effort:** 12-16 hours | **Status:** Not Started
 
 - [ ] Update Prisma schema:
   - [ ] Create `OrganizationMember` model
@@ -303,7 +313,7 @@
 ---
 
 ### 11. Audit Logging
-**Priority:** P1 | **Effort:** 6-8 hours | **Status:** ⬜ Not Started
+**Priority:** P1 | **Effort:** 6-8 hours | **Status:** Not Started
 
 - [ ] Create Prisma model:
   - [ ] `AuditLog` model
@@ -335,7 +345,7 @@
 ---
 
 ### 12. API Documentation
-**Priority:** P1 | **Effort:** 6-8 hours | **Status:** ⬜ Not Started
+**Priority:** P1 | **Effort:** 6-8 hours | **Status:** Not Started
 
 - [ ] Choose documentation tool (Swagger/OpenAPI)
 - [ ] Install dependencies
@@ -370,7 +380,7 @@
 ---
 
 ### 13. Health Check Endpoint
-**Priority:** P1 | **Effort:** 1 hour | **Status:** ⬜ Not Started
+**Priority:** P1 | **Effort:** 1 hour | **Status:** Not Started
 
 - [ ] Create health check route:
   - [ ] `app/api/health/route.ts`
@@ -388,7 +398,7 @@
 ---
 
 ### 14. Improve README
-**Priority:** P1 | **Effort:** 2-3 hours | **Status:** ⬜ Not Started
+**Priority:** P1 | **Effort:** 2-3 hours | **Status:** Not Started
 
 - [ ] Replace boilerplate Next.js content
 - [ ] Add project description
@@ -418,7 +428,7 @@
 ---
 
 ### 15. Security Headers Middleware
-**Priority:** P1 | **Effort:** 1-2 hours | **Status:** ⬜ Not Started
+**Priority:** P1 | **Effort:** 1-2 hours | **Status:** Not Started
 
 - [ ] Create Next.js middleware:
   - [ ] `middleware.ts` (root level)
@@ -439,7 +449,7 @@
 ---
 
 ### 16. Database Backup Strategy
-**Priority:** P1 | **Effort:** 3-4 hours | **Status:** ⬜ Not Started
+**Priority:** P1 | **Effort:** 3-4 hours | **Status:** Not Started
 
 - [ ] Document current backup system (if any)
 - [ ] Set up automated daily backups:
@@ -457,10 +467,10 @@
 
 ---
 
-## 🟡 P2: Medium Priority (Within 3 Months)
+## P2: Medium Priority (Within 3 Months)
 
 ### 17. Bulk CSV Import
-**Priority:** P2 | **Effort:** 10-12 hours | **Status:** ⬜ Not Started
+**Priority:** P2 | **Effort:** 10-12 hours | **Status:** Not Started
 
 - [ ] Create CSV template generator:
   - [ ] Fuel usage template
@@ -498,7 +508,7 @@
 ---
 
 ### 18. Emission Targets & Goals
-**Priority:** P2 | **Effort:** 8-10 hours | **Status:** ⬜ Not Started
+**Priority:** P2 | **Effort:** 8-10 hours | **Status:** Not Started
 
 - [ ] Create Prisma models:
   - [ ] `EmissionTarget` model
@@ -529,7 +539,7 @@
 ---
 
 ### 19. Notification System
-**Priority:** P2 | **Effort:** 10-12 hours | **Status:** ⬜ Not Started
+**Priority:** P2 | **Effort:** 10-12 hours | **Status:** Not Started
 
 - [ ] Create notification preferences model:
   - [ ] `NotificationPreference` model
@@ -563,7 +573,7 @@
 ---
 
 ### 20. Move Emission Factors to Database
-**Priority:** P2 | **Effort:** 8-10 hours | **Status:** ⬜ Not Started
+**Priority:** P2 | **Effort:** 8-10 hours | **Status:** Not Started
 
 - [ ] Create Prisma model:
   - [ ] `EmissionFactor` model
@@ -597,7 +607,7 @@
 ---
 
 ### 21. Advanced Analytics
-**Priority:** P2 | **Effort:** 12-16 hours | **Status:** ⬜ Not Started
+**Priority:** P2 | **Effort:** 12-16 hours | **Status:** Not Started
 
 - [ ] Implement forecasting:
   - [ ] Linear regression model
@@ -628,7 +638,7 @@
 ---
 
 ### 22. CI/CD Pipeline
-**Priority:** P2 | **Effort:** 6-8 hours | **Status:** ⬜ Not Started
+**Priority:** P2 | **Effort:** 6-8 hours | **Status:** Not Started
 
 - [ ] Create GitHub Actions workflow:
   - [ ] `.github/workflows/ci.yml`
@@ -656,7 +666,7 @@
 ---
 
 ### 23. Performance Monitoring
-**Priority:** P2 | **Effort:** 3-4 hours | **Status:** ⬜ Not Started
+**Priority:** P2 | **Effort:** 3-4 hours | **Status:** Not Started
 
 - [ ] Set up Vercel Analytics (if using Vercel)
   ```bash
@@ -684,7 +694,7 @@
 ---
 
 ### 24. Code Quality Tools
-**Priority:** P2 | **Effort:** 3-4 hours | **Status:** ⬜ Not Started
+**Priority:** P2 | **Effort:** 3-4 hours | **Status:** Not Started
 
 - [ ] Configure ESLint:
   - [ ] Extend recommended configs
@@ -715,10 +725,10 @@
 
 ---
 
-## 🟢 P3: Nice to Have (Future)
+## P3: Nice to Have (Future)
 
 ### 25. Mobile App (PWA)
-**Priority:** P3 | **Effort:** 40+ hours | **Status:** ⬜ Not Started
+**Priority:** P3 | **Effort:** 40+ hours | **Status:** Not Started
 
 - [ ] Configure Next.js as PWA
   ```bash
@@ -739,7 +749,7 @@
 ---
 
 ### 26. Third-Party Integrations
-**Priority:** P3 | **Effort:** Variable | **Status:** ⬜ Not Started
+**Priority:** P3 | **Effort:** Variable | **Status:** Not Started
 
 - [ ] Research integration opportunities:
   - [ ] Accounting software (QuickBooks, Xero)
@@ -758,7 +768,7 @@
 ---
 
 ### 27. AI Features
-**Priority:** P3 | **Effort:** 60+ hours | **Status:** ⬜ Not Started
+**Priority:** P3 | **Effort:** 60+ hours | **Status:** Not Started
 
 - [ ] Research AI use cases:
   - [ ] Auto-categorize expenses
@@ -777,7 +787,7 @@
 ---
 
 ### 28. Compliance Features (GHG Protocol)
-**Priority:** P3 | **Effort:** 20-30 hours | **Status:** ⬜ Not Started
+**Priority:** P3 | **Effort:** 20-30 hours | **Status:** Not Started
 
 - [ ] Study GHG Protocol requirements
 - [ ] Study ISO 14064 standards
@@ -794,7 +804,7 @@
 ---
 
 ### 29. White-Label Solution
-**Priority:** P3 | **Effort:** 80+ hours | **Status:** ⬜ Not Started
+**Priority:** P3 | **Effort:** 80+ hours | **Status:** Not Started
 
 - [ ] Design multi-tenant architecture
 - [ ] Implement tenant isolation
@@ -810,7 +820,7 @@
 
 ---
 
-## 📝 Quick Wins (Do These First!)
+## Quick Wins (Do These First!)
 
 ### Quick Win Sprint (4-6 hours total)
 **Goal:** Immediate improvements with minimal effort
@@ -855,7 +865,7 @@
 
 ---
 
-## 📅 Sprint Planning
+## Sprint Planning
 
 ### Sprint 1-2 (Weeks 1-4): Foundation
 **Goal:** Production readiness basics
@@ -911,7 +921,7 @@
 
 ---
 
-## 🎯 Success Metrics
+## Success Metrics
 
 ### Code Quality
 - [ ] Test coverage >80%
@@ -934,7 +944,7 @@
 
 ---
 
-## 📊 Tracking Progress
+## Tracking Progress
 
 ### How to Use This Checklist
 
@@ -946,15 +956,15 @@
 6. **Review weekly** to track progress and adjust priorities
 
 ### Task Status Indicators
-- ⬜ Not Started
-- 🟦 In Progress
-- ✅ Completed
-- ⛔ Blocked
-- ⚠️ Needs Review
+- [ ] Not Started
+- [~] In Progress
+- [x] Completed
+- [!] Blocked
+- [?] Needs Review
 
 ---
 
-## 📎 Related Documents
+## Related Documents
 
 - [CODEBASE_ANALYSIS.md](./CODEBASE_ANALYSIS.md) - Detailed analysis and recommendations
 - [README.md](./README.md) - Project setup and usage (needs update)
