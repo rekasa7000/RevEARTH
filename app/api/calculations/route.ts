@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/lib/utils/auth-middleware";
 import { prisma } from "@/lib/db";
 import { calculateEmissionRecord } from "@/lib/services/calculation-engine";
+import { getValidatedBody } from "@/lib/utils/validation-middleware";
+import { triggerCalculationSchema } from "@/lib/validations/calculation.schemas";
 
 /**
  * POST /api/calculations
@@ -9,15 +11,9 @@ import { calculateEmissionRecord } from "@/lib/services/calculation-engine";
  */
 export const POST = withAuth(async (request, { user }) => {
   try {
-    const body = await request.json();
+    // Validate request body
+    const body = await getValidatedBody(request, triggerCalculationSchema);
     const { emissionRecordId } = body;
-
-    if (!emissionRecordId) {
-      return NextResponse.json(
-        { error: "Emission record ID is required" },
-        { status: 400 }
-      );
-    }
 
     // Check if emission record exists and user owns it
     const emissionRecord = await prisma.emissionRecord.findUnique({

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/lib/utils/auth-middleware";
 import { prisma } from "@/lib/db";
+import { getValidatedBody } from "@/lib/utils/validation-middleware";
+import { createOrganizationSchema } from "@/lib/validations/organization.schemas";
 
 /**
  * POST /api/organizations
@@ -8,7 +10,8 @@ import { prisma } from "@/lib/db";
  */
 export const POST = withAuth(async (request, { user }) => {
   try {
-    const body = await request.json();
+    // Validate request body
+    const body = await getValidatedBody(request, createOrganizationSchema);
     const {
       name,
       industrySector,
@@ -16,23 +19,6 @@ export const POST = withAuth(async (request, { user }) => {
       reportingBoundaries,
       applicableScopes,
     } = body;
-
-    // Validate required fields
-    if (!name || !occupancyType) {
-      return NextResponse.json(
-        { error: "Name and occupancy type are required" },
-        { status: 400 }
-      );
-    }
-
-    // Validate occupancy type
-    const validOccupancyTypes = ["residential", "commercial", "industrial", "lgu", "academic"];
-    if (!validOccupancyTypes.includes(occupancyType)) {
-      return NextResponse.json(
-        { error: "Invalid occupancy type" },
-        { status: 400 }
-      );
-    }
 
     // Check if user already has an organization
     const existingOrg = await prisma.organization.findUnique({

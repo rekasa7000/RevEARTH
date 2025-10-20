@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/lib/utils/auth-middleware";
 import { prisma } from "@/lib/db";
+import { getValidatedBody } from "@/lib/utils/validation-middleware";
+import { updateEmissionRecordSchema } from "@/lib/validations/emission-record.schemas";
 
 /**
  * GET /api/emission-records/:id
@@ -61,7 +63,9 @@ export const GET = withAuth(async (request, { user, params }) => {
 export const PATCH = withAuth(async (request, { user, params }) => {
   try {
     const { id } = params;
-    const body = await request.json();
+
+    // Validate request body
+    const body = await getValidatedBody(request, updateEmissionRecordSchema);
     const {
       reportingPeriodStart,
       reportingPeriodEnd,

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/lib/utils/auth-middleware";
 import { prisma } from "@/lib/db";
+import { getValidatedBody } from "@/lib/utils/validation-middleware";
+import { createEmissionRecordSchema } from "@/lib/validations/emission-record.schemas";
 
 /**
  * POST /api/emission-records
@@ -8,7 +10,8 @@ import { prisma } from "@/lib/db";
  */
 export const POST = withAuth(async (request, { user }) => {
   try {
-    const body = await request.json();
+    // Validate request body
+    const body = await getValidatedBody(request, createEmissionRecordSchema);
     const {
       organizationId,
       facilityId,
@@ -16,14 +19,6 @@ export const POST = withAuth(async (request, { user }) => {
       reportingPeriodEnd,
       scopeSelection,
     } = body;
-
-    // Validate required fields
-    if (!organizationId || !reportingPeriodStart || !reportingPeriodEnd) {
-      return NextResponse.json(
-        { error: "Organization ID, reporting period start and end are required" },
-        { status: 400 }
-      );
-    }
 
     // Check if organization exists and user owns it
     const organization = await prisma.organization.findUnique({

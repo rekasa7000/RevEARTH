@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/lib/utils/auth-middleware";
 import { prisma } from "@/lib/db";
+import { getValidatedBody } from "@/lib/utils/validation-middleware";
+import { createElectricityUsageSchema } from "@/lib/validations/electricity-usage.schemas";
 
 /**
  * POST /api/electricity-usage
@@ -8,7 +10,8 @@ import { prisma } from "@/lib/db";
  */
 export const POST = withAuth(async (request, { user }) => {
   try {
-    const body = await request.json();
+    // Validate request body
+    const body = await getValidatedBody(request, createElectricityUsageSchema);
     const {
       emissionRecordId,
       facilityId,
@@ -20,14 +23,6 @@ export const POST = withAuth(async (request, { user }) => {
       billingPeriodEnd,
       utilityBillData,
     } = body;
-
-    // Validate required fields
-    if (!emissionRecordId || !kwhConsumption || !billingPeriodStart || !billingPeriodEnd) {
-      return NextResponse.json(
-        { error: "Emission record ID, kWh consumption, billing period start and end are required" },
-        { status: 400 }
-      );
-    }
 
     // Check if emission record exists and user owns it
     const emissionRecord = await prisma.emissionRecord.findUnique({
@@ -66,14 +61,6 @@ export const POST = withAuth(async (request, { user }) => {
           { status: 404 }
         );
       }
-    }
-
-    // Validate kWh consumption
-    if (parseFloat(kwhConsumption) <= 0) {
-      return NextResponse.json(
-        { error: "kWh consumption must be greater than 0" },
-        { status: 400 }
-      );
     }
 
     // Create electricity usage

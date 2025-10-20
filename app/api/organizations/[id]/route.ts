@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/lib/utils/auth-middleware";
 import { prisma } from "@/lib/db";
+import { getValidatedBody } from "@/lib/utils/validation-middleware";
+import { updateOrganizationSchema } from "@/lib/validations/organization.schemas";
 
 /**
  * GET /api/organizations/:id
@@ -58,7 +60,9 @@ export const GET = withAuth(async (request, { user, params }) => {
 export const PATCH = withAuth(async (request, { user, params }) => {
   try {
     const { id } = params;
-    const body = await request.json();
+
+    // Validate request body
+    const body = await getValidatedBody(request, updateOrganizationSchema);
     const {
       name,
       industrySector,
@@ -84,17 +88,6 @@ export const PATCH = withAuth(async (request, { user, params }) => {
         { error: "Forbidden - You don't have access to this organization" },
         { status: 403 }
       );
-    }
-
-    // Validate occupancy type if provided
-    if (occupancyType) {
-      const validOccupancyTypes = ["residential", "commercial", "industrial", "lgu", "academic"];
-      if (!validOccupancyTypes.includes(occupancyType)) {
-        return NextResponse.json(
-          { error: "Invalid occupancy type" },
-          { status: 400 }
-        );
-      }
     }
 
     // Update organization
