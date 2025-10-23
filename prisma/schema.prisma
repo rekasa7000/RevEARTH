@@ -52,6 +52,7 @@ model Account {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
   @@map("accounts")
 }
 
@@ -68,6 +69,8 @@ model Session {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
+  @@index([expiresAt])
   @@map("sessions")
 }
 
@@ -123,6 +126,8 @@ model Facility {
   organization     Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   electricityUsage ElectricityUsage[]
 
+  @@index([organizationId])
+  @@index([createdAt])
   @@map("facilities")
 }
 
@@ -146,6 +151,11 @@ model EmissionRecord {
   commutingData      CommutingData[]
   calculation        EmissionCalculation?
 
+  @@index([organizationId])
+  @@index([reportingPeriodStart])
+  @@index([status])
+  @@index([organizationId, reportingPeriodStart])
+  @@index([createdAt])
   @@map("emission_records")
 }
 
@@ -169,6 +179,9 @@ model FuelUsage {
 
   emissionRecord EmissionRecord @relation(fields: [emissionRecordId], references: [id], onDelete: Cascade)
 
+  @@index([emissionRecordId])
+  @@index([entryDate])
+  @@index([fuelType])
   @@map("fuel_usage")
 }
 
@@ -204,6 +217,9 @@ model VehicleUsage {
 
   emissionRecord EmissionRecord @relation(fields: [emissionRecordId], references: [id], onDelete: Cascade)
 
+  @@index([emissionRecordId])
+  @@index([entryDate])
+  @@index([vehicleType])
   @@map("vehicle_usage")
 }
 
@@ -230,6 +246,9 @@ model RefrigerantUsage {
 
   emissionRecord EmissionRecord @relation(fields: [emissionRecordId], references: [id], onDelete: Cascade)
 
+  @@index([emissionRecordId])
+  @@index([entryDate])
+  @@index([refrigerantType])
   @@map("refrigerant_usage")
 }
 
@@ -257,6 +276,9 @@ model ElectricityUsage {
   emissionRecord EmissionRecord @relation(fields: [emissionRecordId], references: [id], onDelete: Cascade)
   facility       Facility?      @relation(fields: [facilityId], references: [id])
 
+  @@index([emissionRecordId])
+  @@index([facilityId])
+  @@index([billingPeriodStart])
   @@map("electricity_usage")
 }
 
@@ -274,6 +296,9 @@ model CommutingData {
 
   emissionRecord EmissionRecord @relation(fields: [emissionRecordId], references: [id], onDelete: Cascade)
 
+  @@index([emissionRecordId])
+  @@index([surveyDate])
+  @@index([transportMode])
   @@map("commuting_data")
 }
 
@@ -301,6 +326,9 @@ model EmployeeCommuteSurvey {
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
+  @@index([organizationId])
+  @@index([surveyDate])
+  @@index([quarter])
   @@map("employee_commute_surveys")
 }
 
@@ -319,6 +347,7 @@ model EmissionCalculation {
 
   emissionRecord EmissionRecord @relation(fields: [emissionRecordId], references: [id], onDelete: Cascade)
 
+  @@index([calculatedAt])
   @@map("emission_calculations")
 }
 
