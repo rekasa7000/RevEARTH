@@ -24,8 +24,17 @@ node scripts/check-env.js
 
 Run Prisma migrations:
 ```bash
-npx prisma migrate dev
+# Option 1: Push schema (quick, no migration files)
+npm run db:push
+
+# Option 2: Create proper migrations (recommended for production)
+npm run db:migrate
+
+# Option 3: Use migration helper
+node scripts/migrate-helper.js
 ```
+
+See [MIGRATIONS.md](./MIGRATIONS.md) for detailed migration workflow and best practices.
 
 ### 3. Run Development Server
 
