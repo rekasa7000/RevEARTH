@@ -2,12 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { generatePasswordResetToken } from "@/lib/utils/auth-helpers";
 import { sendPasswordResetEmail } from "@/lib/services/email";
+import { checkRateLimit } from "@/lib/utils/rate-limit-middleware";
+import { RateLimits } from "@/lib/services/rate-limiter";
 
 /**
  * POST /api/auth/forgot-password
  * Request password reset
+ * Rate limited: 5 requests per minute
  */
 export async function POST(request: NextRequest) {
+  // Apply rate limiting
+  const rateLimit = await checkRateLimit(request, RateLimits.AUTH);
+  if (!rateLimit.allowed) {
+    return rateLimit.response;
+  }
   try {
     const body = await request.json();
     const { email } = body;

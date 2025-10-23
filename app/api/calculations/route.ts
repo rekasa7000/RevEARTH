@@ -4,12 +4,20 @@ import { prisma } from "@/lib/db";
 import { calculateEmissionRecord } from "@/lib/services/calculation-engine";
 import { getValidatedBody } from "@/lib/utils/validation-middleware";
 import { triggerCalculationSchema } from "@/lib/validations/calculation.schemas";
+import { checkRateLimit } from "@/lib/utils/rate-limit-middleware";
+import { RateLimits } from "@/lib/services/rate-limiter";
 
 /**
  * POST /api/calculations
  * Trigger calculation for an emission record
+ * Rate limited: 10 requests per minute (expensive operation)
  */
 export const POST = withAuth(async (request, { user }) => {
+  // Apply strict rate limiting for expensive calculations
+  const rateLimit = await checkRateLimit(request, RateLimits.CALCULATION, user.id);
+  if (!rateLimit.allowed) {
+    return rateLimit.response;
+  }
   try {
     // Validate request body
     const body = await getValidatedBody(request, triggerCalculationSchema);

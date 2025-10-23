@@ -2,12 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/lib/utils/auth-middleware";
 import { prisma } from "@/lib/db";
 import { logError } from "@/lib/services/error-logger";
+import { checkRateLimit } from "@/lib/utils/rate-limit-middleware";
+import { RateLimits } from "@/lib/services/rate-limiter";
 
 /**
  * POST /api/errors
  * Log an error from client-side
+ * Rate limited: 200 requests per minute (lenient for error reporting)
  */
 export async function POST(request: NextRequest) {
+  // Apply lenient rate limiting for error reporting
+  const rateLimit = await checkRateLimit(request, RateLimits.PUBLIC);
+  if (!rateLimit.allowed) {
+    return rateLimit.response;
+  }
   try {
     const body = await request.json();
     const {

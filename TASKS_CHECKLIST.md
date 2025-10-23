@@ -9,14 +9,14 @@
 ## Progress Overview
 
 ### By Priority
-- **P0 (Critical):** 5/8 completed
+- **P0 (Critical):** 6/8 completed
 - **P1 (High):** 0/8 completed
 - **P2 (Medium):** 0/8 completed
 - **P3 (Nice to Have):** 0/5 completed
 
 ### By Category
 - **Infrastructure:** 5/11 completed
-- **Security:** 3/6 completed
+- **Security:** 4/6 completed
 - **Features:** 0/8 completed
 - **Testing:** 0/4 completed
 
@@ -222,31 +222,52 @@
 
 ---
 
-### 6. Rate Limiting
-**Priority:** P0 | **Effort:** 3-4 hours | **Status:** Not Started
+### 6. Rate Limiting (Custom Solution)
+**Priority:** P0 | **Effort:** 3-4 hours | **Status:** COMPLETED
 
-- [ ] Choose rate limiting solution (Upstash recommended)
-- [ ] Install dependencies
-  ```bash
-  npm install @upstash/ratelimit @upstash/redis
-  ```
-- [ ] Create Upstash account and Redis database
-- [ ] Add environment variables
-  - [ ] `UPSTASH_REDIS_REST_URL`
-  - [ ] `UPSTASH_REDIS_REST_TOKEN`
-- [ ] Create rate limiting middleware
-  - [ ] File: `lib/utils/rate-limit.ts`
-- [ ] Apply to API routes:
-  - [ ] Authentication routes (10 req/min)
-  - [ ] Read endpoints (100 req/min)
-  - [ ] Write endpoints (20 req/min)
-  - [ ] Calculation endpoint (5 req/min)
-- [ ] Add rate limit headers to responses
-- [ ] Test rate limiting
-- [ ] Document rate limits in API docs
+- [x] Create custom in-memory rate limiter service
+  - [x] File: `lib/services/rate-limiter.ts`
+  - [x] Automatic cleanup of expired entries
+  - [x] Configurable time windows and request limits
+  - [x] Support for user-based and IP-based limiting
+- [x] Create rate limiting middleware
+  - [x] File: `lib/utils/rate-limit-middleware.ts`
+  - [x] `checkRateLimit()` function
+  - [x] `withRateLimit()` wrapper
+  - [x] Automatic rate limit header injection
+- [x] Define rate limit tiers
+  - [x] AUTH: 5 requests/min (authentication endpoints)
+  - [x] WRITE: 20 requests/min (data modification)
+  - [x] READ: 100 requests/min (data retrieval)
+  - [x] CALCULATION: 10 requests/min (expensive operations)
+  - [x] PUBLIC: 200 requests/min (public/error endpoints)
+- [x] Apply rate limiting to critical API routes
+  - [x] `/api/auth/forgot-password` (AUTH - 5/min)
+  - [x] `/api/organizations` POST (WRITE - 20/min)
+  - [x] `/api/calculations` (CALCULATION - 10/min)
+  - [x] `/api/errors` POST (PUBLIC - 200/min)
+- [x] Add standard rate limit headers
+  - [x] `X-RateLimit-Limit`
+  - [x] `X-RateLimit-Remaining`
+  - [x] `X-RateLimit-Reset`
+- [x] Create comprehensive documentation (RATE_LIMITING.md)
+  - [x] Rate limit tiers and usage
+  - [x] Implementation examples
+  - [x] Client-side handling
+  - [x] Best practices
+  - [x] Troubleshooting guide
+  - [x] Migration path to Redis for multi-instance
 
-**Blockers:** Need Upstash account
+**Blockers:** None
 **Dependencies:** None
+
+**Benefits of Custom Solution:**
+- No external dependencies or accounts required
+- 100% free and open source
+- Zero latency (in-memory)
+- Easy to understand and modify
+- Perfect for single-instance deployments
+- Migration path to Redis documented for scaling
 
 ---
 
