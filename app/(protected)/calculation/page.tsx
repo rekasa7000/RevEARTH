@@ -40,6 +40,7 @@ import {
 import { useEmissionRecords, useCreateEmissionRecord } from "@/lib/api/queries/emission-records";
 import { useFuelUsage, useCreateFuelUsage } from "@/lib/api/queries/fuel-usage";
 import { useVehicleUsage, useCreateVehicleUsage } from "@/lib/api/queries/vehicle-usage";
+import { useRefrigerantUsage, useCreateRefrigerantUsage } from "@/lib/api/queries/refrigerant-usage";
 import { useElectricityUsage, useCreateElectricityUsage } from "@/lib/api/queries/electricity-usage";
 import { useCommutingData, useCreateCommutingData } from "@/lib/api/queries/commuting-data";
 import { useCalculation, useTriggerCalculation } from "@/lib/api/queries/calculations";
@@ -144,12 +145,14 @@ function CalculationContent() {
   // Fetch data based on current scope and emission record
   const { data: fuelData, isLoading: fuelLoading } = useFuelUsage(currentEmissionRecordId);
   const { data: vehicleData, isLoading: vehicleLoading } = useVehicleUsage(currentEmissionRecordId);
+  const { data: refrigerantData, isLoading: refrigerantLoading } = useRefrigerantUsage(currentEmissionRecordId);
   const { data: electricityData, isLoading: electricityLoading } = useElectricityUsage(currentEmissionRecordId);
   const { data: commutingData, isLoading: commutingLoading } = useCommutingData(currentEmissionRecordId);
 
   // Mutation hooks for creating records
   const createFuelUsage = useCreateFuelUsage();
   const createVehicleUsage = useCreateVehicleUsage();
+  const createRefrigerantUsage = useCreateRefrigerantUsage();
   const createElectricityUsage = useCreateElectricityUsage();
   const createCommutingData = useCreateCommutingData();
 
@@ -206,7 +209,20 @@ function CalculationContent() {
             totalEmissions: Number(vehicle.co2eCalculated) || 0,
           })) as EmissionData[];
         case "refrigeration":
-          return []; // Refrigerant usage not implemented yet
+          // Map RefrigerantUsage to Scope1RefrigerationData
+          if (!refrigerantData) return [];
+          return refrigerantData.map((refrigerant) => ({
+            id: refrigerant.id || "",
+            equipmentDescription: refrigerant.equipmentId || "N/A",
+            refrigerantType: refrigerant.refrigerantType || "unknown",
+            quantityLeaked: Number(refrigerant.quantityLeaked) || 0,
+            quantityPurchased: Number(refrigerant.quantityPurchased) || 0,
+            unit: refrigerant.unit || "kg",
+            co2Emissions: Number(refrigerant.co2eCalculated) || 0,
+            ch4Emissions: 0, // Not tracked separately
+            n2oEmissions: 0, // Not tracked separately
+            totalEmissions: Number(refrigerant.co2eCalculated) || 0,
+          })) as EmissionData[];
         case "scope2":
           // Map ElectricityUsage to Scope2Data
           if (!electricityData) return [];
@@ -251,7 +267,7 @@ function CalculationContent() {
       case "mobile":
         return vehicleLoading;
       case "refrigeration":
-        return false;
+        return refrigerantLoading;
       case "scope2":
         return electricityLoading;
       case "scope3":
@@ -375,13 +391,21 @@ function CalculationContent() {
           break;
 
         case "refrigeration":
-          // Scope 1 - Refrigeration (Not implemented yet)
-          toast({
-            title: "Not Implemented",
-            description: "Refrigerant usage tracking is not yet implemented",
-            variant: "destructive",
+          // Scope 1 - Refrigeration (Refrigerant Usage)
+          await createRefrigerantUsage.mutateAsync({
+            emissionRecordId: currentEmissionRecordId,
+            equipmentId: formData.equipmentDescription || undefined,
+            refrigerantType: formData.refrigerantType,
+            quantityLeaked: formData.quantityLeaked ? parseFloat(formData.quantityLeaked) : undefined,
+            quantityPurchased: formData.quantityPurchased ? parseFloat(formData.quantityPurchased) : undefined,
+            unit: formData.unit || "kg",
+            entryDate: today,
           });
-          return;
+          toast({
+            title: "Success",
+            description: "Refrigerant usage record created successfully",
+          });
+          break;
 
         case "scope2":
           // Scope 2 - Electricity Usage

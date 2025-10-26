@@ -10,14 +10,14 @@
 
 ### By Priority
 - **P0 (Critical):** 8/8 completed
-- **P1 (High):** 0/8 completed
+- **P1 (High):** 1/8 completed
 - **P2 (Medium):** 0/8 completed
 - **P3 (Nice to Have):** 0/5 completed
 
 ### By Category
 - **Infrastructure:** 6/11 completed
 - **Security:** 4/6 completed
-- **Features:** 0/8 completed
+- **Features:** 1/8 completed
 - **Testing:** 1/4 completed
 
 ---
@@ -363,25 +363,40 @@
 ## P1: High Priority (Within 1 Month)
 
 ### 9. Refrigerant Usage API
-**Priority:** P1 | **Effort:** 3-4 hours | **Status:** Not Started
+**Priority:** P1 | **Effort:** 3-4 hours | **Status:** COMPLETED
 
-- [ ] Create API route files:
-  - [ ] `app/api/refrigerant-usage/route.ts`
-  - [ ] `app/api/refrigerant-usage/[id]/route.ts`
-- [ ] Implement POST /api/refrigerant-usage
-- [ ] Implement GET /api/refrigerant-usage
-- [ ] Implement GET /api/refrigerant-usage/[id]
-- [ ] Implement PATCH /api/refrigerant-usage/[id]
-- [ ] Implement DELETE /api/refrigerant-usage/[id]
-- [ ] Create React Query hooks:
-  - [ ] `lib/api/queries/refrigerant-usage.ts`
-  - [ ] `useRefrigerantUsage()`
-  - [ ] `useCreateRefrigerantUsage()`
-- [ ] Add to UI (calculation page)
-- [ ] Test CRUD operations
+- [x] Create API route files:
+  - [x] `app/api/refrigerant-usage/route.ts` (POST, GET)
+  - [x] `app/api/refrigerant-usage/[id]/route.ts` (GET, PATCH, DELETE)
+- [x] Implement POST /api/refrigerant-usage
+- [x] Implement GET /api/refrigerant-usage
+- [x] Implement GET /api/refrigerant-usage/[id]
+- [x] Implement PATCH /api/refrigerant-usage/[id]
+- [x] Implement DELETE /api/refrigerant-usage/[id]
+- [x] Create React Query hooks:
+  - [x] `lib/api/queries/refrigerant-usage.ts`
+  - [x] `useRefrigerantUsage()` - Query hook for fetching refrigerant usage list
+  - [x] `useRefrigerantUsageById()` - Query hook for fetching single entry
+  - [x] `useCreateRefrigerantUsage()` - Mutation hook for creating entries
+  - [x] `useUpdateRefrigerantUsage()` - Mutation hook for updating entries
+  - [x] `useDeleteRefrigerantUsage()` - Mutation hook for deleting entries
+- [x] Add to UI (calculation page)
+  - [x] Import refrigerant usage hooks
+  - [x] Add refrigerant data query and mutation hooks
+  - [x] Update getCurrentData() for refrigeration scope
+  - [x] Update isCurrentLoading() for refrigeration scope
+  - [x] Update handleSubmit() for refrigeration scope
 
 **Blockers:** None
 **Dependencies:** Task #2 (Validation)
+
+**Implementation Details:**
+- Follows exact patterns from fuel-usage API (POST/GET routes, PATCH/DELETE in [id] route)
+- Uses existing validation schemas from `lib/validations/refrigerant-usage.schemas.ts`
+- Supports all 4 refrigerant types: R_410A, R_134a, R_32, R_404A
+- Tracks equipment ID, quantity leaked, quantity purchased, leak detection logs
+- React Query hooks with optimistic updates and automatic cache invalidation
+- Full CRUD integration in calculation page UI
 
 ---
 
