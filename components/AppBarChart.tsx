@@ -1,6 +1,7 @@
 "use client";
 
-import { Calendar } from "lucide-react";
+import React from "react";
+import { BarChart4 } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,45 +11,90 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import { useOrganizationCheck } from "@/lib/hooks/use-organization-check";
+import { useDashboard, DashboardPeriod } from "@/lib/api/queries/dashboard";
 
-export const description = "A multiple bar chart";
-
-const chartData = [
-  { month: "January", scope1: 186, scope2: 80, scope3: 100 },
-  { month: "February", scope1: 305, scope2: 200, scope3: 50 },
-  { month: "March", scope1: 237, scope2: 120, scope3: 150 },
-  { month: "April", scope1: 73, scope2: 190, scope3: 400 },
-  { month: "May", scope1: 209, scope2: 130, scope3: 200 },
-  { month: "June", scope1: 214, scope2: 140, scope3: 250 },
-  { month: "July", scope1: 186, scope2: 80, scope3: 100 },
-  { month: "August", scope1: 305, scope2: 200, scope3: 50 },
-  { month: "September", scope1: 237, scope2: 120, scope3: 150 },
-  { month: "October", scope1: 73, scope2: 190, scope3: 400 },
-  { month: "November", scope1: 209, scope2: 130, scope3: 200 },
-  { month: "December", scope1: 214, scope2: 140, scope3: 250 },
-];
+export const description = "Emissions by category bar chart";
 
 const chartConfig = {
-  scope1: {
-    label: "Scope 1",
+  value: {
+    label: "Emissions",
     color: "var(--chart-1)",
-  },
-  scope2: {
-    label: "Scope 2",
-    color: "var(--chart-2)",
-  },
-  scope3: {
-    label: "Scope 3",
-    color: "var(--chart-3)",
   },
 } satisfies ChartConfig;
 
-export function AppBarChart() {
+interface AppBarChartProps {
+  period?: DashboardPeriod;
+}
+
+export function AppBarChart({ period = "year" }: AppBarChartProps) {
+  const { organization } = useOrganizationCheck();
+  const { data: dashboardData, isLoading } = useDashboard(
+    organization?.id || "",
+    period
+  );
+
+  // Convert API data to chart format
+  const chartData = React.useMemo(() => {
+    if (!dashboardData?.breakdown) {
+      return [];
+    }
+
+    const breakdown = dashboardData.breakdown;
+    return [
+      { category: "Fuel", value: breakdown.fuel / 1000 }, // Convert kg to tonnes
+      { category: "Vehicles", value: breakdown.vehicles / 1000 },
+      { category: "Refrigerants", value: breakdown.refrigerants / 1000 },
+      { category: "Electricity", value: breakdown.electricity / 1000 },
+      { category: "Commuting", value: breakdown.commuting / 1000 },
+    ].filter((item) => item.value > 0); // Only show categories with emissions
+  }, [dashboardData]);
+
+  if (isLoading) {
+    return (
+      <Card className="flex flex-col">
+        <CardHeader className="items-center pb-0">
+          <CardTitle className="flex items-center gap-2">
+            <BarChart4 className="h-5 w-5" /> Emissions by Category
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-50 flex items-center justify-center">
+            <div className="animate-pulse text-gray-400">Loading chart...</div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Check if there's any data
+  const hasData = chartData.length > 0;
+
+  if (!hasData) {
+    return (
+      <Card className="flex flex-col">
+        <CardHeader className="items-center pb-0">
+          <CardTitle className="flex items-center gap-2">
+            <BarChart4 className="h-5 w-5" /> Emissions by Category
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-50 flex items-center justify-center">
+            <div className="text-center text-gray-400">
+              <p>No data available</p>
+              <p className="text-sm mt-2">Add emission records to see category breakdown</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="flex flex-col">
       <CardHeader className="items-center pb-0">
         <CardTitle className="flex items-center gap-2">
-          <Calendar className="h-5 w-5" /> Year-over-Year Comparison
+          <BarChart4 className="h-5 w-5" /> Emissions by Category
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -56,20 +102,17 @@ export function AppBarChart() {
           <BarChart accessibilityLayer data={chartData}>
             <CartesianGrid vertical={false} />
             <XAxis
-              dataKey="month"
+              dataKey="category"
               tickLine={false}
               tickMargin={10}
               axisLine={false}
-              tickFormatter={(value) => value.slice(0, 3)}
             />
             <YAxis tickLine={false} axisLine={false} tickMargin={8} />
             <ChartTooltip
               cursor={false}
               content={<ChartTooltipContent indicator="dashed" />}
             />
-            <Bar dataKey="scope1" fill="var(--chart-1)" radius={4} />
-            <Bar dataKey="scope2" fill="var(--chart-2)" radius={4} />
-            <Bar dataKey="scope3" fill="var(--chart-3)" radius={4} />
+            <Bar dataKey="value" fill="var(--chart-1)" radius={4} />
           </BarChart>
         </ChartContainer>
       </CardContent>

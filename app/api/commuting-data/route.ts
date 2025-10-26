@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/lib/utils/auth-middleware";
 import { prisma } from "@/lib/db";
+import { getValidatedBody } from "@/lib/utils/validation-middleware";
+import { createCommutingDataSchema } from "@/lib/validations/commuting-data.schemas";
 
 /**
  * POST /api/commuting-data
@@ -8,7 +10,8 @@ import { prisma } from "@/lib/db";
  */
 export const POST = withAuth(async (request, { user }) => {
   try {
-    const body = await request.json();
+    // Validate request body
+    const body = await getValidatedBody(request, createCommutingDataSchema);
     const {
       emissionRecordId,
       employeeCount,
@@ -18,23 +21,6 @@ export const POST = withAuth(async (request, { user }) => {
       wfhDays,
       surveyDate,
     } = body;
-
-    // Validate required fields
-    if (!emissionRecordId || !employeeCount || !transportMode) {
-      return NextResponse.json(
-        { error: "Emission record ID, employee count, and transport mode are required" },
-        { status: 400 }
-      );
-    }
-
-    // Validate transport mode
-    const validTransportModes = ["car", "motorcycle", "bus", "jeepney", "train", "bicycle", "walking"];
-    if (!validTransportModes.includes(transportMode)) {
-      return NextResponse.json(
-        { error: "Invalid transport mode" },
-        { status: 400 }
-      );
-    }
 
     // Check if emission record exists and user owns it
     const emissionRecord = await prisma.emissionRecord.findUnique({
@@ -55,14 +41,6 @@ export const POST = withAuth(async (request, { user }) => {
       return NextResponse.json(
         { error: "Forbidden" },
         { status: 403 }
-      );
-    }
-
-    // Validate employee count
-    if (parseInt(employeeCount) <= 0) {
-      return NextResponse.json(
-        { error: "Employee count must be greater than 0" },
-        { status: 400 }
       );
     }
 

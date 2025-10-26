@@ -22,13 +22,8 @@ import {
   ChartTooltipContent,
   ChartConfig,
 } from "@/components/ui/chart";
-
-// Pie chart data
-const chartData = [
-  { name: "Scope 1", value: 60, color: "#064e3b" },
-  { name: "Scope 2", value: 20, color: "#a3e635" },
-  { name: "Scope 3", value: 20, color: "#fbbf24" },
-];
+import { useOrganizationCheck } from "@/lib/hooks/use-organization-check";
+import { useDashboard, DashboardPeriod } from "@/lib/api/queries/dashboard";
 
 // Config required by ChartContainer
 const chartConfig: ChartConfig = {
@@ -37,7 +32,86 @@ const chartConfig: ChartConfig = {
   scope3: { label: "Scope 3", color: "#fbbf24" },
 };
 
-export function AppPieChart() {
+interface AppPieChartProps {
+  period?: DashboardPeriod;
+}
+
+export function AppPieChart({ period = "year" }: AppPieChartProps) {
+  const { organization } = useOrganizationCheck();
+  const { data: dashboardData, isLoading } = useDashboard(
+    organization?.id || "",
+    period
+  );
+
+  // Convert API data to chart format
+  const chartData = React.useMemo(() => {
+    if (!dashboardData?.summary) {
+      return [
+        { name: "Scope 1", value: 0, color: "#064e3b" },
+        { name: "Scope 2", value: 0, color: "#a3e635" },
+        { name: "Scope 3", value: 0, color: "#fbbf24" },
+      ];
+    }
+
+    return [
+      {
+        name: "Scope 1",
+        value: dashboardData.summary.totalScope1 / 1000, // Convert kg to tonnes
+        color: "#064e3b",
+      },
+      {
+        name: "Scope 2",
+        value: dashboardData.summary.totalScope2 / 1000,
+        color: "#a3e635",
+      },
+      {
+        name: "Scope 3",
+        value: dashboardData.summary.totalScope3 / 1000,
+        color: "#fbbf24",
+      },
+    ];
+  }, [dashboardData]);
+
+  if (isLoading) {
+    return (
+      <Card className="flex flex-col">
+        <CardHeader className="items-center pb-0">
+          <CardTitle className="flex items-center gap-2">
+            <ChartPie className="h-5 w-5" /> Emission Breakdown by Scope
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[300px] flex items-center justify-center">
+            <div className="animate-pulse text-gray-400">Loading chart...</div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Check if there's any data
+  const hasData = chartData.some(d => d.value > 0);
+
+  if (!hasData) {
+    return (
+      <Card className="flex flex-col">
+        <CardHeader className="items-center pb-0">
+          <CardTitle className="flex items-center gap-2">
+            <ChartPie className="h-5 w-5" /> Emission Breakdown by Scope
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[300px] flex items-center justify-center">
+            <div className="text-center text-gray-400">
+              <p>No data available</p>
+              <p className="text-sm mt-2">Add emission records to see the breakdown</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="flex flex-col">
       <CardHeader className="items-center pb-0">

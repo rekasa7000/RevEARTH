@@ -52,6 +52,7 @@ model Account {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
   @@map("accounts")
 }
 
@@ -68,6 +69,8 @@ model Session {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
+  @@index([expiresAt])
   @@map("sessions")
 }
 
@@ -123,6 +126,8 @@ model Facility {
   organization     Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   electricityUsage ElectricityUsage[]
 
+  @@index([organizationId])
+  @@index([createdAt])
   @@map("facilities")
 }
 
@@ -146,6 +151,11 @@ model EmissionRecord {
   commutingData      CommutingData[]
   calculation        EmissionCalculation?
 
+  @@index([organizationId])
+  @@index([reportingPeriodStart])
+  @@index([status])
+  @@index([organizationId, reportingPeriodStart])
+  @@index([createdAt])
   @@map("emission_records")
 }
 
@@ -169,6 +179,9 @@ model FuelUsage {
 
   emissionRecord EmissionRecord @relation(fields: [emissionRecordId], references: [id], onDelete: Cascade)
 
+  @@index([emissionRecordId])
+  @@index([entryDate])
+  @@index([fuelType])
   @@map("fuel_usage")
 }
 
@@ -178,6 +191,15 @@ enum FuelType {
   propane
   diesel
   gasoline
+  coal
+  wood
+  biomass
+  lpg
+  kerosene
+  fuel_oil
+  biodiesel
+  ethanol
+  other
 }
 
 // Vehicle Usage (Scope 1)
@@ -195,6 +217,9 @@ model VehicleUsage {
 
   emissionRecord EmissionRecord @relation(fields: [emissionRecordId], references: [id], onDelete: Cascade)
 
+  @@index([emissionRecordId])
+  @@index([entryDate])
+  @@index([vehicleType])
   @@map("vehicle_usage")
 }
 
@@ -221,6 +246,9 @@ model RefrigerantUsage {
 
   emissionRecord EmissionRecord @relation(fields: [emissionRecordId], references: [id], onDelete: Cascade)
 
+  @@index([emissionRecordId])
+  @@index([entryDate])
+  @@index([refrigerantType])
   @@map("refrigerant_usage")
 }
 
@@ -248,6 +276,9 @@ model ElectricityUsage {
   emissionRecord EmissionRecord @relation(fields: [emissionRecordId], references: [id], onDelete: Cascade)
   facility       Facility?      @relation(fields: [facilityId], references: [id])
 
+  @@index([emissionRecordId])
+  @@index([facilityId])
+  @@index([billingPeriodStart])
   @@map("electricity_usage")
 }
 
@@ -265,6 +296,9 @@ model CommutingData {
 
   emissionRecord EmissionRecord @relation(fields: [emissionRecordId], references: [id], onDelete: Cascade)
 
+  @@index([emissionRecordId])
+  @@index([surveyDate])
+  @@index([transportMode])
   @@map("commuting_data")
 }
 
@@ -292,6 +326,9 @@ model EmployeeCommuteSurvey {
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
+  @@index([organizationId])
+  @@index([surveyDate])
+  @@index([quarter])
   @@map("employee_commute_surveys")
 }
 
@@ -310,5 +347,41 @@ model EmissionCalculation {
 
   emissionRecord EmissionRecord @relation(fields: [emissionRecordId], references: [id], onDelete: Cascade)
 
+  @@index([calculatedAt])
   @@map("emission_calculations")
+}
+
+// Error Logging model for custom error monitoring
+model ErrorLog {
+  id            String    @id @default(cuid())
+  message       String
+  stack         String?   @db.Text
+  level         ErrorLevel @default(error)
+  context       String?   // e.g., "api", "client", "server"
+  url           String?
+  userAgent     String?   @map("user_agent")
+  userId        String?   @map("user_id")
+  method        String?   // HTTP method
+  statusCode    Int?      @map("status_code")
+  requestBody   Json?     @map("request_body")
+  metadata      Json?     // Additional context data
+  resolved      Boolean   @default(false)
+  resolvedAt    DateTime? @map("resolved_at")
+  resolvedBy    String?   @map("resolved_by")
+  occurrences   Int       @default(1)
+  firstSeenAt   DateTime  @default(now()) @map("first_seen_at")
+  lastSeenAt    DateTime  @default(now()) @map("last_seen_at")
+  environment   String    @default("production") // development, staging, production
+
+  @@index([level, resolved])
+  @@index([firstSeenAt])
+  @@index([userId])
+  @@map("error_logs")
+}
+
+enum ErrorLevel {
+  error
+  warn
+  info
+  debug
 }

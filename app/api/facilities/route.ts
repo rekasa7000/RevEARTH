@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/lib/utils/auth-middleware";
 import { prisma } from "@/lib/db";
+import { getValidatedBody } from "@/lib/utils/validation-middleware";
+import { createFacilitySchema } from "@/lib/validations/facility.schemas";
 
 /**
  * POST /api/facilities
@@ -8,7 +10,8 @@ import { prisma } from "@/lib/db";
  */
 export const POST = withAuth(async (request, { user }) => {
   try {
-    const body = await request.json();
+    // Validate request body
+    const body = await getValidatedBody(request, createFacilitySchema);
     const {
       organizationId,
       name,
@@ -17,14 +20,6 @@ export const POST = withAuth(async (request, { user }) => {
       areaSqm,
       employeeCount,
     } = body;
-
-    // Validate required fields
-    if (!organizationId || !name) {
-      return NextResponse.json(
-        { error: "Organization ID and name are required" },
-        { status: 400 }
-      );
-    }
 
     // Check if organization exists and user owns it
     const organization = await prisma.organization.findUnique({

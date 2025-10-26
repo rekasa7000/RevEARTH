@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/lib/utils/auth-middleware";
 import { prisma } from "@/lib/db";
+import { getValidatedBody } from "@/lib/utils/validation-middleware";
+import { createFuelUsageSchema } from "@/lib/validations/fuel-usage.schemas";
 
 /**
  * POST /api/fuel-usage
@@ -8,7 +10,8 @@ import { prisma } from "@/lib/db";
  */
 export const POST = withAuth(async (request, { user }) => {
   try {
-    const body = await request.json();
+    // Validate request body
+    const body = await getValidatedBody(request, createFuelUsageSchema);
     const {
       emissionRecordId,
       fuelType,
@@ -18,16 +21,23 @@ export const POST = withAuth(async (request, { user }) => {
       metadata,
     } = body;
 
-    // Validate required fields
-    if (!emissionRecordId || !fuelType || !quantity || !unit || !entryDate) {
-      return NextResponse.json(
-        { error: "Emission record ID, fuel type, quantity, unit, and entry date are required" },
-        { status: 400 }
-      );
-    }
-
-    // Validate fuel type
-    const validFuelTypes = ["natural_gas", "heating_oil", "propane", "diesel", "gasoline"];
+    // Validate fuel type (already done by schema, but keeping for reference)
+    const validFuelTypes = [
+      "natural_gas",
+      "heating_oil",
+      "propane",
+      "diesel",
+      "gasoline",
+      "coal",
+      "wood",
+      "biomass",
+      "lpg",
+      "kerosene",
+      "fuel_oil",
+      "biodiesel",
+      "ethanol",
+      "other"
+    ];
     if (!validFuelTypes.includes(fuelType)) {
       return NextResponse.json(
         { error: "Invalid fuel type" },

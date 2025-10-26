@@ -1,14 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/lib/utils/auth-middleware";
 import { prisma } from "@/lib/db";
+import { getValidatedBody } from "@/lib/utils/validation-middleware";
+import { createOrganizationSchema } from "@/lib/validations/organization.schemas";
+import { checkRateLimit } from "@/lib/utils/rate-limit-middleware";
+import { RateLimits } from "@/lib/services/rate-limiter";
 
 /**
  * POST /api/organizations
  * Create a new organization
+ * Rate limited: 20 requests per minute
  */
 export const POST = withAuth(async (request, { user }) => {
+  // Apply rate limiting
+  const rateLimit = await checkRateLimit(request, RateLimits.WRITE, user.id);
+  if (!rateLimit.allowed) {
+    return rateLimit.response;
+  }
   try {
-    const body = await request.json();
+    // Validate request body
+    const body = await getValidatedBody(request, createOrganizationSchema);
     const {
       name,
       industrySector,
@@ -16,23 +27,6 @@ export const POST = withAuth(async (request, { user }) => {
       reportingBoundaries,
       applicableScopes,
     } = body;
-
-    // Validate required fields
-    if (!name || !occupancyType) {
-      return NextResponse.json(
-        { error: "Name and occupancy type are required" },
-        { status: 400 }
-      );
-    }
-
-    // Validate occupancy type
-    const validOccupancyTypes = ["residential", "commercial", "industrial", "lgu", "academic"];
-    if (!validOccupancyTypes.includes(occupancyType)) {
-      return NextResponse.json(
-        { error: "Invalid occupancy type" },
-        { status: 400 }
-      );
-    }
 
     // Check if user already has an organization
     const existingOrg = await prisma.organization.findUnique({

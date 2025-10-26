@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,23 +11,10 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import { ChartSpline } from "lucide-react";
+import { useOrganizationCheck } from "@/lib/hooks/use-organization-check";
+import { useDashboard, DashboardPeriod } from "@/lib/api/queries/dashboard";
 
 export const description = "A multiple line chart";
-
-const chartData = [
-  { month: "January", scope1: 186, scope2: 80, scope3: 100 },
-  { month: "February", scope1: 305, scope2: 200, scope3: 50 },
-  { month: "March", scope1: 237, scope2: 120, scope3: 150 },
-  { month: "April", scope1: 73, scope2: 190, scope3: 400 },
-  { month: "May", scope1: 209, scope2: 130, scope3: 200 },
-  { month: "June", scope1: 214, scope2: 140, scope3: 250 },
-  { month: "July", scope1: 186, scope2: 80, scope3: 100 },
-  { month: "August", scope1: 305, scope2: 200, scope3: 50 },
-  { month: "September", scope1: 237, scope2: 120, scope3: 150 },
-  { month: "October", scope1: 73, scope2: 190, scope3: 400 },
-  { month: "November", scope1: 209, scope2: 130, scope3: 200 },
-  { month: "December", scope1: 214, scope2: 140, scope3: 250 },
-];
 
 const chartConfig = {
   scope1: {
@@ -43,7 +31,77 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export function AppLineChart() {
+interface AppLineChartProps {
+  period?: DashboardPeriod;
+}
+
+export function AppLineChart({ period = "year" }: AppLineChartProps) {
+  const { organization } = useOrganizationCheck();
+  const { data: dashboardData, isLoading } = useDashboard(
+    organization?.id || "",
+    period
+  );
+
+  // Convert API data to chart format
+  const chartData = React.useMemo(() => {
+    if (!dashboardData?.trends?.monthly) {
+      return [];
+    }
+
+    // Map the monthly data and convert YYYY-MM to month names
+    return dashboardData.trends.monthly.map((item) => {
+      const date = new Date(item.month + "-01"); // Add day to parse
+      const monthName = date.toLocaleString("en-US", { month: "long" });
+
+      return {
+        month: monthName,
+        scope1: item.scope1 / 1000, // Convert kg to tonnes
+        scope2: item.scope2 / 1000,
+        scope3: item.scope3 / 1000,
+      };
+    });
+  }, [dashboardData]);
+
+  if (isLoading) {
+    return (
+      <Card className="flex flex-col">
+        <CardHeader className="flex flex-row items-center justify-between pb-0">
+          <CardTitle className="flex items-center gap-2">
+            <ChartSpline className="h-5 w-5" /> Monthly Emissions Trend
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-4">
+          <div className="h-72 flex items-center justify-center">
+            <div className="animate-pulse text-gray-400">Loading chart...</div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Check if there's any data
+  const hasData = chartData.length > 0;
+
+  if (!hasData) {
+    return (
+      <Card className="flex flex-col">
+        <CardHeader className="flex flex-row items-center justify-between pb-0">
+          <CardTitle className="flex items-center gap-2">
+            <ChartSpline className="h-5 w-5" /> Monthly Emissions Trend
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-4">
+          <div className="h-72 flex items-center justify-center">
+            <div className="text-center text-gray-400">
+              <p>No data available</p>
+              <p className="text-sm mt-2">Add emission records to see trends</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between pb-0">

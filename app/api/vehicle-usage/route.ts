@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/lib/utils/auth-middleware";
 import { prisma } from "@/lib/db";
+import { getValidatedBody } from "@/lib/utils/validation-middleware";
+import { createVehicleUsageSchema } from "@/lib/validations/vehicle-usage.schemas";
 
 /**
  * POST /api/vehicle-usage
@@ -8,7 +10,8 @@ import { prisma } from "@/lib/db";
  */
 export const POST = withAuth(async (request, { user }) => {
   try {
-    const body = await request.json();
+    // Validate request body
+    const body = await getValidatedBody(request, createVehicleUsageSchema);
     const {
       emissionRecordId,
       vehicleId,
@@ -19,32 +22,6 @@ export const POST = withAuth(async (request, { user }) => {
       unit,
       entryDate,
     } = body;
-
-    // Validate required fields
-    if (!emissionRecordId || !vehicleType || !fuelType || !unit || !entryDate) {
-      return NextResponse.json(
-        { error: "Emission record ID, vehicle type, fuel type, unit, and entry date are required" },
-        { status: 400 }
-      );
-    }
-
-    // Validate vehicle type
-    const validVehicleTypes = ["sedan", "suv", "truck", "van", "motorcycle"];
-    if (!validVehicleTypes.includes(vehicleType)) {
-      return NextResponse.json(
-        { error: "Invalid vehicle type" },
-        { status: 400 }
-      );
-    }
-
-    // Validate fuel type
-    const validFuelTypes = ["natural_gas", "heating_oil", "propane", "diesel", "gasoline"];
-    if (!validFuelTypes.includes(fuelType)) {
-      return NextResponse.json(
-        { error: "Invalid fuel type" },
-        { status: 400 }
-      );
-    }
 
     // Check if emission record exists and user owns it
     const emissionRecord = await prisma.emissionRecord.findUnique({
@@ -65,14 +42,6 @@ export const POST = withAuth(async (request, { user }) => {
       return NextResponse.json(
         { error: "Forbidden" },
         { status: 403 }
-      );
-    }
-
-    // At least one of fuelConsumed or mileage is required
-    if (!fuelConsumed && !mileage) {
-      return NextResponse.json(
-        { error: "Either fuel consumed or mileage is required" },
-        { status: 400 }
       );
     }
 

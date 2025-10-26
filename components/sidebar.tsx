@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar, Home, Inbox, LogOut, User, Settings, ChevronUp } from "lucide-react";
+import { Calendar, Home, Inbox, LogOut, User, Settings, ChevronUp, Building2 } from "lucide-react";
 import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import {
@@ -29,6 +29,11 @@ const items = [
     title: "Dashboard",
     url: "/dashboard",
     icon: Home,
+  },
+  {
+    title: "Facilities",
+    url: "/facilities",
+    icon: Building2,
   },
   {
     title: "Calculation",

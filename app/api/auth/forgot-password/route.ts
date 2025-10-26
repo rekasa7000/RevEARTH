@@ -1,12 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { generatePasswordResetToken } from "@/lib/utils/auth-helpers";
+import { sendPasswordResetEmail } from "@/lib/services/email";
+import { checkRateLimit } from "@/lib/utils/rate-limit-middleware";
+import { RateLimits } from "@/lib/services/rate-limiter";
 
 /**
  * POST /api/auth/forgot-password
  * Request password reset
+ * Rate limited: 5 requests per minute
  */
 export async function POST(request: NextRequest) {
+  // Apply rate limiting
+  const rateLimit = await checkRateLimit(request, RateLimits.AUTH);
+  if (!rateLimit.allowed) {
+    return rateLimit.response;
+  }
   try {
     const body = await request.json();
     const { email } = body;
@@ -34,19 +43,24 @@ export async function POST(request: NextRequest) {
     // Generate reset token
     const token = await generatePasswordResetToken(email);
 
-    // TODO: Send email with reset link
-    // For now, we'll just return the token in development
-    const resetLink = `${process.env.NEXT_PUBLIC_APP_URL}/auth/reset-password?token=${token}`;
+    // Send email with reset link
+    const resetLink = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/auth/reset-password?token=${token}`;
 
-    console.log("Password reset link:", resetLink);
+    // Send password reset email
+    const emailSent = await sendPasswordResetEmail(email, resetLink, user.name || undefined);
 
-    // TODO: In production, send email via email service
-    // await sendPasswordResetEmail(email, resetLink);
+    if (!emailSent) {
+      console.warn(`Failed to send password reset email to ${email}`);
+      // In development, log the link
+      if (process.env.NODE_ENV === "development") {
+        console.log("Password reset link:", resetLink);
+      }
+    }
 
     return NextResponse.json({
       success: true,
       message: "Password reset link sent to your email",
-      // Remove this in production:
+      // Include link in development for testing
       ...(process.env.NODE_ENV === "development" && { resetLink }),
     });
   } catch (error) {
