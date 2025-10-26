@@ -711,8 +711,8 @@ export default function Calculation() {
   };
 
   return (
-    <div className="min-h-screen py-6 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-900">
-      <div className="mx-auto">
+    <div className="p-6 w-full container mx-auto max-w-[100rem]">
+      <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
           Data Calculation
         </h1>

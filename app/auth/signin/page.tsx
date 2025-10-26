@@ -1,17 +1,57 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { signInWithEmail } from "@/lib/auth/auth-hooks";
+import { GuestOnlyRoute } from "@/components/auth/guest-only-route";
 
-export default function SignIn() {
+function SignInPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const returnUrl = searchParams.get("returnUrl") || "/dashboard";
+  const expired = searchParams.get("expired");
+
+  // Show session expired message
+  useEffect(() => {
+    if (expired === "true") {
+      setError("Your session has expired. Please sign in again.");
+    }
+  }, [expired]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    const result = await signInWithEmail(email, password, {
+      onRequest: () => {
+        setIsLoading(true);
+      },
+      onSuccess: () => {
+        // Success - redirect to return URL or dashboard
+        router.push(returnUrl);
+      },
+      onError: (error) => {
+        setError(error.message);
+        setIsLoading(false);
+      },
+    });
+
+    // Handle result errors that weren't caught by callbacks
+    if (result.error) {
+      setError(result.error.message || "Failed to sign in");
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
@@ -63,7 +103,12 @@ export default function SignIn() {
               </div>
             </div>
 
-            <form className="space-y-4">
+            <form className="space-y-4" onSubmit={handleSubmit}>
+              {error && (
+                <div className="p-3 text-sm text-red-600 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+                  {error}
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -72,6 +117,7 @@ export default function SignIn() {
                   placeholder="demo@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  disabled={isLoading}
                   required
                 />
               </div>
@@ -83,6 +129,7 @@ export default function SignIn() {
                   placeholder="password123"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  disabled={isLoading}
                   required
                 />
               </div>
@@ -91,12 +138,31 @@ export default function SignIn() {
               </Button>
             </form>
 
-            <div className="text-center text-sm text-muted-foreground">
-              <p>Demo credentials: demo@example.com / password123</p>
+            <div className="text-center text-sm text-gray-600 dark:text-gray-400">
+              <p className="mb-2 text-muted-foreground">
+                Demo credentials: demo@example.com / password123
+              </p>
+              <p>
+                Don't have an account?{" "}
+                <Link
+                  href="/auth/signup"
+                  className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400"
+                >
+                  Sign up
+                </Link>
+              </p>
             </div>
           </CardContent>
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function SignIn() {
+  return (
+    <GuestOnlyRoute>
+      <SignInPage />
+    </GuestOnlyRoute>
   );
 }

@@ -10,17 +10,41 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useOrganizationCheck } from "@/lib/hooks/use-organization-check";
 
 export default function Dashboard() {
+  const { organization, isLoading } = useOrganizationCheck();
+
+  if (isLoading) {
+    return (
+      <div className="p-6 w-full container mx-auto max-w-[100rem]">
+        <div className="animate-pulse space-y-6">
+          <div className="h-8 bg-gray-300 dark:bg-gray-700 rounded w-1/3"></div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <div className="h-32 bg-gray-300 dark:bg-gray-700 rounded"></div>
+            <div className="h-32 bg-gray-300 dark:bg-gray-700 rounded"></div>
+            <div className="h-32 bg-gray-300 dark:bg-gray-700 rounded"></div>
+            <div className="h-32 bg-gray-300 dark:bg-gray-700 rounded"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <div className="p-6 w-full container mx-auto max-w-[100rem]">
+      <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
           Emissions Dashboard
         </h1>
+        {organization && (
+          <p className="mt-2 text-gray-600 dark:text-gray-400">
+            {organization.name}
+          </p>
+        )}
       </div>
 
-      <div className="mx-auto grid grid-cols-1 md:grid-cols-4 gap-3 mb-4 px-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
         <Card>
           <CardHeader>
             <CardTitle className="text-lg font-medium text-gray-600 dark:text-gray-300">
@@ -69,7 +93,7 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      <div className="mmx-auto grid grid-cols-1 md:grid-cols-2 gap-3 px-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
         <div>
           <AppPieChart />
         </div>
