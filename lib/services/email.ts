@@ -21,14 +21,14 @@ const createTransporter = () => {
   });
 };
 
-interface SendEmailOptions {
+export interface SendEmailOptions {
   to: string;
   subject: string;
   html: string;
   text: string;
 }
 
-async function sendEmail({ to, subject, html, text }: SendEmailOptions): Promise<boolean> {
+export async function sendEmail({ to, subject, html, text }: SendEmailOptions): Promise<boolean> {
   try {
     const transporter = createTransporter();
 

@@ -29,9 +29,10 @@ model User {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
-  accounts     Account[]
-  sessions     Session[]
-  organization Organization?
+  accounts             Account[]
+  sessions             Session[]
+  organization         Organization?
+  organizationMembers  OrganizationMember[]
 
   @@map("users")
 }
@@ -100,6 +101,8 @@ model Organization {
   facilities      Facility[]
   emissionRecords EmissionRecord[]
   commuteSurveys  EmployeeCommuteSurvey[]
+  members         OrganizationMember[]
+  invitations     InvitationToken[]
 
   @@map("organizations")
 }
@@ -110,6 +113,51 @@ enum OccupancyType {
   industrial
   lgu
   academic
+}
+
+enum Role {
+  owner
+  admin
+  editor
+  viewer
+}
+
+// Organization Member model - junction table for multi-user organizations
+model OrganizationMember {
+  id             String       @id @default(cuid())
+  organizationId String       @map("organization_id")
+  userId         String       @map("user_id")
+  role           Role
+  joinedAt       DateTime     @default(now()) @map("joined_at")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([organizationId])
+  @@index([userId])
+  @@map("organization_members")
+}
+
+// Invitation Token model for inviting users to organizations
+model InvitationToken {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  email          String
+  role           Role
+  token          String   @unique
+  expiresAt      DateTime @map("expires_at")
+  invitedBy      String   @map("invited_by")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([email])
+  @@index([token])
+  @@map("invitation_tokens")
 }
 
 // Facility model

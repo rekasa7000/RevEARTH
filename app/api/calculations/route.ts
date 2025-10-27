@@ -3,7 +3,7 @@ import { withAuth } from "@/lib/utils/auth-middleware";
 import { prisma } from "@/lib/db";
 import { calculateEmissionRecord } from "@/lib/services/calculation-engine";
 import { getValidatedBody } from "@/lib/utils/validation-middleware";
-import { triggerCalculationSchema } from "@/lib/validations/calculation.schemas";
+import { calculateEmissionsSchema } from "@/lib/validations/calculation.schemas";
 import { checkRateLimit } from "@/lib/utils/rate-limit-middleware";
 import { RateLimits } from "@/lib/services/rate-limiter";
 
@@ -20,7 +20,7 @@ export const POST = withAuth(async (request, { user }) => {
   }
   try {
     // Validate request body
-    const body = await getValidatedBody(request, triggerCalculationSchema);
+    const body = await getValidatedBody(request, calculateEmissionsSchema);
     const { emissionRecordId } = body;
 
     // Check if emission record exists and user owns it
