@@ -9,9 +9,7 @@ import { z } from "zod";
 
 const addMemberSchema = z.object({
   userId: z.string().cuid("Invalid user ID"),
-  role: z.enum(["admin", "editor", "viewer"], {
-    errorMap: () => ({ message: "Role must be admin, editor, or viewer" }),
-  }),
+  role: z.enum(["admin", "editor", "viewer"] as const),
 });
 
 /**
@@ -71,7 +69,7 @@ export const POST = withAuth(async (request, { user, params }) => {
 
     if (!validation.success) {
       return NextResponse.json(
-        { error: "Invalid request data", details: validation.error.errors },
+        { error: "Invalid request data", details: validation.error.issues },
         { status: 400 }
       );
     }

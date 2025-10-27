@@ -11,13 +11,13 @@ import { RateLimits } from "@/lib/services/rate-limiter";
  * Create a new organization
  * Rate limited: 20 requests per minute
  */
-export const POST = withAuth(async (request, { user }) => {
-  // Apply rate limiting
-  const rateLimit = await checkRateLimit(request, RateLimits.WRITE, user.id);
-  if (!rateLimit.allowed) {
-    return rateLimit.response;
-  }
+export const POST = withAuth(async (request, { user }): Promise<NextResponse> => {
   try {
+    // Apply rate limiting
+    const rateLimit = await checkRateLimit(request, RateLimits.WRITE, user.id);
+    if (!rateLimit.allowed) {
+      return rateLimit.response || NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
+    }
     // Validate request body
     const body = await getValidatedBody(request, createOrganizationSchema);
     const {
@@ -61,8 +61,8 @@ export const POST = withAuth(async (request, { user }) => {
         name,
         industrySector: industrySector || null,
         occupancyType,
-        reportingBoundaries: reportingBoundaries || null,
-        applicableScopes: defaultScopes,
+        reportingBoundaries: (reportingBoundaries as any) || undefined,
+        applicableScopes: defaultScopes as any,
       },
     });
 

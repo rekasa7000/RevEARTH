@@ -48,11 +48,11 @@ export const POST = withAuth(async (request, { user }) => {
     const commutingData = await prisma.commutingData.create({
       data: {
         emissionRecordId,
-        employeeCount: parseInt(employeeCount),
-        avgDistanceKm: avgDistanceKm ? parseFloat(avgDistanceKm) : null,
+        employeeCount,
+        avgDistanceKm: avgDistanceKm || null,
         transportMode,
-        daysPerWeek: daysPerWeek ? parseInt(daysPerWeek) : null,
-        wfhDays: wfhDays ? parseInt(wfhDays) : null,
+        daysPerWeek: daysPerWeek || null,
+        wfhDays: wfhDays || null,
         surveyDate: surveyDate ? new Date(surveyDate) : null,
       },
     });

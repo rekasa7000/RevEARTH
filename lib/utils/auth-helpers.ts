@@ -27,7 +27,6 @@ export async function generateVerificationToken(userId: string, email: string) {
     where: { id: userId },
     data: {
       verificationToken: token,
-      isVerified: false,
     },
   });
 
@@ -69,8 +68,6 @@ export async function verifyEmailToken(token: string) {
   await prisma.user.update({
     where: { id: user.id },
     data: {
-      isVerified: true,
-      emailVerified: new Date(),
       verificationToken: null,
     },
   });

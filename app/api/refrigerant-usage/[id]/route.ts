@@ -134,7 +134,7 @@ export const PATCH = withAuth(async (request, { user, params }) => {
         }),
         ...(unit && { unit }),
         ...(entryDate && { entryDate: new Date(entryDate) }),
-        ...(leakDetectionLog !== undefined && { leakDetectionLog }),
+        ...(leakDetectionLog !== undefined && { leakDetectionLog: leakDetectionLog as any }),
       },
     });
 

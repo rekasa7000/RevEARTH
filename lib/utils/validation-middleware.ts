@@ -50,7 +50,7 @@ export class ValidationError extends Error {
   constructor(zodError: ZodError) {
     super("Validation failed");
     this.name = "ValidationError";
-    this.errors = zodError.errors.map((err) => ({
+    this.errors = zodError.issues.map((err) => ({
       field: err.path.join("."),
       message: err.message,
     }));

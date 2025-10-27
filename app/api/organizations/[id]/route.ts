@@ -97,8 +97,8 @@ export const PATCH = withAuth(async (request, { user, params }) => {
         ...(name && { name }),
         ...(industrySector !== undefined && { industrySector }),
         ...(occupancyType && { occupancyType }),
-        ...(reportingBoundaries !== undefined && { reportingBoundaries }),
-        ...(applicableScopes && { applicableScopes }),
+        ...(reportingBoundaries !== undefined && { reportingBoundaries: reportingBoundaries as any }),
+        ...(applicableScopes && { applicableScopes: applicableScopes as any }),
       },
     });
 

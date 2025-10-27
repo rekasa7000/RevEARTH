@@ -140,7 +140,8 @@ class RateLimiter {
 const rateLimiter = new RateLimiter();
 
 // Export rate limiter instance
-export { rateLimiter, RateLimitOptions, RateLimitResult };
+export { rateLimiter };
+export type { RateLimitOptions, RateLimitResult };
 
 // Export pre-configured rate limiters
 export const RateLimits = {

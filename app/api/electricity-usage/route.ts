@@ -69,12 +69,12 @@ export const POST = withAuth(async (request, { user }) => {
         emissionRecordId,
         facilityId: facilityId || null,
         meterNumber: meterNumber || null,
-        kwhConsumption: parseFloat(kwhConsumption),
-        peakHoursKwh: peakHoursKwh ? parseFloat(peakHoursKwh) : null,
-        offpeakHoursKwh: offpeakHoursKwh ? parseFloat(offpeakHoursKwh) : null,
+        kwhConsumption,
+        peakHoursKwh: peakHoursKwh || null,
+        offpeakHoursKwh: offpeakHoursKwh || null,
         billingPeriodStart: new Date(billingPeriodStart),
         billingPeriodEnd: new Date(billingPeriodEnd),
-        utilityBillData: utilityBillData || null,
+        utilityBillData: utilityBillData as any,
       },
     });
 

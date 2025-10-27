@@ -79,7 +79,7 @@ export const POST = withAuth(async (request, { user }) => {
         quantityPurchased: quantityPurchased !== undefined && quantityPurchased !== null ? parseFloat(quantityPurchased.toString()) : null,
         unit,
         entryDate: new Date(entryDate),
-        leakDetectionLog: leakDetectionLog || null,
+        leakDetectionLog: leakDetectionLog as any,
         // co2eCalculated will be set by calculation engine
       },
     });

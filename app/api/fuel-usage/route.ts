@@ -68,7 +68,7 @@ export const POST = withAuth(async (request, { user }) => {
     }
 
     // Validate quantity
-    if (parseFloat(quantity) <= 0) {
+    if (quantity <= 0) {
       return NextResponse.json(
         { error: "Quantity must be greater than 0" },
         { status: 400 }
@@ -80,10 +80,10 @@ export const POST = withAuth(async (request, { user }) => {
       data: {
         emissionRecordId,
         fuelType,
-        quantity: parseFloat(quantity),
+        quantity,
         unit,
         entryDate: new Date(entryDate),
-        metadata: metadata || null,
+        metadata: metadata as any,
         // co2eCalculated will be set by calculation engine
       },
     });

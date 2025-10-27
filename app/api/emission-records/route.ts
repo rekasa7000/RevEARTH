@@ -75,7 +75,7 @@ export const POST = withAuth(async (request, { user }) => {
         reportingPeriodStart: startDate,
         reportingPeriodEnd: endDate,
         status: "draft",
-        scopeSelection: scopeSelection || organization.applicableScopes,
+        scopeSelection: (scopeSelection || organization.applicableScopes) as any,
       },
     });
 

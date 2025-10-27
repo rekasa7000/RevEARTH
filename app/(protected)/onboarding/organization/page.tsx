@@ -128,7 +128,7 @@ export default function OrganizationSetup() {
                   placeholder="e.g., Acme Corporation"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  disabled={isLoading}
+                  disabled={createOrganization.isPending}
                   className="mt-1"
                 />
               </div>
@@ -141,7 +141,7 @@ export default function OrganizationSetup() {
                   placeholder="e.g., Technology, Manufacturing, Retail"
                   value={formData.industrySector}
                   onChange={(e) => setFormData({ ...formData, industrySector: e.target.value })}
-                  disabled={isLoading}
+                  disabled={createOrganization.isPending}
                   className="mt-1"
                 />
               </div>
@@ -162,7 +162,7 @@ export default function OrganizationSetup() {
                     key={option.value}
                     type="button"
                     onClick={() => setFormData({ ...formData, occupancyType: option.value })}
-                    disabled={isLoading}
+                    disabled={createOrganization.isPending}
                     className={`relative p-4 border-2 rounded-lg text-left transition-all ${
                       formData.occupancyType === option.value
                         ? "border-[#A5C046] bg-[#A5C046]/10"

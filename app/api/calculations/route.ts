@@ -12,13 +12,14 @@ import { RateLimits } from "@/lib/services/rate-limiter";
  * Trigger calculation for an emission record
  * Rate limited: 10 requests per minute (expensive operation)
  */
-export const POST = withAuth(async (request, { user }) => {
-  // Apply strict rate limiting for expensive calculations
-  const rateLimit = await checkRateLimit(request, RateLimits.CALCULATION, user.id);
-  if (!rateLimit.allowed) {
-    return rateLimit.response;
-  }
+export const POST = withAuth(async (request, { user }): Promise<NextResponse> => {
   try {
+    // Apply strict rate limiting for expensive calculations
+    const rateLimit = await checkRateLimit(request, RateLimits.CALCULATION, user.id);
+    if (!rateLimit.allowed) {
+      return rateLimit.response || NextResponse.json({ error: "Rate limit exceeded" }, { status: 429 });
+    }
+
     // Validate request body
     const body = await getValidatedBody(request, calculateEmissionsSchema);
     const { emissionRecordId } = body;

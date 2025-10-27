@@ -38,11 +38,11 @@ import {
   getSchemaForScope,
 } from "@/lib/validations/emission-forms";
 import { useEmissionRecords, useCreateEmissionRecord } from "@/lib/api/queries/emission-records";
-import { useFuelUsage, useCreateFuelUsage } from "@/lib/api/queries/fuel-usage";
-import { useVehicleUsage, useCreateVehicleUsage } from "@/lib/api/queries/vehicle-usage";
-import { useRefrigerantUsage, useCreateRefrigerantUsage } from "@/lib/api/queries/refrigerant-usage";
+import { useFuelUsage, useCreateFuelUsage, FuelType } from "@/lib/api/queries/fuel-usage";
+import { useVehicleUsage, useCreateVehicleUsage, VehicleType, VehicleFuelType } from "@/lib/api/queries/vehicle-usage";
+import { useRefrigerantUsage, useCreateRefrigerantUsage, RefrigerantType } from "@/lib/api/queries/refrigerant-usage";
 import { useElectricityUsage, useCreateElectricityUsage } from "@/lib/api/queries/electricity-usage";
-import { useCommutingData, useCreateCommutingData } from "@/lib/api/queries/commuting-data";
+import { useCommutingData, useCreateCommutingData, TransportMode } from "@/lib/api/queries/commuting-data";
 import { useCalculation, useTriggerCalculation } from "@/lib/api/queries/calculations";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
@@ -183,7 +183,7 @@ function CalculationContent() {
             return {
               id: fuel.id || "",
               sourceDescription: (metadata?.sourceDescription as string) || "N/A",
-              fuelState: ((metadata?.fuelState as string) === "Solid" || (metadata?.fuelState as string) === "Gas" ? metadata.fuelState : "Liquid") as "Solid" | "Liquid" | "Gas",
+              fuelState: ((metadata?.fuelState as string) === "Solid" || (metadata?.fuelState as string) === "Gas" ? metadata?.fuelState : "Liquid") as "Solid" | "Liquid" | "Gas",
               fuelType: fuel.fuelType || "unknown",
               fuelConsumption: Number(fuel.quantity) || 0,
               unit: fuel.unit || "",
@@ -215,12 +215,10 @@ function CalculationContent() {
             id: refrigerant.id || "",
             equipmentDescription: refrigerant.equipmentId || "N/A",
             refrigerantType: refrigerant.refrigerantType || "unknown",
-            quantityLeaked: Number(refrigerant.quantityLeaked) || 0,
-            quantityPurchased: Number(refrigerant.quantityPurchased) || 0,
+            equipmentCapacity: Number(refrigerant.quantityPurchased) || 0,
+            refrigerantLeakage: Number(refrigerant.quantityLeaked) || 0,
             unit: refrigerant.unit || "kg",
             co2Emissions: Number(refrigerant.co2eCalculated) || 0,
-            ch4Emissions: 0, // Not tracked separately
-            n2oEmissions: 0, // Not tracked separately
             totalEmissions: Number(refrigerant.co2eCalculated) || 0,
           })) as EmissionData[];
         case "scope2":
@@ -358,7 +356,7 @@ function CalculationContent() {
           // Scope 1 - Stationary Combustion (Fuel Usage)
           await createFuelUsage.mutateAsync({
             emissionRecordId: currentEmissionRecordId,
-            fuelType: formData.fuelType,
+            fuelType: formData.fuelType as FuelType,
             quantity: parseFloat(formData.fuelConsumption) || 0,
             unit: formData.unit || "L",
             entryDate: today,
@@ -376,8 +374,8 @@ function CalculationContent() {
           // Scope 1 - Mobile Combustion (Vehicle Usage)
           await createVehicleUsage.mutateAsync({
             emissionRecordId: currentEmissionRecordId,
-            vehicleType: formData.vehicleType,
-            fuelType: formData.fuelType,
+            vehicleType: formData.vehicleType as VehicleType,
+            fuelType: formData.fuelType as VehicleFuelType,
             fuelConsumed: parseFloat(formData.fuelConsumption),
             mileage: formData.mileage ? parseFloat(formData.mileage) : undefined,
             unit: formData.unit || "L",
@@ -395,7 +393,7 @@ function CalculationContent() {
           await createRefrigerantUsage.mutateAsync({
             emissionRecordId: currentEmissionRecordId,
             equipmentId: formData.equipmentDescription || undefined,
-            refrigerantType: formData.refrigerantType,
+            refrigerantType: formData.refrigerantType as RefrigerantType,
             quantityLeaked: formData.quantityLeaked ? parseFloat(formData.quantityLeaked) : undefined,
             quantityPurchased: formData.quantityPurchased ? parseFloat(formData.quantityPurchased) : undefined,
             unit: formData.unit || "kg",
@@ -429,7 +427,7 @@ function CalculationContent() {
             emissionRecordId: currentEmissionRecordId,
             employeeCount: parseInt(formData.employeeCount) || 1,
             avgDistanceKm: parseFloat(formData.activityData),
-            transportMode: formData.transportMode,
+            transportMode: formData.transportMode as TransportMode,
             daysPerWeek: formData.daysPerWeek ? parseInt(formData.daysPerWeek) : undefined,
             wfhDays: formData.wfhDays ? parseInt(formData.wfhDays) : undefined,
             surveyDate: today,
@@ -497,7 +495,6 @@ function CalculationContent() {
         organizationId: organization.id,
         reportingPeriodStart: new Date(newRecordData.reportingPeriodStart).toISOString(),
         reportingPeriodEnd: new Date(newRecordData.reportingPeriodEnd).toISOString(),
-        status: "draft",
       });
 
       toast({
