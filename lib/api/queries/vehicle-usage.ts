@@ -118,7 +118,7 @@ export function useCreateVehicleUsage() {
         queryKey: ["emissionRecord", newVehicleUsage.emissionRecordId],
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error("Failed to create vehicle usage:", error);
     },
   });
@@ -164,7 +164,7 @@ export function useUpdateVehicleUsage() {
       // Return a context with the previous value
       return { previousVehicleUsage };
     },
-    onError: (error: any, variables, context) => {
+    onError: (error: Error, variables, context) => {
       // Rollback to the previous value on error
       if (context?.previousVehicleUsage) {
         queryClient.setQueryData(["vehicle-usage"], context.previousVehicleUsage);
@@ -229,7 +229,7 @@ export function useDeleteVehicleUsage() {
       // Return a context with the previous value
       return { previousVehicleUsage };
     },
-    onError: (error: any, variables, context) => {
+    onError: (error: Error, variables, context) => {
       // Rollback to the previous value on error
       if (context?.previousVehicleUsage) {
         queryClient.setQueryData(

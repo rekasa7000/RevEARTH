@@ -17,7 +17,7 @@ export interface RefrigerantUsage {
   unit: string;
   co2eCalculated?: number | null;
   entryDate: string;
-  leakDetectionLog?: Record<string, any> | null;
+  leakDetectionLog?: Record<string, unknown> | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -30,7 +30,7 @@ export interface CreateRefrigerantUsageInput {
   quantityPurchased?: number;
   unit: string;
   entryDate: string;
-  leakDetectionLog?: Record<string, any>;
+  leakDetectionLog?: Record<string, unknown>;
 }
 
 export interface UpdateRefrigerantUsageInput {
@@ -42,7 +42,7 @@ export interface UpdateRefrigerantUsageInput {
     quantityPurchased?: number | null;
     unit?: string;
     entryDate?: string;
-    leakDetectionLog?: Record<string, any> | null;
+    leakDetectionLog?: Record<string, unknown> | null;
   };
 }
 
@@ -138,7 +138,7 @@ export function useCreateRefrigerantUsage() {
         queryKey: ["emissionRecord", newRefrigerantUsage.emissionRecordId],
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error("Failed to create refrigerant usage:", error);
     },
   });
@@ -184,7 +184,7 @@ export function useUpdateRefrigerantUsage() {
     },
 
     // Rollback on error
-    onError: (error: any, variables, context) => {
+    onError: (error: Error, variables, context) => {
       if (context?.previousRefrigerantUsage) {
         queryClient.setQueryData(
           ["refrigerant-usage"],
@@ -252,7 +252,7 @@ export function useDeleteRefrigerantUsage() {
       return { previousRefrigerantUsage };
     },
 
-    onError: (error: any, variables, context) => {
+    onError: (error: Error, variables, context) => {
       if (context?.previousRefrigerantUsage) {
         queryClient.setQueryData(
           ["refrigerant-usage", variables.emissionRecordId],

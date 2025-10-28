@@ -15,9 +15,7 @@ export const createCommutingDataSchema = z.object({
     .optional()
     .or(z.string().transform((val) => parseFloat(val)).pipe(z.number().positive()))
     .optional(),
-  transportMode: z.nativeEnum(TransportMode, {
-    errorMap: () => ({ message: "Invalid transport mode" }),
-  }),
+  transportMode: z.nativeEnum(TransportMode),
   daysPerWeek: z
     .number()
     .int("Days per week must be an integer")

@@ -91,8 +91,8 @@ export default function OrganizationSetup() {
 
       // Redirect to dashboard after successful setup
       router.push("/dashboard");
-    } catch (err: any) {
-      setError(err.message || "Failed to create organization");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to create organization");
     }
   };
 
@@ -109,7 +109,7 @@ export default function OrganizationSetup() {
             Set Up Your Organization
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Let's get started by setting up your organization profile
+            Let&apos;s get started by setting up your organization profile
           </p>
         </div>
 

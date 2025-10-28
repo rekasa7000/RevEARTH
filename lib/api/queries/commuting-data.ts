@@ -114,7 +114,7 @@ export function useCreateCommutingData() {
         queryKey: ["emissionRecord", newCommutingData.emissionRecordId],
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error("Failed to create commuting data:", error);
     },
   });
@@ -160,7 +160,7 @@ export function useUpdateCommutingData() {
       // Return a context with the previous value
       return { previousCommutingData };
     },
-    onError: (error: any, variables, context) => {
+    onError: (error: Error, variables, context) => {
       // Rollback to the previous value on error
       if (context?.previousCommutingData) {
         queryClient.setQueryData(["commuting-data"], context.previousCommutingData);
@@ -225,7 +225,7 @@ export function useDeleteCommutingData() {
       // Return a context with the previous value
       return { previousCommutingData };
     },
-    onError: (error: any, variables, context) => {
+    onError: (error: Error, variables, context) => {
       // Rollback to the previous value on error
       if (context?.previousCommutingData) {
         queryClient.setQueryData(

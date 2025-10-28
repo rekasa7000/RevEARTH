@@ -2,11 +2,24 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 
+// Type definitions for auth middleware
+export interface AuthUser {
+  id: string;
+  email: string;
+  name?: string;
+  [key: string]: unknown;
+}
+
+export interface AuthContext {
+  user: AuthUser;
+  params?: Record<string, string>;
+}
+
 /**
  * Middleware to protect API routes
  * Usage: const user = await requireAuth(request);
  */
-export async function requireAuth(request: NextRequest) {
+export async function requireAuth(request: NextRequest): Promise<AuthUser> {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
@@ -24,10 +37,10 @@ export async function requireAuth(request: NextRequest) {
 export function withAuth(
   handler: (
     request: NextRequest,
-    context: { user: any; params?: any }
+    context: AuthContext
   ) => Promise<NextResponse>
 ) {
-  return async (request: NextRequest, { params }: any = {}) => {
+  return async (request: NextRequest, { params }: { params?: Record<string, string> } = {}) => {
     try {
       const user = await requireAuth(request);
       return await handler(request, { user, params });

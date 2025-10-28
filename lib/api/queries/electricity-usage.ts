@@ -16,7 +16,7 @@ export interface ElectricityUsage {
   co2eCalculated?: number | null;
   billingPeriodStart: string;
   billingPeriodEnd: string;
-  utilityBillData?: Record<string, any> | null;
+  utilityBillData?: Record<string, unknown> | null;
   createdAt: string;
   updatedAt: string;
   facility?: {
@@ -35,7 +35,7 @@ export interface CreateElectricityUsageInput {
   offpeakHoursKwh?: number;
   billingPeriodStart: string;
   billingPeriodEnd: string;
-  utilityBillData?: Record<string, any>;
+  utilityBillData?: Record<string, unknown>;
 }
 
 export interface UpdateElectricityUsageInput {
@@ -48,7 +48,7 @@ export interface UpdateElectricityUsageInput {
     offpeakHoursKwh?: number | null;
     billingPeriodStart?: string;
     billingPeriodEnd?: string;
-    utilityBillData?: Record<string, any> | null;
+    utilityBillData?: Record<string, unknown> | null;
   };
 }
 
@@ -130,7 +130,7 @@ export function useCreateElectricityUsage() {
         });
       }
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error("Failed to create electricity usage:", error);
     },
   });
@@ -176,7 +176,7 @@ export function useUpdateElectricityUsage() {
       // Return a context with the previous value
       return { previousElectricityUsage };
     },
-    onError: (error: any, variables, context) => {
+    onError: (error: Error, variables, context) => {
       // Rollback to the previous value on error
       if (context?.previousElectricityUsage) {
         queryClient.setQueryData(["electricity-usage"], context.previousElectricityUsage);
@@ -250,7 +250,7 @@ export function useDeleteElectricityUsage() {
       // Return a context with the previous value
       return { previousElectricityUsage };
     },
-    onError: (error: any, variables, context) => {
+    onError: (error: Error, variables, context) => {
       // Rollback to the previous value on error
       if (context?.previousElectricityUsage) {
         queryClient.setQueryData(

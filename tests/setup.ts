@@ -6,6 +6,7 @@
 import '@testing-library/jest-dom';
 
 // Mock environment variables
+// @ts-ignore - NODE_ENV is read-only in strict mode
 process.env.NODE_ENV = 'test';
 process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/test';
 process.env.DIRECT_URL = 'postgresql://test:test@localhost:5432/test';

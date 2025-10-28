@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { withAuth } from "@/lib/utils/auth-middleware";
 import { prisma } from "@/lib/db";
 
@@ -84,8 +84,8 @@ export const GET = withAuth(async (request, { user }) => {
     let totalScope2 = 0;
     let totalScope3 = 0;
 
-    const monthlyData: any[] = [];
-    const categoryBreakdown: any = {
+    const monthlyData: Array<{ month: string; scope1: number; scope2: number; scope3: number }> = [];
+    const categoryBreakdown: Record<string, number> = {
       fuel: 0,
       vehicles: 0,
       refrigerants: 0,
@@ -112,7 +112,7 @@ export const GET = withAuth(async (request, { user }) => {
 
         // Add to category breakdown
         if (calc.breakdownByCategory) {
-          const breakdown = calc.breakdownByCategory as any;
+          const breakdown = calc.breakdownByCategory as Record<string, number>;
           categoryBreakdown.fuel += breakdown.fuel || 0;
           categoryBreakdown.vehicles += breakdown.vehicles || 0;
           categoryBreakdown.refrigerants += breakdown.refrigerants || 0;

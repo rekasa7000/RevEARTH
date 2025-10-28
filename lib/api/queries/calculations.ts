@@ -12,8 +12,8 @@ export interface EmissionCalculation {
   totalScope2Co2e: number | null;
   totalScope3Co2e: number | null;
   totalCo2e: number | null;
-  breakdownByCategory: Record<string, any> | null;
-  emissionFactorsUsed: Record<string, any> | null;
+  breakdownByCategory: Record<string, unknown> | null;
+  emissionFactorsUsed: Record<string, unknown> | null;
   emissionsPerEmployee: number | null;
   calculatedAt: string;
 }
@@ -24,7 +24,7 @@ export interface CalculationSummary {
   totalScope2Co2e: number;
   totalScope3Co2e: number;
   emissionsPerEmployee: number;
-  breakdownByCategory: Record<string, any>;
+  breakdownByCategory: Record<string, unknown>;
 }
 
 export interface TriggerCalculationInput {
@@ -61,7 +61,7 @@ export function useCalculation(emissionRecordId: string) {
     },
     enabled: !!emissionRecordId,
     staleTime: 2 * 60 * 1000, // 2 minutes - calculations are relatively stable
-    retry: (failureCount, error: any) => {
+    retry: (failureCount, error: Error) => {
       // Don't retry if calculation doesn't exist (404)
       if (error?.response?.status === 404) {
         return false;
@@ -128,7 +128,7 @@ export function useTriggerCalculation() {
         queryKey: ["commuting-data", calculation.emissionRecordId],
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error("Failed to trigger calculation:", error);
     },
   });

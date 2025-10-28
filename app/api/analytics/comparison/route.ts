@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { withAuth } from "@/lib/utils/auth-middleware";
 import { prisma } from "@/lib/db";
 
@@ -44,7 +44,7 @@ export const GET = withAuth(async (request, { user }) => {
     }
 
     // Build where clause
-    const where: any = { organizationId };
+    const where: Record<string, unknown> = { organizationId };
     if (startDate && endDate) {
       where.reportingPeriodStart = {
         gte: new Date(startDate),
@@ -67,7 +67,7 @@ export const GET = withAuth(async (request, { user }) => {
       },
     });
 
-    let comparison: any = {};
+    let comparison: Record<string, unknown> = {};
 
     if (compareBy === "scope") {
       // Compare by scope
@@ -108,7 +108,7 @@ export const GET = withAuth(async (request, { user }) => {
       };
     } else if (compareBy === "facility") {
       // Compare by facility
-      const facilityData: any = {};
+      const facilityData: Record<string, number> = {};
 
       records.forEach((record) => {
         record.electricityUsage.forEach((elec) => {
@@ -122,7 +122,7 @@ export const GET = withAuth(async (request, { user }) => {
         });
       });
 
-      const total = Object.values(facilityData).reduce((sum: number, val: any) => sum + val, 0);
+      const total = Object.values(facilityData).reduce((sum: number, val: number) => sum + val, 0);
 
       comparison = {
         type: "facility",
@@ -135,7 +135,7 @@ export const GET = withAuth(async (request, { user }) => {
       };
     } else if (compareBy === "category") {
       // Compare by category
-      const categoryTotals: any = {
+      const categoryTotals: Record<string, number> = {
         fuel: 0,
         vehicles: 0,
         refrigerants: 0,
@@ -145,7 +145,7 @@ export const GET = withAuth(async (request, { user }) => {
 
       records.forEach((record) => {
         if (record.calculation?.breakdownByCategory) {
-          const breakdown = record.calculation.breakdownByCategory as any;
+          const breakdown = record.calculation.breakdownByCategory as Record<string, number>;
           categoryTotals.fuel += breakdown.fuel || 0;
           categoryTotals.vehicles += breakdown.vehicles || 0;
           categoryTotals.refrigerants += breakdown.refrigerants || 0;
@@ -154,7 +154,7 @@ export const GET = withAuth(async (request, { user }) => {
         }
       });
 
-      const total = Object.values(categoryTotals).reduce((sum: number, val: any) => sum + val, 0);
+      const total = Object.values(categoryTotals).reduce((sum: number, val: number) => sum + val, 0);
 
       comparison = {
         type: "category",

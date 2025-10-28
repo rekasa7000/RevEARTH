@@ -76,9 +76,7 @@ export type RefrigerationFormData = z.infer<typeof refrigerationSchema>;
 
 export const electricityUsageSchema = z.object({
   energySourceDescription: z.string().min(1, "Energy source description is required"),
-  energyType: z.enum(["Electricity", "Steam", "Heating", "Cooling"], {
-    errorMap: () => ({ message: "Please select an energy type" }),
-  }),
+  energyType: z.enum(["Electricity", "Steam", "Heating", "Cooling"] as const),
   energyConsumption: z
     .string()
     .min(1, "Energy consumption is required")

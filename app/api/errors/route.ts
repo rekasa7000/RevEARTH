@@ -36,7 +36,6 @@ export async function POST(request: NextRequest) {
     // Get user info from auth if available (optional)
     let userId: string | undefined;
     try {
-      const authHeader = request.headers.get("authorization");
       // Extract user from session if available
       // This is optional - errors can be logged without authentication
     } catch {
@@ -68,7 +67,7 @@ export async function POST(request: NextRequest) {
  * GET /api/errors
  * Get error logs (requires authentication)
  */
-export const GET = withAuth(async (request, { user }) => {
+export const GET = withAuth(async (request, { user: _user }) => {
   try {
     const searchParams = request.nextUrl.searchParams;
     const page = parseInt(searchParams.get("page") || "1");
@@ -78,7 +77,7 @@ export const GET = withAuth(async (request, { user }) => {
     const context = searchParams.get("context");
 
     // Build where clause
-    const where: any = {};
+    const where: Record<string, unknown> = {};
 
     if (level) {
       where.level = level;

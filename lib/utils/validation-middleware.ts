@@ -69,9 +69,9 @@ export class ValidationError extends Error {
  * Use this to wrap route handlers that use validation
  */
 export function withValidation<T>(
-  handler: (request: NextRequest, context?: any) => Promise<NextResponse>
+  handler: (request: NextRequest, context?: Record<string, unknown>) => Promise<NextResponse>
 ) {
-  return async (request: NextRequest, context?: any) => {
+  return async (request: NextRequest, context?: Record<string, unknown>) => {
     try {
       return await handler(request, context);
     } catch (error) {

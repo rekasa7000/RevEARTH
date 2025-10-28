@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { withAuth } from "@/lib/utils/auth-middleware";
 import {
   getOrganizationMembers,
@@ -84,14 +84,14 @@ export const POST = withAuth(async (request, { user, params }) => {
         success: true,
         member,
       }, { status: 201 });
-    } catch (error: any) {
-      if (error.message.includes("already a member")) {
+    } catch (error: unknown) {
+      if (error instanceof Error && error.message.includes("already a member")) {
         return NextResponse.json(
           { error: "User is already a member of this organization" },
           { status: 400 }
         );
       }
-      if (error.message.includes("already the owner")) {
+      if (error instanceof Error && error.message.includes("already the owner")) {
         return NextResponse.json(
           { error: "User is already the owner of this organization" },
           { status: 400 }

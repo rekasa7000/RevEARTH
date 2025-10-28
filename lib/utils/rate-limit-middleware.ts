@@ -54,10 +54,10 @@ function createRateLimitedResponse(result: {
  * Rate limiting middleware wrapper
  */
 export function withRateLimit(
-  handler: (request: NextRequest, context: any) => Promise<NextResponse>,
+  handler: (request: NextRequest, context: Record<string, unknown>) => Promise<NextResponse>,
   options: RateLimitMiddlewareOptions
 ) {
-  return async (request: NextRequest, context: any) => {
+  return async (request: NextRequest, context: Record<string, unknown>) => {
     try {
       // Get user ID if function provided
       const userId = options.getUserId ? options.getUserId(request) : undefined;
@@ -119,9 +119,9 @@ export async function checkRateLimit(
  * Combine auth middleware with rate limiting
  */
 export function withAuthAndRateLimit(
-  handler: (request: NextRequest, context: any) => Promise<NextResponse>,
+  handler: (request: NextRequest, context: Record<string, unknown>) => Promise<NextResponse>,
   options: RateLimitMiddlewareOptions,
-  authMiddleware: (handler: any) => any
+  authMiddleware: (handler: (request: NextRequest, context: Record<string, unknown>) => Promise<NextResponse>) => (request: NextRequest, context: Record<string, unknown>) => Promise<NextResponse>
 ) {
   // First apply rate limiting, then auth
   const rateLimitedHandler = withRateLimit(handler, options);

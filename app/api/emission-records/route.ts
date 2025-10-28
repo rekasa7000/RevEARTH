@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { withAuth } from "@/lib/utils/auth-middleware";
 import { prisma } from "@/lib/db";
 import { getValidatedBody } from "@/lib/utils/validation-middleware";
@@ -131,7 +131,7 @@ export const GET = withAuth(async (request, { user }) => {
     }
 
     // Build where clause
-    const where: any = { organizationId };
+    const where: Record<string, unknown> = { organizationId };
     if (status) {
       where.status = status;
     }

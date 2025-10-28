@@ -5,12 +5,8 @@ import { FuelType, VehicleType } from "@prisma/client";
 export const createVehicleUsageSchema = z.object({
   emissionRecordId: z.string().cuid("Invalid emission record ID"),
   vehicleId: z.string().optional(),
-  vehicleType: z.nativeEnum(VehicleType, {
-    errorMap: () => ({ message: "Invalid vehicle type" }),
-  }),
-  fuelType: z.nativeEnum(FuelType, {
-    errorMap: () => ({ message: "Invalid fuel type" }),
-  }),
+  vehicleType: z.nativeEnum(VehicleType),
+  fuelType: z.nativeEnum(FuelType),
   fuelConsumed: z
     .number()
     .positive("Fuel consumed must be a positive number")

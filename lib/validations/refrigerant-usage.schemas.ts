@@ -5,9 +5,7 @@ import { RefrigerantType } from "@prisma/client";
 export const createRefrigerantUsageSchema = z.object({
   emissionRecordId: z.string().cuid("Invalid emission record ID"),
   equipmentId: z.string().optional(),
-  refrigerantType: z.nativeEnum(RefrigerantType, {
-    errorMap: () => ({ message: "Invalid refrigerant type" }),
-  }),
+  refrigerantType: z.nativeEnum(RefrigerantType),
   quantityLeaked: z
     .number()
     .nonnegative("Quantity leaked must be non-negative")
@@ -22,7 +20,7 @@ export const createRefrigerantUsageSchema = z.object({
     .optional(),
   unit: z.string().min(1, "Unit is required"),
   entryDate: z.string().datetime("Invalid entry date"),
-  leakDetectionLog: z.record(z.any()).optional(),
+  leakDetectionLog: z.record(z.string(), z.unknown()).optional(),
 });
 
 export type CreateRefrigerantUsageInput = z.infer<typeof createRefrigerantUsageSchema>;
@@ -45,7 +43,7 @@ export const updateRefrigerantUsageSchema = z.object({
     .optional(),
   unit: z.string().min(1, "Unit is required").optional(),
   entryDate: z.string().datetime("Invalid entry date").optional(),
-  leakDetectionLog: z.record(z.any()).optional(),
+  leakDetectionLog: z.record(z.string(), z.unknown()).optional(),
 });
 
 export type UpdateRefrigerantUsageInput = z.infer<typeof updateRefrigerantUsageSchema>;

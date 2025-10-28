@@ -143,7 +143,7 @@ function SignInPage() {
                 Demo credentials: demo@example.com / password123
               </p>
               <p>
-                Don't have an account?{" "}
+                Don&apos;t have an account?{" "}
                 <Link
                   href="/auth/signup"
                   className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400"

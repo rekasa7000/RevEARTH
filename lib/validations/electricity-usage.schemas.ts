@@ -23,7 +23,7 @@ export const createElectricityUsageSchema = z.object({
     .optional(),
   billingPeriodStart: z.string().datetime("Invalid billing period start date"),
   billingPeriodEnd: z.string().datetime("Invalid billing period end date"),
-  utilityBillData: z.record(z.any()).optional(),
+  utilityBillData: z.record(z.string(), z.unknown()).optional(),
 }).refine(
   (data) => {
     const start = new Date(data.billingPeriodStart);
@@ -61,7 +61,7 @@ export const updateElectricityUsageSchema = z.object({
     .optional(),
   billingPeriodStart: z.string().datetime("Invalid billing period start date").optional(),
   billingPeriodEnd: z.string().datetime("Invalid billing period end date").optional(),
-  utilityBillData: z.record(z.any()).optional(),
+  utilityBillData: z.record(z.string(), z.unknown()).optional(),
 }).refine(
   (data) => {
     if (data.billingPeriodStart && data.billingPeriodEnd) {

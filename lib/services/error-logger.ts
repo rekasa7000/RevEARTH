@@ -17,8 +17,8 @@ export interface LogErrorOptions {
   userId?: string;
   method?: string;
   statusCode?: number;
-  requestBody?: any;
-  metadata?: Record<string, any>;
+  requestBody?: unknown;
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -126,7 +126,7 @@ export async function logClientError(
   error: Error,
   url?: string,
   userId?: string,
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 ): Promise<void> {
   await logError({
     message: error.message,

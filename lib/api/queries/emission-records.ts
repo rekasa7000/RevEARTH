@@ -42,10 +42,10 @@ export interface EmissionRecordWithDetails extends EmissionRecord {
     id: string;
     name: string;
   };
-  fuelUsage: any[];
-  vehicleUsage: any[];
-  electricityUsage: any[];
-  commutingData: any[];
+  fuelUsage: unknown[];
+  vehicleUsage: unknown[];
+  electricityUsage: unknown[];
+  commutingData: unknown[];
 }
 
 export interface CreateEmissionRecordInput {
@@ -188,7 +188,7 @@ export function useCreateEmissionRecord() {
       // Set the new record in cache
       queryClient.setQueryData(["emissionRecord", newRecord.id], newRecord);
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error("Failed to create emission record:", error);
     },
   });
@@ -230,7 +230,7 @@ export function useUpdateEmissionRecord() {
       // Return a context with the previous value
       return { previousRecord };
     },
-    onError: (error: any, variables, context) => {
+    onError: (error: Error, variables, context) => {
       // Rollback to the previous value on error
       if (context?.previousRecord) {
         queryClient.setQueryData(
@@ -290,7 +290,7 @@ export function useDeleteEmissionRecord() {
         });
       }
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error("Failed to delete emission record:", error);
     },
   });

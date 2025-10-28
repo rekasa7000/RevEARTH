@@ -158,8 +158,8 @@ export function getEmissionFactorsUsed(
   fuelTypes: string[],
   refrigerantTypes: string[],
   transportModes: string[]
-): Record<string, any> {
-  const factorsUsed: Record<string, any> = {};
+): Record<string, number> {
+  const factorsUsed: Record<string, number> = {};
 
   // Add fuel factors
   fuelTypes.forEach(type => {

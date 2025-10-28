@@ -14,7 +14,7 @@ export interface TrendDataPoint {
   scope1: number;
   scope2: number;
   scope3: number;
-  breakdown: Record<string, any>;
+  breakdown: Record<string, number>;
 }
 
 export interface TrendStatistics {

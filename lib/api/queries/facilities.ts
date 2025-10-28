@@ -139,7 +139,7 @@ export function useCreateFacility() {
       // Set the new facility in cache
       queryClient.setQueryData(["facility", newFacility.id], newFacility);
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error("Failed to create facility:", error);
     },
   });
@@ -181,7 +181,7 @@ export function useUpdateFacility() {
       // Return a context with the previous value
       return { previousFacility };
     },
-    onError: (error: any, variables, context) => {
+    onError: (error: Error, variables, context) => {
       // Rollback to the previous value on error
       if (context?.previousFacility) {
         queryClient.setQueryData(
@@ -240,7 +240,7 @@ export function useDeleteFacility() {
         });
       }
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error("Failed to delete facility:", error);
     },
   });

@@ -15,7 +15,7 @@ export interface FuelUsage {
   unit: string;
   co2eCalculated?: number | null;
   entryDate: string;
-  metadata?: Record<string, any> | null;
+  metadata?: Record<string, unknown> | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -26,7 +26,7 @@ export interface CreateFuelUsageInput {
   quantity: number;
   unit: string;
   entryDate: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface UpdateFuelUsageInput {
@@ -36,7 +36,7 @@ export interface UpdateFuelUsageInput {
     quantity?: number;
     unit?: string;
     entryDate?: string;
-    metadata?: Record<string, any> | null;
+    metadata?: Record<string, unknown> | null;
   };
 }
 
@@ -111,7 +111,7 @@ export function useCreateFuelUsage() {
         queryKey: ["emissionRecord", newFuelUsage.emissionRecordId],
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error("Failed to create fuel usage:", error);
     },
   });
@@ -156,7 +156,7 @@ export function useUpdateFuelUsage() {
       // Return a context with the previous value
       return { previousFuelUsage };
     },
-    onError: (error: any, variables, context) => {
+    onError: (error: Error, variables, context) => {
       // Rollback to the previous value on error
       if (context?.previousFuelUsage) {
         queryClient.setQueryData(["fuel-usage"], context.previousFuelUsage);
@@ -220,7 +220,7 @@ export function useDeleteFuelUsage() {
       // Return a context with the previous value
       return { previousFuelUsage };
     },
-    onError: (error: any, variables, context) => {
+    onError: (error: Error, variables, context) => {
       // Rollback to the previous value on error
       if (context?.previousFuelUsage) {
         queryClient.setQueryData(

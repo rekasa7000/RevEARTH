@@ -11,7 +11,8 @@
       "Bash(tree:*)",
       "Bash(npm run build)",
       "Bash(npm run dev)",
-      "Bash(mkdir -p lib/emails)"
+      "Bash(mkdir -p lib/emails)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []

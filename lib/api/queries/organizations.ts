@@ -21,7 +21,7 @@ export interface Organization {
   name: string;
   industrySector?: string;
   occupancyType: "residential" | "commercial" | "industrial" | "lgu" | "academic";
-  reportingBoundaries?: any;
+  reportingBoundaries?: Record<string, unknown>;
   applicableScopes: {
     scope1: boolean;
     scope2: boolean;
@@ -44,7 +44,7 @@ export interface CreateOrganizationInput {
   name: string;
   industrySector?: string;
   occupancyType: "residential" | "commercial" | "industrial" | "lgu" | "academic";
-  reportingBoundaries?: any;
+  reportingBoundaries?: Record<string, unknown>;
   applicableScopes: {
     scope1: boolean;
     scope2: boolean;
@@ -113,7 +113,7 @@ export function useCreateOrganization() {
       // Also invalidate to ensure fresh data
       queryClient.invalidateQueries({ queryKey: ["organization"] });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error("Failed to create organization:", error);
     },
   });
@@ -152,7 +152,7 @@ export function useUpdateOrganization() {
       // Return a context with the previous value
       return { previousOrganization };
     },
-    onError: (error: any, variables, context) => {
+    onError: (error: Error, variables, context) => {
       // Rollback to the previous value on error
       if (context?.previousOrganization) {
         queryClient.setQueryData(["organization"], context.previousOrganization);

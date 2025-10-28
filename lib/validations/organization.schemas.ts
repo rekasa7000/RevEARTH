@@ -5,10 +5,8 @@ import { OccupancyType } from "@prisma/client";
 export const createOrganizationSchema = z.object({
   name: z.string().min(1, "Organization name is required").max(255),
   industrySector: z.string().optional(),
-  occupancyType: z.nativeEnum(OccupancyType, {
-    errorMap: () => ({ message: "Invalid occupancy type" }),
-  }),
-  reportingBoundaries: z.record(z.any()).optional(),
+  occupancyType: z.nativeEnum(OccupancyType),
+  reportingBoundaries: z.record(z.string(), z.unknown()).optional(),
   applicableScopes: z
     .object({
       scope1: z.boolean(),
@@ -25,7 +23,7 @@ export const updateOrganizationSchema = z.object({
   name: z.string().min(1, "Organization name is required").max(255).optional(),
   industrySector: z.string().optional(),
   occupancyType: z.nativeEnum(OccupancyType).optional(),
-  reportingBoundaries: z.record(z.any()).optional(),
+  reportingBoundaries: z.record(z.string(), z.unknown()).optional(),
   applicableScopes: z
     .object({
       scope1: z.boolean().optional(),
