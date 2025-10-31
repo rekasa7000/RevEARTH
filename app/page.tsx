@@ -15,7 +15,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Facebook, Linkedin, Instagram, Home, Mail, Phone } from "lucide-react";
-import Navigation from "@/components/navigation";
 
 export default function RevEarthPage() {
   const [signupOpen, setSignupOpen] = useState(false);
@@ -271,7 +270,7 @@ export default function RevEarthPage() {
                             and conservation initiatives. Section 2 establishes
                             the framework for a strategic and well-coordinated
                             approach to energy management, highlighting the
-                            government's unwavering dedication to cultivating a
+                            government&apos;s unwavering dedication to cultivating a
                             resilient and sustainable energy future for the
                             Philippines.
                           </p>
@@ -289,7 +288,7 @@ export default function RevEarthPage() {
         <section id="customersbenefit" className="py-16 bg-revearth-green/40">
           <div className="container mx-auto px-4">
             <h2 className="text-3xl font-bold text-center text-revearth-dark mb-12 uppercase">
-              Customer's Benefit
+              Customer&apos;s Benefit
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
               {[
@@ -402,7 +401,7 @@ export default function RevEarthPage() {
 
             <div className="text-center">
               <h1 className="text-4xl font-bold text-revearth-green/80">
-                "Unravel your Trace"
+                &quot;Unravel your Trace&quot;
               </h1>
             </div>
           </div>
@@ -608,7 +607,7 @@ export default function RevEarthPage() {
                       href="#customersbenefit"
                       className="text-gray-700 hover:text-revearth-green"
                     >
-                      Customer's benefit
+                      Customer&apos;s benefit
                     </Link>
                   </div>
                   <div>

@@ -2,14 +2,13 @@
 
 import { Calendar, Home, Inbox, LogOut, User, Settings, ChevronUp, Building2 } from "lucide-react";
 import { useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -54,7 +53,6 @@ const items = [
 
 export function AppSidebar() {
   const user = useUser();
-  const router = useRouter();
   const pathname = usePathname();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 

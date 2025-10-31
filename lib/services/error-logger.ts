@@ -4,6 +4,7 @@
  */
 
 import { prisma } from "@/lib/db";
+import { Prisma } from "@prisma/client";
 
 export type ErrorLevel = "error" | "warn" | "info" | "debug";
 
@@ -66,7 +67,7 @@ export async function logError(options: LogErrorOptions): Promise<void> {
           // Update stack if new one is provided
           ...(stack && { stack }),
           // Update metadata if provided
-          ...(metadata && { metadata }),
+          ...(metadata && { metadata: metadata as Prisma.InputJsonValue }),
         },
       });
     } else {
@@ -82,8 +83,8 @@ export async function logError(options: LogErrorOptions): Promise<void> {
           userId,
           method,
           statusCode,
-          requestBody: requestBody ? JSON.parse(JSON.stringify(requestBody)) : null,
-          metadata: metadata ? JSON.parse(JSON.stringify(metadata)) : null,
+          requestBody: requestBody as Prisma.InputJsonValue,
+          metadata: metadata as Prisma.InputJsonValue,
           environment: process.env.NODE_ENV || "production",
         },
       });

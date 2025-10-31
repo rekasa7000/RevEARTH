@@ -68,7 +68,7 @@ export class ValidationError extends Error {
  * Middleware wrapper that handles validation errors
  * Use this to wrap route handlers that use validation
  */
-export function withValidation<T>(
+export function withValidation(
   handler: (request: NextRequest, context?: Record<string, unknown>) => Promise<NextResponse>
 ) {
   return async (request: NextRequest, context?: Record<string, unknown>) => {

@@ -67,6 +67,7 @@ export async function POST(request: NextRequest) {
  * GET /api/errors
  * Get error logs (requires authentication)
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const GET = withAuth(async (request, { user: _user }) => {
   try {
     const searchParams = request.nextUrl.searchParams;

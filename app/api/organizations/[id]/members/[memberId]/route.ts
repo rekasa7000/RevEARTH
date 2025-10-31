@@ -18,6 +18,12 @@ const updateMemberSchema = z.object({
  */
 export const PATCH = withAuth(async (request, { user, params }) => {
   try {
+    if (!params) {
+      return NextResponse.json(
+        { error: "Missing parameters" },
+        { status: 400 }
+      );
+    }
     const { id: organizationId, memberId } = params;
 
     // Check if user can manage this organization
@@ -85,6 +91,12 @@ export const PATCH = withAuth(async (request, { user, params }) => {
  */
 export const DELETE = withAuth(async (request, { user, params }) => {
   try {
+    if (!params) {
+      return NextResponse.json(
+        { error: "Missing parameters" },
+        { status: 400 }
+      );
+    }
     const { id: organizationId, memberId } = params;
 
     // Check if user can manage this organization

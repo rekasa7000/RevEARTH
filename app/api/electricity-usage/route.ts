@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { withAuth } from "@/lib/utils/auth-middleware";
 import { prisma } from "@/lib/db";
+import { Prisma } from "@prisma/client";
 import { getValidatedBody } from "@/lib/utils/validation-middleware";
 import { createElectricityUsageSchema } from "@/lib/validations/electricity-usage.schemas";
 
@@ -74,7 +75,7 @@ export const POST = withAuth(async (request, { user }) => {
         offpeakHoursKwh: offpeakHoursKwh || null,
         billingPeriodStart: new Date(billingPeriodStart),
         billingPeriodEnd: new Date(billingPeriodEnd),
-        utilityBillData: utilityBillData as any,
+        utilityBillData: (utilityBillData as Prisma.InputJsonValue) || undefined,
       },
     });
 

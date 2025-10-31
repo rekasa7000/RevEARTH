@@ -2,19 +2,8 @@
 
 import { PageErrorBoundary } from "@/components/error-boundary";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -27,16 +16,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DataTable } from "./data-table";
 import type { ColumnDef } from "@tanstack/react-table";
-import {
-  getColumnsForScope,
-  EmissionData,
-} from "./columns";
-import { useState, useEffect } from "react";
-import { X, Plus } from "lucide-react";
+import { getColumnsForScope, EmissionData } from "./columns";
+import { useState, useEffect, useRef } from "react";
+import { Plus, ChevronDown, ChevronUp, TrendingUp } from "lucide-react";
 import { useOrganizationCheck } from "@/lib/hooks/use-organization-check";
-import {
-  getSchemaForScope,
-} from "@/lib/validations/emission-forms";
+import { getSchemaForScope } from "@/lib/validations/emission-forms";
 import { useEmissionRecords, useCreateEmissionRecord } from "@/lib/api/queries/emission-records";
 import { useFuelUsage, useCreateFuelUsage, FuelType } from "@/lib/api/queries/fuel-usage";
 import { useVehicleUsage, useCreateVehicleUsage, VehicleType, VehicleFuelType } from "@/lib/api/queries/vehicle-usage";
@@ -54,8 +38,7 @@ import { FileX } from "lucide-react";
 const contentConfigs = {
   stationary: {
     title: "Scope 1: Direct Emissions: Stationary Combustion",
-    subtitle:
-      "Enter the following data for each stationary combustion source in the table below.",
+    subtitle: "Enter the following data for each stationary combustion source in the table below.",
     instructions: [
       "Source Description: Provide a brief description of the stationary combustion source (e.g. single-burner stove).",
       "Fuel State: Select the physical state of the fuel used in the stationary combustion source from the dropdown menu.",
@@ -66,8 +49,7 @@ const contentConfigs = {
   },
   mobile: {
     title: "Scope 1: Direct Emissions: Mobile Combustion",
-    subtitle:
-      "Enter the following data for each mobile combustion source in the table below.",
+    subtitle: "Enter the following data for each mobile combustion source in the table below.",
     instructions: [
       "Mobile Description: Provide a brief description of the mobile combustion source (e.g., brand, model, and year, if applicable). Only include vehicles owned or leased by your organization.",
       "Vehicle Type: Select the category or type of vehicle from the dropdown menu that best matches the source.",
@@ -79,8 +61,7 @@ const contentConfigs = {
   },
   refrigeration: {
     title: "Scope 1: Direct Emissions: Refrigeration & Air Conditioning",
-    subtitle:
-      "Enter the following data for each refrigeration and AC equipment in the table below.",
+    subtitle: "Enter the following data for each refrigeration and AC equipment in the table below.",
     instructions: [
       "Source Description: Provide a brief description of the refrigeration or air conditioning unit (e.g. brand, model, and/or generic description, if applicable). Ex. Refrigerated pastry display.",
       "Refrigerant Type: Select the type of refrigerant used in the unit from the dropdown menu. You may enter the name or designation of the refrigerant if it is not available from the menu.",
@@ -104,8 +85,7 @@ const contentConfigs = {
   },
   scope3: {
     title: "Scope 3: Other Indirect Emissions: Employee Commuting",
-    subtitle:
-      "Enter the following data for each employee, staff, or personnel in the table below.",
+    subtitle: "Enter the following data for each employee, staff, or personnel in the table below.",
     instructions: [
       "ID: Assign a distinct ID number to each employee.",
       "Notes: This can be used to put certain details or information about the specific employee.",
@@ -133,11 +113,7 @@ function CalculationContent() {
   });
 
   // Fetch emission records for the organization
-  const { data: emissionRecordsData, isLoading: recordsLoading } = useEmissionRecords(
-    organization?.id || "",
-    1,
-    50
-  );
+  const { data: emissionRecordsData, isLoading: recordsLoading } = useEmissionRecords(organization?.id || "", 1, 50);
 
   // Create emission record mutation
   const createEmissionRecord = useCreateEmissionRecord();
@@ -170,6 +146,8 @@ function CalculationContent() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [isResultsExpanded, setIsResultsExpanded] = useState(true);
+  const resultsRef = useRef<HTMLDivElement>(null);
 
   // Get data and loading state based on current scope
   const getCurrentData = (): EmissionData[] => {
@@ -183,7 +161,9 @@ function CalculationContent() {
             return {
               id: fuel.id || "",
               sourceDescription: (metadata?.sourceDescription as string) || "N/A",
-              fuelState: ((metadata?.fuelState as string) === "Solid" || (metadata?.fuelState as string) === "Gas" ? metadata?.fuelState : "Liquid") as "Solid" | "Liquid" | "Gas",
+              fuelState: ((metadata?.fuelState as string) === "Solid" || (metadata?.fuelState as string) === "Gas"
+                ? metadata?.fuelState
+                : "Liquid") as "Solid" | "Liquid" | "Gas",
               fuelType: fuel.fuelType || "unknown",
               fuelConsumption: Number(fuel.quantity) || 0,
               unit: fuel.unit || "",
@@ -289,12 +269,6 @@ function CalculationContent() {
   };
 
   // Keyboard shortcut handler for modal
-  const handleModalKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Escape") {
-      e.preventDefault();
-      setIsModalOpen(false);
-    }
-  };
 
   // Handle form field changes
   const handleFieldChange = (field: string, value: string) => {
@@ -320,7 +294,7 @@ function CalculationContent() {
       return true;
     } catch (error) {
       const errors: Record<string, string> = {};
-      if (error && typeof error === 'object' && 'errors' in error) {
+      if (error && typeof error === "object" && "errors" in error) {
         const zodError = error as { errors: Array<{ path: string[]; message: string }> };
         zodError.errors.forEach((err) => {
           if (err.path && err.path.length > 0) {
@@ -467,6 +441,12 @@ function CalculationContent() {
         title: "Success",
         description: "Emissions calculated successfully",
       });
+
+      // Expand results and scroll to them
+      setIsResultsExpanded(true);
+      setTimeout(() => {
+        resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
     } catch (error) {
       console.error("Failed to calculate emissions:", error);
       const errorMessage = error instanceof Error ? error.message : "Failed to calculate emissions. Please try again.";
@@ -506,7 +486,8 @@ function CalculationContent() {
       setNewRecordData({ reportingPeriodStart: "", reportingPeriodEnd: "" });
     } catch (error) {
       console.error("Failed to create emission record:", error);
-      const errorMessage = error instanceof Error ? error.message : "Failed to create emission record. Please try again.";
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to create emission record. Please try again.";
       toast({
         title: "Error",
         description: errorMessage,
@@ -534,12 +515,70 @@ function CalculationContent() {
     return true;
   };
 
+  // Render content for each scope/category
+  const renderScopeContent = (scope: string) => {
+    if (!currentEmissionRecordId || scope !== currentScope) return null;
+
+    return (
+      <div>
+        {/* Scope Instructions */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-white">
+            {contentConfigs[scope as keyof typeof contentConfigs].title}
+          </h2>
+          <p className="text-lg font-medium mb-4 text-gray-700 dark:text-gray-300">
+            {contentConfigs[scope as keyof typeof contentConfigs].subtitle}
+          </p>
+          <div className="space-y-3">
+            {contentConfigs[scope as keyof typeof contentConfigs].instructions.map((instruction, index) => (
+              <p key={index} className="text-gray-600 dark:text-gray-400 leading-relaxed">
+                {instruction}
+              </p>
+            ))}
+          </div>
+        </div>
+
+        {/* Data Table */}
+        <div className="mb-8">
+          {isCurrentLoading() ? (
+            <div className="flex justify-center py-8">
+              <div className="text-gray-600 dark:text-gray-400">Loading data...</div>
+            </div>
+          ) : (
+            <DataTable
+              columns={getColumnsForScope(scope) as ColumnDef<EmissionData>[]}
+              data={getCurrentData()}
+              searchPlaceholder={`Search ${scope} data...`}
+            />
+          )}
+        </div>
+
+        {/* Action Buttons */}
+        <div className="mb-8 flex gap-3">
+          <Button onClick={handleAddRecord} disabled={isCurrentLoading()}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Record
+          </Button>
+          <Button
+            onClick={handleCalculate}
+            disabled={isCurrentLoading() || triggerCalculation.isPending}
+            variant="secondary"
+          >
+            {triggerCalculation.isPending ? "Calculating..." : "Calculate Emissions"}
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
   // Render form fields based on current scope
   const renderFormFields = () => {
     if (!currentScope) return null;
 
-    const inputClass = "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100";
-    const inputErrorClass = "w-full px-3 py-2 border border-red-500 dark:border-red-400 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100";
+    const inputClass =
+      "w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100";
+    const inputErrorClass =
+      "w-full px-3 py-2 border border-red-500 dark:border-red-400 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100";
     const labelClass = "block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300";
     const errorClass = "text-sm text-red-600 dark:text-red-400 mt-1";
 
@@ -552,7 +591,9 @@ function CalculationContent() {
         return (
           <div className="grid gap-4">
             <div>
-              <label htmlFor="sourceDescription" className={labelClass}>Source Description *</label>
+              <label htmlFor="sourceDescription" className={labelClass}>
+                Source Description *
+              </label>
               <input
                 id="sourceDescription"
                 type="text"
@@ -561,12 +602,12 @@ function CalculationContent() {
                 placeholder="e.g., Single-burner stove"
                 className={getInputClass("sourceDescription")}
               />
-              {formErrors.sourceDescription && (
-                <p className={errorClass}>{formErrors.sourceDescription}</p>
-              )}
+              {formErrors.sourceDescription && <p className={errorClass}>{formErrors.sourceDescription}</p>}
             </div>
             <div>
-              <label htmlFor="fuelState" className={labelClass}>Fuel State</label>
+              <label htmlFor="fuelState" className={labelClass}>
+                Fuel State
+              </label>
               <select
                 id="fuelState"
                 value={formData.fuelState || ""}
@@ -580,7 +621,9 @@ function CalculationContent() {
               </select>
             </div>
             <div>
-              <label htmlFor="fuelType" className={labelClass}>Fuel Type *</label>
+              <label htmlFor="fuelType" className={labelClass}>
+                Fuel Type *
+              </label>
               <select
                 id="fuelType"
                 value={formData.fuelType || ""}
@@ -603,12 +646,12 @@ function CalculationContent() {
                 <option value="ethanol">Ethanol</option>
                 <option value="other">Other</option>
               </select>
-              {formErrors.fuelType && (
-                <p className={errorClass}>{formErrors.fuelType}</p>
-              )}
+              {formErrors.fuelType && <p className={errorClass}>{formErrors.fuelType}</p>}
             </div>
             <div>
-              <label htmlFor="fuelConsumption" className={labelClass}>Quantity Combusted *</label>
+              <label htmlFor="fuelConsumption" className={labelClass}>
+                Quantity Combusted *
+              </label>
               <input
                 id="fuelConsumption"
                 type="number"
@@ -616,12 +659,12 @@ function CalculationContent() {
                 onChange={(e) => handleFieldChange("fuelConsumption", e.target.value)}
                 className={getInputClass("fuelConsumption")}
               />
-              {formErrors.fuelConsumption && (
-                <p className={errorClass}>{formErrors.fuelConsumption}</p>
-              )}
+              {formErrors.fuelConsumption && <p className={errorClass}>{formErrors.fuelConsumption}</p>}
             </div>
             <div>
-              <label htmlFor="unit" className={labelClass}>Unit *</label>
+              <label htmlFor="unit" className={labelClass}>
+                Unit *
+              </label>
               <input
                 id="unit"
                 type="text"
@@ -630,49 +673,7 @@ function CalculationContent() {
                 placeholder="e.g., kg, L"
                 className={getInputClass("unit")}
               />
-              {formErrors.unit && (
-                <p className={errorClass}>{formErrors.unit}</p>
-              )}
-            </div>
-            <div>
-              <label htmlFor="co2Emissions" className={labelClass}>CO2 Emissions (kg)</label>
-              <input
-                id="co2Emissions"
-                type="number"
-                value={formData.co2Emissions || ""}
-                onChange={(e) => handleFieldChange("co2Emissions", e.target.value)}
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label htmlFor="ch4Emissions" className={labelClass}>CH4 Emissions (kg)</label>
-              <input
-                id="ch4Emissions"
-                type="number"
-                value={formData.ch4Emissions || ""}
-                onChange={(e) => handleFieldChange("ch4Emissions", e.target.value)}
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label htmlFor="n2oEmissions" className={labelClass}>N2O Emissions (kg)</label>
-              <input
-                id="n2oEmissions"
-                type="number"
-                value={formData.n2oEmissions || ""}
-                onChange={(e) => handleFieldChange("n2oEmissions", e.target.value)}
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label htmlFor="totalEmissions" className={labelClass}>Total Emissions (kg CO2e)</label>
-              <input
-                id="totalEmissions"
-                type="number"
-                value={formData.totalEmissions || ""}
-                onChange={(e) => handleFieldChange("totalEmissions", e.target.value)}
-                className={inputClass}
-              />
+              {formErrors.unit && <p className={errorClass}>{formErrors.unit}</p>}
             </div>
           </div>
         );
@@ -681,7 +682,9 @@ function CalculationContent() {
         return (
           <div className="grid gap-4">
             <div>
-              <label htmlFor="vehicleDescription" className={labelClass}>Vehicle Description</label>
+              <label htmlFor="vehicleDescription" className={labelClass}>
+                Vehicle Description
+              </label>
               <input
                 id="vehicleDescription"
                 type="text"
@@ -692,7 +695,9 @@ function CalculationContent() {
               />
             </div>
             <div>
-              <label htmlFor="fuelState" className={labelClass}>Fuel State</label>
+              <label htmlFor="fuelState" className={labelClass}>
+                Fuel State
+              </label>
               <select
                 id="fuelState"
                 value={formData.fuelState || ""}
@@ -706,7 +711,9 @@ function CalculationContent() {
               </select>
             </div>
             <div>
-              <label htmlFor="fuelType" className={labelClass}>Fuel Type *</label>
+              <label htmlFor="fuelType" className={labelClass}>
+                Fuel Type *
+              </label>
               <select
                 id="fuelType"
                 value={formData.fuelType || ""}
@@ -731,7 +738,9 @@ function CalculationContent() {
               </select>
             </div>
             <div>
-              <label htmlFor="fuelConsumption" className={labelClass}>Fuel Consumed</label>
+              <label htmlFor="fuelConsumption" className={labelClass}>
+                Fuel Consumed
+              </label>
               <input
                 id="fuelConsumption"
                 type="number"
@@ -741,53 +750,15 @@ function CalculationContent() {
               />
             </div>
             <div>
-              <label htmlFor="unit" className={labelClass}>Unit</label>
+              <label htmlFor="unit" className={labelClass}>
+                Unit
+              </label>
               <input
                 id="unit"
                 type="text"
                 value={formData.unit || ""}
                 onChange={(e) => handleFieldChange("unit", e.target.value)}
                 placeholder="e.g., L"
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label htmlFor="co2Emissions" className={labelClass}>CO2 Emissions (kg)</label>
-              <input
-                id="co2Emissions"
-                type="number"
-                value={formData.co2Emissions || ""}
-                onChange={(e) => handleFieldChange("co2Emissions", e.target.value)}
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label htmlFor="ch4Emissions" className={labelClass}>CH4 Emissions (kg)</label>
-              <input
-                id="ch4Emissions"
-                type="number"
-                value={formData.ch4Emissions || ""}
-                onChange={(e) => handleFieldChange("ch4Emissions", e.target.value)}
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label htmlFor="n2oEmissions" className={labelClass}>N2O Emissions (kg)</label>
-              <input
-                id="n2oEmissions"
-                type="number"
-                value={formData.n2oEmissions || ""}
-                onChange={(e) => handleFieldChange("n2oEmissions", e.target.value)}
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label htmlFor="totalEmissions" className={labelClass}>Total Emissions (kg CO2e)</label>
-              <input
-                id="totalEmissions"
-                type="number"
-                value={formData.totalEmissions || ""}
-                onChange={(e) => handleFieldChange("totalEmissions", e.target.value)}
                 className={inputClass}
               />
             </div>
@@ -798,7 +769,9 @@ function CalculationContent() {
         return (
           <div className="grid gap-4">
             <div>
-              <label htmlFor="equipmentDescription" className={labelClass}>Equipment Description</label>
+              <label htmlFor="equipmentDescription" className={labelClass}>
+                Equipment Description
+              </label>
               <input
                 id="equipmentDescription"
                 type="text"
@@ -809,7 +782,9 @@ function CalculationContent() {
               />
             </div>
             <div>
-              <label htmlFor="refrigerantType" className={labelClass}>Refrigerant Type</label>
+              <label htmlFor="refrigerantType" className={labelClass}>
+                Refrigerant Type
+              </label>
               <input
                 id="refrigerantType"
                 type="text"
@@ -820,7 +795,9 @@ function CalculationContent() {
               />
             </div>
             <div>
-              <label htmlFor="equipmentCapacity" className={labelClass}>Equipment Capacity</label>
+              <label htmlFor="equipmentCapacity" className={labelClass}>
+                Equipment Capacity
+              </label>
               <input
                 id="equipmentCapacity"
                 type="number"
@@ -830,7 +807,9 @@ function CalculationContent() {
               />
             </div>
             <div>
-              <label htmlFor="refrigerantLeakage" className={labelClass}>Refrigerant Leakage</label>
+              <label htmlFor="refrigerantLeakage" className={labelClass}>
+                Refrigerant Leakage
+              </label>
               <input
                 id="refrigerantLeakage"
                 type="number"
@@ -840,33 +819,15 @@ function CalculationContent() {
               />
             </div>
             <div>
-              <label htmlFor="unit" className={labelClass}>Unit</label>
+              <label htmlFor="unit" className={labelClass}>
+                Unit
+              </label>
               <input
                 id="unit"
                 type="text"
                 value={formData.unit || ""}
                 onChange={(e) => handleFieldChange("unit", e.target.value)}
                 placeholder="e.g., kg"
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label htmlFor="co2Emissions" className={labelClass}>CO2 Equivalent (kg)</label>
-              <input
-                id="co2Emissions"
-                type="number"
-                value={formData.co2Emissions || ""}
-                onChange={(e) => handleFieldChange("co2Emissions", e.target.value)}
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label htmlFor="totalEmissions" className={labelClass}>Total Emissions (kg CO2e)</label>
-              <input
-                id="totalEmissions"
-                type="number"
-                value={formData.totalEmissions || ""}
-                onChange={(e) => handleFieldChange("totalEmissions", e.target.value)}
                 className={inputClass}
               />
             </div>
@@ -877,7 +838,9 @@ function CalculationContent() {
         return (
           <div className="grid gap-4">
             <div>
-              <label htmlFor="energySourceDescription" className={labelClass}>Energy Source Description</label>
+              <label htmlFor="energySourceDescription" className={labelClass}>
+                Energy Source Description
+              </label>
               <input
                 id="energySourceDescription"
                 type="text"
@@ -888,7 +851,9 @@ function CalculationContent() {
               />
             </div>
             <div>
-              <label htmlFor="energyType" className={labelClass}>Energy Type</label>
+              <label htmlFor="energyType" className={labelClass}>
+                Energy Type
+              </label>
               <select
                 id="energyType"
                 value={formData.energyType || ""}
@@ -903,7 +868,9 @@ function CalculationContent() {
               </select>
             </div>
             <div>
-              <label htmlFor="energyConsumption" className={labelClass}>Energy Consumption</label>
+              <label htmlFor="energyConsumption" className={labelClass}>
+                Energy Consumption
+              </label>
               <input
                 id="energyConsumption"
                 type="number"
@@ -913,7 +880,9 @@ function CalculationContent() {
               />
             </div>
             <div>
-              <label htmlFor="unit" className={labelClass}>Unit</label>
+              <label htmlFor="unit" className={labelClass}>
+                Unit
+              </label>
               <input
                 id="unit"
                 type="text"
@@ -924,7 +893,9 @@ function CalculationContent() {
               />
             </div>
             <div>
-              <label htmlFor="gridFactor" className={labelClass}>Grid/Supplier Factor</label>
+              <label htmlFor="gridFactor" className={labelClass}>
+                Grid/Supplier Factor
+              </label>
               <input
                 id="gridFactor"
                 type="number"
@@ -935,33 +906,15 @@ function CalculationContent() {
               />
             </div>
             <div>
-              <label htmlFor="renewableCertificates" className={labelClass}>Renewable Certificates</label>
+              <label htmlFor="renewableCertificates" className={labelClass}>
+                Renewable Certificates
+              </label>
               <input
                 id="renewableCertificates"
                 type="text"
                 value={formData.renewableCertificates || ""}
                 onChange={(e) => handleFieldChange("renewableCertificates", e.target.value)}
                 placeholder="e.g., None"
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label htmlFor="co2Emissions" className={labelClass}>CO2 Emissions (kg)</label>
-              <input
-                id="co2Emissions"
-                type="number"
-                value={formData.co2Emissions || ""}
-                onChange={(e) => handleFieldChange("co2Emissions", e.target.value)}
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label htmlFor="totalEmissions" className={labelClass}>Total Emissions (kg CO2e)</label>
-              <input
-                id="totalEmissions"
-                type="number"
-                value={formData.totalEmissions || ""}
-                onChange={(e) => handleFieldChange("totalEmissions", e.target.value)}
                 className={inputClass}
               />
             </div>
@@ -972,7 +925,9 @@ function CalculationContent() {
         return (
           <div className="grid gap-4">
             <div>
-              <label htmlFor="activityDescription" className={labelClass}>Activity Description</label>
+              <label htmlFor="activityDescription" className={labelClass}>
+                Activity Description
+              </label>
               <input
                 id="activityDescription"
                 type="text"
@@ -983,7 +938,9 @@ function CalculationContent() {
               />
             </div>
             <div>
-              <label htmlFor="activityCategory" className={labelClass}>Activity Category</label>
+              <label htmlFor="activityCategory" className={labelClass}>
+                Activity Category
+              </label>
               <input
                 id="activityCategory"
                 type="text"
@@ -994,7 +951,9 @@ function CalculationContent() {
               />
             </div>
             <div>
-              <label htmlFor="activityData" className={labelClass}>Activity Data</label>
+              <label htmlFor="activityData" className={labelClass}>
+                Activity Data
+              </label>
               <input
                 id="activityData"
                 type="number"
@@ -1004,7 +963,9 @@ function CalculationContent() {
               />
             </div>
             <div>
-              <label htmlFor="unit" className={labelClass}>Unit</label>
+              <label htmlFor="unit" className={labelClass}>
+                Unit
+              </label>
               <input
                 id="unit"
                 type="text"
@@ -1015,7 +976,9 @@ function CalculationContent() {
               />
             </div>
             <div>
-              <label htmlFor="emissionFactor" className={labelClass}>Emission Factor</label>
+              <label htmlFor="emissionFactor" className={labelClass}>
+                Emission Factor
+              </label>
               <input
                 id="emissionFactor"
                 type="number"
@@ -1026,7 +989,9 @@ function CalculationContent() {
               />
             </div>
             <div>
-              <label htmlFor="dataQuality" className={labelClass}>Data Quality</label>
+              <label htmlFor="dataQuality" className={labelClass}>
+                Data Quality
+              </label>
               <select
                 id="dataQuality"
                 value={formData.dataQuality || ""}
@@ -1038,26 +1003,6 @@ function CalculationContent() {
                 <option value="Medium">Medium</option>
                 <option value="Low">Low</option>
               </select>
-            </div>
-            <div>
-              <label htmlFor="co2Emissions" className={labelClass}>CO2 Emissions (kg)</label>
-              <input
-                id="co2Emissions"
-                type="number"
-                value={formData.co2Emissions || ""}
-                onChange={(e) => handleFieldChange("co2Emissions", e.target.value)}
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label htmlFor="totalEmissions" className={labelClass}>Total Emissions (kg CO2e)</label>
-              <input
-                id="totalEmissions"
-                type="number"
-                value={formData.totalEmissions || ""}
-                onChange={(e) => handleFieldChange("totalEmissions", e.target.value)}
-                className={inputClass}
-              />
             </div>
           </div>
         );
@@ -1079,19 +1024,15 @@ function CalculationContent() {
     <div className="p-6 w-full container mx-auto max-w-[100rem]">
       {/* Page Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-          Data Calculation
-        </h1>
-        <p className="text-lg text-[#A5C046] font-semibold">
-          Energy Auditing Tool
-        </p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Data Calculation</h1>
+        <p className="text-lg text-[#A5C046] font-semibold">Energy Auditing Tool</p>
       </div>
 
       {/* Emission Record Selector */}
       <div className="mb-8">
         <div className="flex justify-center">
-          <div className="w-full max-w-md">
-            <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+          <div className="w-full flex">
+            <label className="block w-full text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
               Select Reporting Period
             </label>
             {recordsLoading ? (
@@ -1107,10 +1048,7 @@ function CalculationContent() {
                 }}
               />
             ) : (
-              <Select
-                value={currentEmissionRecordId}
-                onValueChange={setCurrentEmissionRecordId}
-              >
+              <Select value={currentEmissionRecordId} onValueChange={setCurrentEmissionRecordId}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select reporting period" />
                 </SelectTrigger>
@@ -1128,243 +1066,275 @@ function CalculationContent() {
         </div>
       </div>
 
-      {/* Scope Selection Tabs */}
+      {/* Calculation Results Display - Top Position */}
+      {calculation && currentEmissionRecordId && (
+        <div ref={resultsRef} className="mb-8">
+          <div className="bg-gradient-to-br from-[#A5C046]/5 to-[#00594D]/5 rounded-lg shadow-lg border-2 border-[#A5C046]/20 overflow-hidden">
+            {/* Header with toggle */}
+            <div
+              className="flex items-center justify-between p-6 cursor-pointer hover:bg-[#A5C046]/5 transition-colors"
+              onClick={() => setIsResultsExpanded(!isResultsExpanded)}
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-[#A5C046] rounded-lg">
+                  <TrendingUp className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-[#00594D] dark:text-white">Calculation Results</h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Last calculated: {format(new Date(calculation.calculatedAt), "PPpp")}
+                  </p>
+                </div>
+              </div>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                {isResultsExpanded ? (
+                  <ChevronUp className="h-5 w-5 text-[#00594D]" />
+                ) : (
+                  <ChevronDown className="h-5 w-5 text-[#00594D]" />
+                )}
+              </Button>
+            </div>
+
+            {/* Results Content */}
+            {isResultsExpanded && (
+              <div className="p-6 pt-0">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-5 shadow-md border border-gray-200 dark:border-gray-700">
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Total CO2e</p>
+                    <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                      {calculation.totalCo2e?.toLocaleString() || "0"} <span className="text-lg">kg</span>
+                    </p>
+                  </div>
+
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-5 shadow-md border border-blue-200 dark:border-blue-700">
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Scope 1</p>
+                    <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+                      {calculation.totalScope1Co2e?.toLocaleString() || "0"} <span className="text-lg">kg</span>
+                    </p>
+                  </div>
+
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-5 shadow-md border border-green-200 dark:border-green-700">
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Scope 2</p>
+                    <p className="text-3xl font-bold text-green-600 dark:text-green-400">
+                      {calculation.totalScope2Co2e?.toLocaleString() || "0"} <span className="text-lg">kg</span>
+                    </p>
+                  </div>
+
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-5 shadow-md border border-purple-200 dark:border-purple-700">
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Scope 3</p>
+                    <p className="text-3xl font-bold text-purple-600 dark:text-purple-400">
+                      {calculation.totalScope3Co2e?.toLocaleString() || "0"} <span className="text-lg">kg</span>
+                    </p>
+                  </div>
+                </div>
+
+                {calculation.emissionsPerEmployee && (
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-5 shadow-md border border-[#A5C046]/30">
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Emissions Per Employee</p>
+                    <p className="text-2xl font-bold text-[#00594D] dark:text-white">
+                      {calculation.emissionsPerEmployee.toLocaleString()} <span className="text-base">kg CO2e</span>
+                    </p>
+                  </div>
+                )}
+
+                <div className="mt-4 flex justify-end">
+                  <Button variant="outline" asChild>
+                    <a href="/reports" className="flex items-center gap-2">
+                      View Detailed Reports
+                    </a>
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Scope Tabs - Horizontal */}
       {hasEmissionRecords && (
         <div className="mb-8">
-          <div className="flex justify-center gap-3.5">
-            {isScopeApplicable("stationary") && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant={
-                      ["stationary", "mobile", "refrigeration"].includes(
-                        currentScope || ""
-                      )
-                        ? "default"
-                        : "outline"
-                    }
-                  >
-                    Scope 1
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="min-w-[220px]">
-                  <DropdownMenuItem
-                    onClick={() => handleScopeSelection("stationary")}
-                  >
-                    Stationary Combustion
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleScopeSelection("mobile")}>
-                    Mobile Combustion
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => handleScopeSelection("refrigeration")}
-                  >
-                    Refrigeration & Air Conditioning
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-
-            {isScopeApplicable("scope2") && (
-              <Button
-                variant={currentScope === "scope2" ? "default" : "outline"}
-                onClick={() => handleScopeSelection("scope2")}
-              >
-                Scope 2
-              </Button>
-            )}
-
-            {isScopeApplicable("scope3") && (
-              <Button
-                variant={currentScope === "scope3" ? "default" : "outline"}
-                onClick={() => handleScopeSelection("scope3")}
-              >
-                Scope 3
-              </Button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Scope Instructions */}
-      {hasEmissionRecords && currentScope && (
-        <div className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-white">
-            {contentConfigs[currentScope as keyof typeof contentConfigs].title}
-          </h2>
-          <p className="text-lg font-medium mb-4 text-gray-700 dark:text-gray-300">
-            {contentConfigs[currentScope as keyof typeof contentConfigs].subtitle}
-          </p>
-          <div className="space-y-3">
-            {contentConfigs[currentScope as keyof typeof contentConfigs].instructions.map(
-              (instruction, index) => (
-                <p
-                  key={index}
-                  className="text-gray-600 dark:text-gray-400 leading-relaxed"
-                >
-                  {instruction}
-                </p>
-              )
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Data Table */}
-      {hasEmissionRecords && currentScope && currentEmissionRecordId && (
-        <div className="mb-8">
-          {isCurrentLoading() ? (
-            <div className="flex justify-center py-8">
-              <div className="text-gray-600 dark:text-gray-400">
-                Loading data...
-              </div>
-            </div>
-          ) : (
-            <DataTable
-              columns={getColumnsForScope(currentScope) as ColumnDef<EmissionData>[]}
-              data={getCurrentData()}
-              searchPlaceholder={`Search ${currentScope} data...`}
-            />
-          )}
-        </div>
-      )}
-
-      {/* Action Buttons */}
-      {hasEmissionRecords && currentScope && currentEmissionRecordId && (
-        <div className="mb-8 flex gap-3">
-          <Button onClick={handleAddRecord} disabled={isCurrentLoading()}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Record
-          </Button>
-          <Button
-            onClick={handleCalculate}
-            disabled={isCurrentLoading() || triggerCalculation.isPending}
-            variant="secondary"
+          <Tabs
+            value={
+              ["stationary", "mobile", "refrigeration"].includes(currentScope)
+                ? "scope1"
+                : currentScope === "scope2"
+                  ? "scope2"
+                  : currentScope === "scope3"
+                    ? "scope3"
+                    : "scope1"
+            }
+            onValueChange={(value) => {
+              // When changing main scope, select the first category within that scope
+              if (value === "scope1") handleScopeSelection("stationary");
+              else if (value === "scope2") handleScopeSelection("scope2");
+              else if (value === "scope3") handleScopeSelection("scope3");
+            }}
+            className="w-full"
           >
-            {triggerCalculation.isPending ? "Calculating..." : "Calculate Emissions"}
-          </Button>
-        </div>
-      )}
+            {/* Horizontal Scope Tabs */}
+            <TabsList className="w-fit p-0 bg-background justify-start border-b border-border rounded-none mb-8">
+              {isScopeApplicable("stationary") && (
+                <TabsTrigger
+                  value="scope1"
+                  className="rounded-none bg-background h-full data-[state=active]:shadow-none border-0 data-[state=active]:bg-[#A5C046]/10 data-[state=active]:text-[#00594D] data-[state=active]:font-semibold px-6 py-3 transition-all hover:bg-[#A5C046]/5"
+                >
+                  Scope 1: Direct Emissions
+                </TabsTrigger>
+              )}
+              {isScopeApplicable("scope2") && (
+                <TabsTrigger
+                  value="scope2"
+                  className="rounded-none bg-background h-full data-[state=active]:shadow-none border-0 data-[state=active]:bg-[#A5C046]/10 data-[state=active]:text-[#00594D] data-[state=active]:font-semibold px-6 py-3 transition-all hover:bg-[#A5C046]/5"
+                >
+                  Scope 2: Indirect Emissions
+                </TabsTrigger>
+              )}
+              {isScopeApplicable("scope3") && (
+                <TabsTrigger
+                  value="scope3"
+                  className="rounded-none bg-background h-full data-[state=active]:shadow-none border-0 data-[state=active]:bg-[#A5C046]/10 data-[state=active]:text-[#00594D] data-[state=active]:font-semibold px-6 py-3 transition-all hover:bg-[#A5C046]/5"
+                >
+                  Scope 3: Other Indirect
+                </TabsTrigger>
+              )}
+            </TabsList>
 
-      {/* Calculation Results Display */}
-      {calculation && currentEmissionRecordId && (
-        <div className="mb-8">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border border-gray-200 dark:border-gray-700">
-            <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
-              Calculation Results
-            </h2>
+            {/* Scope 1 Content with Vertical Category Tabs */}
+            {isScopeApplicable("stationary") && (
+              <TabsContent value="scope1" className="mt-0">
+                <Tabs orientation="vertical" value={currentScope} onValueChange={handleScopeSelection} className="flex flex-row items-start gap-6">
+                  <TabsList className="shrink-0 grid grid-cols-1 gap-1 p-0 bg-background">
+                    <TabsTrigger
+                      value="stationary"
+                      className="border-0 data-[state=active]:bg-[#A5C046]/10 data-[state=active]:text-[#00594D] data-[state=active]:font-semibold rounded-none justify-start px-4 py-3 whitespace-nowrap transition-all hover:bg-[#A5C046]/5"
+                    >
+                      Stationary Combustion
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="mobile"
+                      className="border-0 data-[state=active]:bg-[#A5C046]/10 data-[state=active]:text-[#00594D] data-[state=active]:font-semibold rounded-none justify-start px-4 py-3 whitespace-nowrap transition-all hover:bg-[#A5C046]/5"
+                    >
+                      Mobile Combustion
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="refrigeration"
+                      className="border-0 data-[state=active]:bg-[#A5C046]/10 data-[state=active]:text-[#00594D] data-[state=active]:font-semibold rounded-none justify-start px-4 py-3 whitespace-nowrap transition-all hover:bg-[#A5C046]/5"
+                    >
+                      Refrigeration & AC
+                    </TabsTrigger>
+                  </TabsList>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-              <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total CO2e</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {calculation.totalCo2e?.toLocaleString() || "0"} kg
-                </p>
-              </div>
-
-              <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Scope 1</p>
-                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                  {calculation.totalScope1Co2e?.toLocaleString() || "0"} kg
-                </p>
-              </div>
-
-              <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Scope 2</p>
-                <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                  {calculation.totalScope2Co2e?.toLocaleString() || "0"} kg
-                </p>
-              </div>
-
-              <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Scope 3</p>
-                <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                  {calculation.totalScope3Co2e?.toLocaleString() || "0"} kg
-                </p>
-              </div>
-            </div>
-
-            {calculation.emissionsPerEmployee && (
-              <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 mb-6">
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Emissions Per Employee</p>
-                <p className="text-xl font-bold text-gray-900 dark:text-white">
-                  {calculation.emissionsPerEmployee.toLocaleString()} kg CO2e
-                </p>
-              </div>
+                  <div className="flex-1 w-full">
+                    <TabsContent value="stationary" className="mt-0">
+                      {renderScopeContent("stationary")}
+                    </TabsContent>
+                    <TabsContent value="mobile" className="mt-0">
+                      {renderScopeContent("mobile")}
+                    </TabsContent>
+                    <TabsContent value="refrigeration" className="mt-0">
+                      {renderScopeContent("refrigeration")}
+                    </TabsContent>
+                  </div>
+                </Tabs>
+              </TabsContent>
             )}
 
-            <div className="text-sm text-gray-500 dark:text-gray-400">
-              Last calculated: {format(new Date(calculation.calculatedAt), "PPpp")}
-            </div>
-          </div>
+            {/* Scope 2 Content with Vertical Category Tabs */}
+            {isScopeApplicable("scope2") && (
+              <TabsContent value="scope2" className="mt-0">
+                <Tabs orientation="vertical" value={currentScope} onValueChange={handleScopeSelection} className="flex flex-row items-start gap-6">
+                  <TabsList className="shrink-0 grid grid-cols-1 gap-1 p-0 bg-background">
+                    <TabsTrigger
+                      value="scope2"
+                      className="border-0 data-[state=active]:bg-[#A5C046]/10 data-[state=active]:text-[#00594D] data-[state=active]:font-semibold rounded-none justify-start px-4 py-3 whitespace-nowrap transition-all hover:bg-[#A5C046]/5"
+                    >
+                      Purchased Electricity
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <div className="flex-1 w-full">
+                    <TabsContent value="scope2" className="mt-0">
+                      {renderScopeContent("scope2")}
+                    </TabsContent>
+                  </div>
+                </Tabs>
+              </TabsContent>
+            )}
+
+            {/* Scope 3 Content with Vertical Category Tabs */}
+            {isScopeApplicable("scope3") && (
+              <TabsContent value="scope3" className="mt-0">
+                <Tabs orientation="vertical" value={currentScope} onValueChange={handleScopeSelection} className="flex flex-row items-start gap-6">
+                  <TabsList className="shrink-0 grid grid-cols-1 gap-1 p-0 bg-background">
+                    <TabsTrigger
+                      value="scope3"
+                      className="border-0 data-[state=active]:bg-[#A5C046]/10 data-[state=active]:text-[#00594D] data-[state=active]:font-semibold rounded-none justify-start px-4 py-3 whitespace-nowrap transition-all hover:bg-[#A5C046]/5"
+                    >
+                      Employee Commuting
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <div className="flex-1 w-full">
+                    <TabsContent value="scope3" className="mt-0">
+                      {renderScopeContent("scope3")}
+                    </TabsContent>
+                  </div>
+                </Tabs>
+              </TabsContent>
+            )}
+          </Tabs>
         </div>
       )}
 
-      {/* Add Record Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" onClick={() => setIsModalOpen(false)}>
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col m-4" onClick={(e) => e.stopPropagation()} onKeyDown={handleModalKeyDown} tabIndex={-1}>
-            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                  Add New Record
-                </h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                  {currentScope && contentConfigs[currentScope as keyof typeof contentConfigs].title}
-                </p>
-              </div>
-              <Button
-                onClick={() => setIsModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-              >
-                <X className="h-6 w-6" />
-              </Button>
-            </div>
-            <div className="p-6 overflow-y-auto flex-1">
-              {renderFormFields()}
-            </div>
-            <div className="flex justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700">
-              <Button
-                variant="outline"
-                onClick={() => setIsModalOpen(false)}
-                disabled={
-                  createFuelUsage.isPending ||
-                  createVehicleUsage.isPending ||
-                  createElectricityUsage.isPending ||
-                  createCommutingData.isPending
-                }
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleSubmit}
-                disabled={
-                  createFuelUsage.isPending ||
-                  createVehicleUsage.isPending ||
-                  createElectricityUsage.isPending ||
-                  createCommutingData.isPending
-                }
-              >
-                {(createFuelUsage.isPending ||
-                  createVehicleUsage.isPending ||
-                  createElectricityUsage.isPending ||
-                  createCommutingData.isPending)
-                  ? "Creating..."
-                  : "Add Record"}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Add Record Dialog */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Add New Record</DialogTitle>
+            <DialogDescription>
+              {currentScope && contentConfigs[currentScope as keyof typeof contentConfigs].title}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">{renderFormFields()}</div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsModalOpen(false)}
+              disabled={
+                createFuelUsage.isPending ||
+                createVehicleUsage.isPending ||
+                createElectricityUsage.isPending ||
+                createCommutingData.isPending
+              }
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              disabled={
+                createFuelUsage.isPending ||
+                createVehicleUsage.isPending ||
+                createElectricityUsage.isPending ||
+                createCommutingData.isPending
+              }
+            >
+              {createFuelUsage.isPending ||
+              createVehicleUsage.isPending ||
+              createElectricityUsage.isPending ||
+              createCommutingData.isPending
+                ? "Creating..."
+                : "Add Record"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Create Emission Record Dialog */}
       <Dialog open={isCreateRecordDialogOpen} onOpenChange={setIsCreateRecordDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Create Emission Record</DialogTitle>
-            <DialogDescription>
-              Create a new reporting period to track emissions data.
-            </DialogDescription>
+            <DialogDescription>Create a new reporting period to track emissions data.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
@@ -1373,9 +1343,7 @@ function CalculationContent() {
                 id="startDate"
                 type="date"
                 value={newRecordData.reportingPeriodStart}
-                onChange={(e) =>
-                  setNewRecordData({ ...newRecordData, reportingPeriodStart: e.target.value })
-                }
+                onChange={(e) => setNewRecordData({ ...newRecordData, reportingPeriodStart: e.target.value })}
               />
             </div>
             <div className="grid gap-2">
@@ -1384,9 +1352,7 @@ function CalculationContent() {
                 id="endDate"
                 type="date"
                 value={newRecordData.reportingPeriodEnd}
-                onChange={(e) =>
-                  setNewRecordData({ ...newRecordData, reportingPeriodEnd: e.target.value })
-                }
+                onChange={(e) => setNewRecordData({ ...newRecordData, reportingPeriodEnd: e.target.value })}
               />
             </div>
           </div>
@@ -1398,10 +1364,7 @@ function CalculationContent() {
             >
               Cancel
             </Button>
-            <Button
-              onClick={handleCreateEmissionRecord}
-              disabled={createEmissionRecord.isPending}
-            >
+            <Button onClick={handleCreateEmissionRecord} disabled={createEmissionRecord.isPending}>
               {createEmissionRecord.isPending ? "Creating..." : "Create Record"}
             </Button>
           </DialogFooter>

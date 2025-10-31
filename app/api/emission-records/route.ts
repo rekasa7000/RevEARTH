@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { withAuth } from "@/lib/utils/auth-middleware";
 import { prisma } from "@/lib/db";
+import { Prisma } from "@prisma/client";
 import { getValidatedBody } from "@/lib/utils/validation-middleware";
 import { createEmissionRecordSchema } from "@/lib/validations/emission-record.schemas";
 
@@ -75,7 +76,7 @@ export const POST = withAuth(async (request, { user }) => {
         reportingPeriodStart: startDate,
         reportingPeriodEnd: endDate,
         status: "draft",
-        scopeSelection: (scopeSelection || organization.applicableScopes) as any,
+        scopeSelection: (scopeSelection || organization.applicableScopes) as Prisma.InputJsonValue,
       },
     });
 

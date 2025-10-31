@@ -68,7 +68,7 @@ export const GET = withAuth(async (request, { user }) => {
         scope1: parseFloat(record.calculation!.totalScope1Co2e?.toString() || "0"),
         scope2: parseFloat(record.calculation!.totalScope2Co2e?.toString() || "0"),
         scope3: parseFloat(record.calculation!.totalScope3Co2e?.toString() || "0"),
-        breakdown: record.calculation!.breakdownByCategory as any,
+        breakdown: record.calculation!.breakdownByCategory as Record<string, unknown>,
       }));
 
     // Calculate moving average (3-month)

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { withAuth } from "@/lib/utils/auth-middleware";
 import { prisma } from "@/lib/db";
+import { Prisma } from "@prisma/client";
 import { getValidatedBody } from "@/lib/utils/validation-middleware";
 import { updateRefrigerantUsageSchema } from "@/lib/validations/refrigerant-usage.schemas";
 
@@ -10,6 +11,12 @@ import { updateRefrigerantUsageSchema } from "@/lib/validations/refrigerant-usag
  */
 export const GET = withAuth(async (request, { user, params }) => {
   try {
+    if (!params) {
+      return NextResponse.json(
+        { error: "Missing parameters" },
+        { status: 400 }
+      );
+    }
     const { id } = params;
 
     // Check if refrigerant usage exists and user owns it
@@ -56,6 +63,12 @@ export const GET = withAuth(async (request, { user, params }) => {
  */
 export const PATCH = withAuth(async (request, { user, params }) => {
   try {
+    if (!params) {
+      return NextResponse.json(
+        { error: "Missing parameters" },
+        { status: 400 }
+      );
+    }
     const { id } = params;
     const body = await getValidatedBody(request, updateRefrigerantUsageSchema);
     const {
@@ -134,7 +147,7 @@ export const PATCH = withAuth(async (request, { user, params }) => {
         }),
         ...(unit && { unit }),
         ...(entryDate && { entryDate: new Date(entryDate) }),
-        ...(leakDetectionLog !== undefined && { leakDetectionLog: leakDetectionLog as any }),
+        ...(leakDetectionLog !== undefined && { leakDetectionLog: (leakDetectionLog as Prisma.InputJsonValue) || undefined }),
       },
     });
 
@@ -157,6 +170,12 @@ export const PATCH = withAuth(async (request, { user, params }) => {
  */
 export const DELETE = withAuth(async (request, { user, params }) => {
   try {
+    if (!params) {
+      return NextResponse.json(
+        { error: "Missing parameters" },
+        { status: 400 }
+      );
+    }
     const { id } = params;
 
     // Check if refrigerant usage exists and user owns it

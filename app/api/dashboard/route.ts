@@ -84,7 +84,7 @@ export const GET = withAuth(async (request, { user }) => {
     let totalScope2 = 0;
     let totalScope3 = 0;
 
-    const monthlyData: Array<{ month: string; scope1: number; scope2: number; scope3: number }> = [];
+    const monthlyData: Array<{ month: string; totalCo2e: number; scope1: number; scope2: number; scope3: number }> = [];
     const categoryBreakdown: Record<string, number> = {
       fuel: 0,
       vehicles: 0,

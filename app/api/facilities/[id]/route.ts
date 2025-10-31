@@ -10,6 +10,12 @@ import { updateFacilitySchema } from "@/lib/validations/facility.schemas";
  */
 export const GET = withAuth(async (request, { user, params }) => {
   try {
+    if (!params) {
+      return NextResponse.json(
+        { error: "Missing parameters" },
+        { status: 400 }
+      );
+    }
     const { id } = params;
 
     const facility = await prisma.facility.findUnique({
@@ -57,6 +63,12 @@ export const GET = withAuth(async (request, { user, params }) => {
  */
 export const PATCH = withAuth(async (request, { user, params }) => {
   try {
+    if (!params) {
+      return NextResponse.json(
+        { error: "Missing parameters" },
+        { status: 400 }
+      );
+    }
     const { id } = params;
 
     // Validate request body
@@ -126,6 +138,12 @@ export const PATCH = withAuth(async (request, { user, params }) => {
  */
 export const DELETE = withAuth(async (request, { user, params }) => {
   try {
+    if (!params) {
+      return NextResponse.json(
+        { error: "Missing parameters" },
+        { status: 400 }
+      );
+    }
     const { id } = params;
 
     // Check if facility exists and user owns it

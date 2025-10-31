@@ -100,7 +100,7 @@ function DashboardContent() {
                 No Emissions Data Yet
               </h3>
               <p className="text-gray-600 dark:text-gray-400 max-w-md">
-                You haven't recorded any emissions data yet. Start by adding your facilities and creating emission records to see your dashboard analytics.
+                You haven&apos;t recorded any emissions data yet. Start by adding your facilities and creating emission records to see your dashboard analytics.
               </p>
               <div className="flex gap-3 justify-center pt-4">
                 <Button

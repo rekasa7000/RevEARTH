@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { withAuth } from "@/lib/utils/auth-middleware";
 import { prisma } from "@/lib/db";
+import { Prisma } from "@prisma/client";
 import { getValidatedBody } from "@/lib/utils/validation-middleware";
 import { createFuelUsageSchema } from "@/lib/validations/fuel-usage.schemas";
 
@@ -83,7 +84,7 @@ export const POST = withAuth(async (request, { user }) => {
         quantity,
         unit,
         entryDate: new Date(entryDate),
-        metadata: metadata as any,
+        metadata: (metadata as Prisma.InputJsonValue) || undefined,
         // co2eCalculated will be set by calculation engine
       },
     });

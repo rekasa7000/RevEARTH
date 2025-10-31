@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { withAuth } from "@/lib/utils/auth-middleware";
 import { prisma } from "@/lib/db";
+import { Prisma } from "@prisma/client";
 import { getValidatedBody } from "@/lib/utils/validation-middleware";
 import { createOrganizationSchema } from "@/lib/validations/organization.schemas";
 import { checkRateLimit } from "@/lib/utils/rate-limit-middleware";
@@ -61,8 +62,8 @@ export const POST = withAuth(async (request, { user }): Promise<NextResponse> =>
         name,
         industrySector: industrySector || null,
         occupancyType,
-        reportingBoundaries: (reportingBoundaries as any) || undefined,
-        applicableScopes: defaultScopes as any,
+        reportingBoundaries: (reportingBoundaries as Prisma.InputJsonValue) || undefined,
+        applicableScopes: defaultScopes as Prisma.InputJsonValue,
       },
     });
 

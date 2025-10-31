@@ -63,7 +63,7 @@ export function useCalculation(emissionRecordId: string) {
     staleTime: 2 * 60 * 1000, // 2 minutes - calculations are relatively stable
     retry: (failureCount, error: Error) => {
       // Don't retry if calculation doesn't exist (404)
-      if (error?.response?.status === 404) {
+      if ('response' in error && error.response && typeof error.response === 'object' && 'status' in error.response && error.response.status === 404) {
         return false;
       }
       return failureCount < 2;

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { withAuth } from "@/lib/utils/auth-middleware";
 import { prisma } from "@/lib/db";
+import { Prisma } from "@prisma/client";
 import { getValidatedBody } from "@/lib/utils/validation-middleware";
 import { createRefrigerantUsageSchema } from "@/lib/validations/refrigerant-usage.schemas";
 
@@ -79,7 +80,7 @@ export const POST = withAuth(async (request, { user }) => {
         quantityPurchased: quantityPurchased !== undefined && quantityPurchased !== null ? parseFloat(quantityPurchased.toString()) : null,
         unit,
         entryDate: new Date(entryDate),
-        leakDetectionLog: leakDetectionLog as any,
+        leakDetectionLog: (leakDetectionLog as Prisma.InputJsonValue) || undefined,
         // co2eCalculated will be set by calculation engine
       },
     });

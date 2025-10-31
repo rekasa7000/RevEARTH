@@ -7,8 +7,15 @@ import { resolveError } from "@/lib/services/error-logger";
  * GET /api/errors/:id
  * Get single error log by ID
  */
-export const GET = withAuth(async (request, { user, params }) => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export const GET = withAuth(async (request, { user: _user, params }) => {
   try {
+    if (!params) {
+      return NextResponse.json(
+        { error: "Missing parameters" },
+        { status: 400 }
+      );
+    }
     const { id } = params;
 
     const error = await prisma.errorLog.findUnique({
@@ -38,6 +45,12 @@ export const GET = withAuth(async (request, { user, params }) => {
  */
 export const PATCH = withAuth(async (request, { user, params }) => {
   try {
+    if (!params) {
+      return NextResponse.json(
+        { error: "Missing parameters" },
+        { status: 400 }
+      );
+    }
     const { id } = params;
     const body = await request.json();
     const { resolved } = body;
@@ -84,8 +97,15 @@ export const PATCH = withAuth(async (request, { user, params }) => {
  * DELETE /api/errors/:id
  * Delete error log
  */
-export const DELETE = withAuth(async (request, { user, params }) => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export const DELETE = withAuth(async (request, { user: _user, params }) => {
   try {
+    if (!params) {
+      return NextResponse.json(
+        { error: "Missing parameters" },
+        { status: 400 }
+      );
+    }
     const { id } = params;
 
     await prisma.errorLog.delete({

@@ -156,7 +156,8 @@ function FacilitiesContent() {
       }
 
       handleCloseDialog();
-    } catch (error) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (_error) {
       toast({
         title: "Error",
         description: editingFacility
@@ -183,7 +184,8 @@ function FacilitiesContent() {
       });
 
       setDeletingFacilityId(null);
-    } catch (error) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (_error) {
       toast({
         title: "Error",
         description: "Failed to delete facility",
@@ -211,7 +213,7 @@ function FacilitiesContent() {
           </h1>
           {organization && (
             <p className="mt-2 text-gray-600 dark:text-gray-400">
-              Manage your organization's facilities and locations
+              Manage your organization&apos;s facilities and locations
             </p>
           )}
         </div>

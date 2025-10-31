@@ -20,7 +20,8 @@ export function createTokenExpiry(hours: number = 24): Date {
 /**
  * Generate and store email verification token
  */
-export async function generateVerificationToken(userId: string, email: string) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function generateVerificationToken(userId: string, _email: string) {
   const token = generateToken();
 
   await prisma.user.update({

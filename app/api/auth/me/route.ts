@@ -6,7 +6,8 @@ import { headers } from "next/headers";
  * GET /api/auth/me
  * Get current authenticated user
  */
-export async function GET(request: NextRequest) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function GET(_request: NextRequest) {
   try {
     // Get session from better-auth
     const session = await auth.api.getSession({

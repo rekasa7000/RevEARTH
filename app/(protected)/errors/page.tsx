@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { AlertTriangle, CheckCircle, XCircle, Info, AlertCircle, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -43,7 +43,7 @@ export default function ErrorsPage() {
   const [filter, setFilter] = useState<"all" | "unresolved" | "resolved">("unresolved");
   const [selectedError, setSelectedError] = useState<ErrorLog | null>(null);
 
-  const fetchErrors = async () => {
+  const fetchErrors = useCallback(async () => {
     try {
       setLoading(true);
       const resolvedParam = filter === "all" ? "" : `&resolved=${filter === "resolved"}`;
@@ -55,9 +55,9 @@ export default function ErrorsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter]);
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       const response = await fetch("/api/errors/stats?timeframe=day");
       const data = await response.json();
@@ -65,12 +65,12 @@ export default function ErrorsPage() {
     } catch (error) {
       console.error("Failed to fetch stats:", error);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchErrors();
     fetchStats();
-  }, [filter]);
+  }, [fetchErrors, fetchStats]);
 
   const handleResolve = async (errorId: string, resolved: boolean) => {
     try {
@@ -121,14 +121,14 @@ export default function ErrorsPage() {
     }
   };
 
-  const getLevelColor = (level: string) => {
+  const getLevelColor = (level: string): "destructive" | "secondary" | "default" | "outline" => {
     switch (level) {
       case "error":
         return "destructive";
       case "warn":
-        return "warning";
+        return "outline";
       case "info":
-        return "info";
+        return "default";
       case "debug":
         return "secondary";
       default:
@@ -194,7 +194,7 @@ export default function ErrorsPage() {
       )}
 
       {/* Tabs */}
-      <Tabs value={filter} onValueChange={(value) => setFilter(value as any)}>
+      <Tabs value={filter} onValueChange={(value) => setFilter(value as "all" | "unresolved" | "resolved")}>
         <TabsList>
           <TabsTrigger value="unresolved">Unresolved</TabsTrigger>
           <TabsTrigger value="resolved">Resolved</TabsTrigger>
@@ -227,7 +227,7 @@ export default function ErrorsPage() {
                         {getLevelIcon(error.level)}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap mb-1">
-                            <Badge variant={getLevelColor(error.level) as any}>{error.level}</Badge>
+                            <Badge variant={getLevelColor(error.level)}>{error.level}</Badge>
                             {error.context && <Badge variant="outline">{error.context}</Badge>}
                             {error.environment && <Badge variant="secondary">{error.environment}</Badge>}
                             {error.occurrences > 1 && (

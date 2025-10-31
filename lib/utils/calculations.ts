@@ -3,7 +3,6 @@ import {
   getRefrigerantEmissionFactor,
   getElectricityEmissionFactor,
   getTransportEmissionFactor,
-  EMISSION_FACTORS,
 } from "@/lib/constants/emission-factors";
 
 /**

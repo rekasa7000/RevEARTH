@@ -10,6 +10,12 @@ import { updateEmissionRecordSchema } from "@/lib/validations/emission-record.sc
  */
 export const GET = withAuth(async (request, { user, params }) => {
   try {
+    if (!params) {
+      return NextResponse.json(
+        { error: "Missing parameters" },
+        { status: 400 }
+      );
+    }
     const { id } = params;
 
     const record = await prisma.emissionRecord.findUnique({
@@ -62,6 +68,12 @@ export const GET = withAuth(async (request, { user, params }) => {
  */
 export const PATCH = withAuth(async (request, { user, params }) => {
   try {
+    if (!params) {
+      return NextResponse.json(
+        { error: "Missing parameters" },
+        { status: 400 }
+      );
+    }
     const { id } = params;
 
     // Validate request body
@@ -149,6 +161,12 @@ export const PATCH = withAuth(async (request, { user, params }) => {
  */
 export const DELETE = withAuth(async (request, { user, params }) => {
   try {
+    if (!params) {
+      return NextResponse.json(
+        { error: "Missing parameters" },
+        { status: 400 }
+      );
+    }
     const { id } = params;
 
     // Check if record exists and user owns it

@@ -17,6 +17,12 @@ const createInvitationSchema = z.object({
  */
 export const POST = withAuth(async (request, { user, params }) => {
   try {
+    if (!params) {
+      return NextResponse.json(
+        { error: "Missing parameters" },
+        { status: 400 }
+      );
+    }
     const { id: organizationId } = params;
 
     // Check if user can manage this organization
@@ -169,6 +175,12 @@ export const POST = withAuth(async (request, { user, params }) => {
  */
 export const GET = withAuth(async (request, { user, params }) => {
   try {
+    if (!params) {
+      return NextResponse.json(
+        { error: "Missing parameters" },
+        { status: 400 }
+      );
+    }
     const { id: organizationId } = params;
 
     // Check if user can manage this organization

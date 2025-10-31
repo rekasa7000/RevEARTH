@@ -243,7 +243,7 @@ function SettingsContent() {
                     placeholder="e.g., Manufacturing, Healthcare, Education"
                   />
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Optional: Specify your organization's industry sector
+                    Optional: Specify your organization&apos;s industry sector
                   </p>
                 </div>
 
@@ -519,7 +519,7 @@ function SettingsContent() {
               {/* Note */}
               <div className="bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
                 <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                  <strong>Note:</strong> To change your applicable scopes, update your organization's
+                  <strong>Note:</strong> To change your applicable scopes, update your organization&apos;s
                   occupancy type in the Organization tab. Scopes are automatically configured based on
                   industry best practices for your occupancy type.
                 </p>

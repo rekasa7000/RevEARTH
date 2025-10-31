@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { withAuth } from "@/lib/utils/auth-middleware";
 import { prisma } from "@/lib/db";
+import { Prisma } from "@prisma/client";
 import { getValidatedBody } from "@/lib/utils/validation-middleware";
 import { updateOrganizationSchema } from "@/lib/validations/organization.schemas";
 
@@ -10,6 +11,12 @@ import { updateOrganizationSchema } from "@/lib/validations/organization.schemas
  */
 export const GET = withAuth(async (request, { user, params }) => {
   try {
+    if (!params) {
+      return NextResponse.json(
+        { error: "Missing parameters" },
+        { status: 400 }
+      );
+    }
     const { id } = params;
 
     const organization = await prisma.organization.findUnique({
@@ -59,6 +66,12 @@ export const GET = withAuth(async (request, { user, params }) => {
  */
 export const PATCH = withAuth(async (request, { user, params }) => {
   try {
+    if (!params) {
+      return NextResponse.json(
+        { error: "Missing parameters" },
+        { status: 400 }
+      );
+    }
     const { id } = params;
 
     // Validate request body
@@ -97,8 +110,8 @@ export const PATCH = withAuth(async (request, { user, params }) => {
         ...(name && { name }),
         ...(industrySector !== undefined && { industrySector }),
         ...(occupancyType && { occupancyType }),
-        ...(reportingBoundaries !== undefined && { reportingBoundaries: reportingBoundaries as any }),
-        ...(applicableScopes && { applicableScopes: applicableScopes as any }),
+        ...(reportingBoundaries !== undefined && { reportingBoundaries: reportingBoundaries as Prisma.InputJsonValue }),
+        ...(applicableScopes && { applicableScopes: applicableScopes as Prisma.InputJsonValue }),
       },
     });
 
@@ -121,6 +134,12 @@ export const PATCH = withAuth(async (request, { user, params }) => {
  */
 export const DELETE = withAuth(async (request, { user, params }) => {
   try {
+    if (!params) {
+      return NextResponse.json(
+        { error: "Missing parameters" },
+        { status: 400 }
+      );
+    }
     const { id } = params;
 
     // Check if organization exists and user owns it

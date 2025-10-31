@@ -9,6 +9,12 @@ import { canManageOrganization } from "@/lib/utils/permissions";
  */
 export const DELETE = withAuth(async (request, { user, params }) => {
   try {
+    if (!params) {
+      return NextResponse.json(
+        { error: "Missing parameters" },
+        { status: 400 }
+      );
+    }
     const { id: organizationId, invitationId } = params;
 
     // Check if user can manage this organization

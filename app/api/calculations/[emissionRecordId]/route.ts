@@ -8,6 +8,12 @@ import { prisma } from "@/lib/db";
  */
 export const GET = withAuth(async (request, { user, params }) => {
   try {
+    if (!params) {
+      return NextResponse.json(
+        { error: "Missing parameters" },
+        { status: 400 }
+      );
+    }
     const { emissionRecordId } = params;
 
     // Check if emission record exists and user owns it

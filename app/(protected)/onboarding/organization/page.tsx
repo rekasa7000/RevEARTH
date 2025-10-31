@@ -117,7 +117,7 @@ export default function OrganizationSetup() {
           <Card className="mb-6">
             <CardHeader>
               <CardTitle>Organization Details</CardTitle>
-              <CardDescription>Enter your organization's basic information</CardDescription>
+              <CardDescription>Enter your organization&apos;s basic information</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
