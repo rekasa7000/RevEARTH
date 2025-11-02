@@ -41,6 +41,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# documentation (client toolkit - do not commit)
+revearth_toolkit_doc.pdf
+revearth_toolkit_doc.xlsm
+
 /lib/generated/prisma
 
 # Claude Code
