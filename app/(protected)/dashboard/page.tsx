@@ -19,11 +19,12 @@ import { useOrganizationCheck } from "@/lib/hooks/use-organization-check";
 import { useDashboard, DashboardPeriod } from "@/lib/api/queries/dashboard";
 import { PageErrorBoundary } from "@/components/error-boundary";
 import { DashboardSkeleton } from "@/components/skeletons";
+import { OrganizationSetupDialog } from "@/components/organization-setup-dialog";
 
 function DashboardContent() {
   const [period, setPeriod] = useState<DashboardPeriod>("year");
   const queryClient = useQueryClient();
-  const { organization, isLoading: orgLoading } = useOrganizationCheck();
+  const { organization, isLoading: orgLoading, needsSetup } = useOrganizationCheck({ disableRedirect: true });
   const { data: dashboardData, isLoading: dashboardLoading, isFetching } = useDashboard(
     organization?.id || "",
     period
@@ -299,6 +300,12 @@ function DashboardContent() {
           </CardContent>
         </Card>
       </div> */}
+
+      {/* Organization Setup Dialog */}
+      <OrganizationSetupDialog
+        open={needsSetup}
+        onOpenChange={() => {}} // Make it non-dismissable
+      />
     </div>
   );
 }

@@ -112,8 +112,14 @@ export function OrganizationSetupDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+    <Dialog open={open} onOpenChange={onOpenChange} modal>
+      <DialogContent
+        className="max-w-3xl max-h-[90vh] overflow-y-auto"
+        showCloseButton={false}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader className="space-y-3">
           <div className="flex justify-center">
             <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">

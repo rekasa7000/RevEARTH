@@ -192,10 +192,14 @@ export const EMISSION_FACTORS = {
 
 /**
  * Get emission factor for fuel type (total CO2e)
+ * Calculates CO2e from separate gas factors: CO2e = CO2 + (CH4 × 25) + (N2O × 298)
  */
 export function getFuelEmissionFactor(fuelType: string): number {
   const fuel = EMISSION_FACTORS.scope1.fuels[fuelType as keyof typeof EMISSION_FACTORS.scope1.fuels];
-  return fuel?.factor || 0;
+  if (!fuel) return 0;
+
+  // GWP factors: CH4 = 25, N2O = 298 (IPCC AR4)
+  return fuel.co2 + (fuel.ch4 * 25) + (fuel.n2o * 298);
 }
 
 /**
