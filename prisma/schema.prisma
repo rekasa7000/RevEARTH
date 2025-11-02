@@ -221,6 +221,9 @@ model FuelUsage {
   fuelType         FuelType @map("fuel_type")
   quantity         Decimal  @db.Decimal(12, 2)
   unit             String
+  co2Emissions     Decimal? @map("co2_emissions") @db.Decimal(12, 4)
+  ch4Emissions     Decimal? @map("ch4_emissions") @db.Decimal(12, 4)
+  n2oEmissions     Decimal? @map("n2o_emissions") @db.Decimal(12, 4)
   co2eCalculated   Decimal? @map("co2e_calculated") @db.Decimal(12, 4)
   entryDate        DateTime @map("entry_date") @db.Date
   metadata         Json?
@@ -260,6 +263,9 @@ model VehicleUsage {
   fuelConsumed     Decimal?    @map("fuel_consumed") @db.Decimal(10, 2)
   mileage          Decimal?    @db.Decimal(10, 2)
   unit             String
+  co2Emissions     Decimal?    @map("co2_emissions") @db.Decimal(12, 4)
+  ch4Emissions     Decimal?    @map("ch4_emissions") @db.Decimal(12, 4)
+  n2oEmissions     Decimal?    @map("n2o_emissions") @db.Decimal(12, 4)
   co2eCalculated   Decimal?    @map("co2e_calculated") @db.Decimal(12, 4)
   entryDate        DateTime    @map("entry_date") @db.Date
 
@@ -288,6 +294,9 @@ model RefrigerantUsage {
   quantityLeaked    Decimal?        @map("quantity_leaked") @db.Decimal(10, 4)
   quantityPurchased Decimal?        @map("quantity_purchased") @db.Decimal(10, 4)
   unit              String
+  co2Emissions      Decimal?        @map("co2_emissions") @db.Decimal(12, 4)
+  ch4Emissions      Decimal?        @map("ch4_emissions") @db.Decimal(12, 4)
+  n2oEmissions      Decimal?        @map("n2o_emissions") @db.Decimal(12, 4)
   co2eCalculated    Decimal?        @map("co2e_calculated") @db.Decimal(12, 4)
   entryDate         DateTime        @map("entry_date") @db.Date
   leakDetectionLog  Json?           @map("leak_detection_log")
@@ -316,6 +325,9 @@ model ElectricityUsage {
   kwhConsumption     Decimal  @map("kwh_consumption") @db.Decimal(12, 2)
   peakHoursKwh       Decimal? @map("peak_hours_kwh") @db.Decimal(12, 2)
   offpeakHoursKwh    Decimal? @map("offpeak_hours_kwh") @db.Decimal(12, 2)
+  co2Emissions       Decimal? @map("co2_emissions") @db.Decimal(12, 4)
+  ch4Emissions       Decimal? @map("ch4_emissions") @db.Decimal(12, 4)
+  n2oEmissions       Decimal? @map("n2o_emissions") @db.Decimal(12, 4)
   co2eCalculated     Decimal? @map("co2e_calculated") @db.Decimal(12, 4)
   billingPeriodStart DateTime @map("billing_period_start") @db.Date
   billingPeriodEnd   DateTime @map("billing_period_end") @db.Date
@@ -339,6 +351,9 @@ model CommutingData {
   transportMode    TransportMode @map("transport_mode")
   daysPerWeek      Int?          @map("days_per_week")
   wfhDays          Int?          @map("wfh_days")
+  co2Emissions     Decimal?      @map("co2_emissions") @db.Decimal(12, 4)
+  ch4Emissions     Decimal?      @map("ch4_emissions") @db.Decimal(12, 4)
+  n2oEmissions     Decimal?      @map("n2o_emissions") @db.Decimal(12, 4)
   co2eCalculated   Decimal?      @map("co2e_calculated") @db.Decimal(12, 4)
   surveyDate       DateTime?     @map("survey_date") @db.Date
 
@@ -384,9 +399,21 @@ model EmployeeCommuteSurvey {
 model EmissionCalculation {
   id                   String   @id @default(cuid())
   emissionRecordId     String   @unique @map("emission_record_id")
+  totalScope1Co2       Decimal? @map("total_scope1_co2") @db.Decimal(15, 4)
+  totalScope1Ch4       Decimal? @map("total_scope1_ch4") @db.Decimal(15, 4)
+  totalScope1N2o       Decimal? @map("total_scope1_n2o") @db.Decimal(15, 4)
   totalScope1Co2e      Decimal? @map("total_scope1_co2e") @db.Decimal(15, 4)
+  totalScope2Co2       Decimal? @map("total_scope2_co2") @db.Decimal(15, 4)
+  totalScope2Ch4       Decimal? @map("total_scope2_ch4") @db.Decimal(15, 4)
+  totalScope2N2o       Decimal? @map("total_scope2_n2o") @db.Decimal(15, 4)
   totalScope2Co2e      Decimal? @map("total_scope2_co2e") @db.Decimal(15, 4)
+  totalScope3Co2       Decimal? @map("total_scope3_co2") @db.Decimal(15, 4)
+  totalScope3Ch4       Decimal? @map("total_scope3_ch4") @db.Decimal(15, 4)
+  totalScope3N2o       Decimal? @map("total_scope3_n2o") @db.Decimal(15, 4)
   totalScope3Co2e      Decimal? @map("total_scope3_co2e") @db.Decimal(15, 4)
+  totalCo2             Decimal? @map("total_co2") @db.Decimal(15, 4)
+  totalCh4             Decimal? @map("total_ch4") @db.Decimal(15, 4)
+  totalN2o             Decimal? @map("total_n2o") @db.Decimal(15, 4)
   totalCo2e            Decimal? @map("total_co2e") @db.Decimal(15, 4)
   breakdownByCategory  Json?    @map("breakdown_by_category")
   emissionFactorsUsed  Json?    @map("emission_factors_used")

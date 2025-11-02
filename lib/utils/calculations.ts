@@ -1,60 +1,63 @@
 import {
   getFuelEmissionFactor,
+  getFuelGasEmissions,
   getRefrigerantEmissionFactor,
   getElectricityEmissionFactor,
+  getElectricityGasEmissions,
   getTransportEmissionFactor,
+  getTransportGasEmissions,
 } from "@/lib/constants/emission-factors";
 
 /**
- * Calculate CO2e for fuel consumption
- * Formula: Quantity × Emission Factor
+ * Calculate emissions for fuel consumption (returns separate CO2, CH4, N2O)
+ * Formula: CO2e = CO2 + (CH4 × 25) + (N2O × 298)
  */
 export function calculateFuelEmissions(
   fuelType: string,
   quantity: number
-): number {
-  const factor = getFuelEmissionFactor(fuelType);
-  return quantity * factor;
+): { co2: number; ch4: number; n2o: number; co2e: number } {
+  return getFuelGasEmissions(fuelType, quantity);
 }
 
 /**
- * Calculate CO2e for vehicle fuel consumption
+ * Calculate emissions for vehicle fuel consumption (returns separate CO2, CH4, N2O)
  * Formula: Fuel Consumed × Emission Factor
  */
 export function calculateVehicleEmissions(
   fuelType: string,
   fuelConsumed: number
-): number {
-  const factor = getFuelEmissionFactor(fuelType);
-  return fuelConsumed * factor;
+): { co2: number; ch4: number; n2o: number; co2e: number } {
+  return getFuelGasEmissions(fuelType, fuelConsumed);
 }
 
 /**
  * Calculate CO2e for refrigerant leakage
- * Formula: Quantity Leaked × GWP × 0.001
+ * Formula: Quantity Leaked × GWP
+ * Note: Refrigerants produce direct CO2e (no separate CO2, CH4, N2O)
  */
 export function calculateRefrigerantEmissions(
   refrigerantType: string,
   quantityLeaked: number
-): number {
+): { co2: number; ch4: number; n2o: number; co2e: number } {
   const factor = getRefrigerantEmissionFactor(refrigerantType);
-  return quantityLeaked * factor;
+  const co2e = quantityLeaked * factor;
+  // Refrigerants contribute directly to CO2e, so we put it all in CO2
+  return { co2: co2e, ch4: 0, n2o: 0, co2e };
 }
 
 /**
- * Calculate CO2e for electricity consumption
+ * Calculate emissions for electricity consumption (returns separate CO2, CH4, N2O)
  * Formula: kWh Consumption × Grid Emission Factor
  */
 export function calculateElectricityEmissions(
   kwhConsumption: number,
   grid: string = "ph_grid_average"
-): number {
-  const factor = getElectricityEmissionFactor(grid);
-  return kwhConsumption * factor;
+): { co2: number; ch4: number; n2o: number; co2e: number } {
+  return getElectricityGasEmissions(kwhConsumption, grid);
 }
 
 /**
- * Calculate CO2e for employee commuting
+ * Calculate emissions for employee commuting (returns separate CO2, CH4, N2O)
  * Formula: Employee Count × Avg Distance × Transport Factor × Work Days × Round Trip Factor
  *
  * Work Days = (Days per Week × 52 weeks) - (WFH Days × 52)
@@ -66,58 +69,93 @@ export function calculateCommutingEmissions(
   transportMode: string,
   daysPerWeek: number,
   wfhDays: number
-): number {
-  const factor = getTransportEmissionFactor(transportMode);
-
+): { co2: number; ch4: number; n2o: number; co2e: number } {
   // Calculate annual work days
   const workDaysPerYear = (daysPerWeek * 52) - (wfhDays * 52);
 
   // Round trip factor (2 = to and from work)
   const roundTripFactor = 2;
 
-  // Annual emissions
-  const annualEmissions =
-    employeeCount *
-    avgDistanceKm *
-    roundTripFactor *
-    factor *
-    workDaysPerYear;
+  // Total distance per year for all employees
+  const totalDistancePerYear =
+    employeeCount * avgDistanceKm * roundTripFactor * workDaysPerYear;
+
+  // Get emissions for total distance
+  const annualEmissions = getTransportGasEmissions(transportMode, totalDistancePerYear);
 
   // Convert to monthly average
-  return annualEmissions / 12;
+  return {
+    co2: annualEmissions.co2 / 12,
+    ch4: annualEmissions.ch4 / 12,
+    n2o: annualEmissions.n2o / 12,
+    co2e: annualEmissions.co2e / 12,
+  };
 }
 
 /**
- * Calculate total Scope 1 emissions
+ * Calculate total Scope 1 emissions (aggregates separate gases)
  */
 export function calculateScope1Total(
-  fuelEmissions: number[],
-  vehicleEmissions: number[],
-  refrigerantEmissions: number[]
-): number {
-  const fuelTotal = fuelEmissions.reduce((sum, val) => sum + val, 0);
-  const vehicleTotal = vehicleEmissions.reduce((sum, val) => sum + val, 0);
-  const refrigerantTotal = refrigerantEmissions.reduce((sum, val) => sum + val, 0);
+  fuelEmissions: Array<{ co2: number; ch4: number; n2o: number; co2e: number }>,
+  vehicleEmissions: Array<{ co2: number; ch4: number; n2o: number; co2e: number }>,
+  refrigerantEmissions: Array<{ co2: number; ch4: number; n2o: number; co2e: number }>
+): { co2: number; ch4: number; n2o: number; co2e: number } {
+  const aggregate = (emissions: Array<{ co2: number; ch4: number; n2o: number; co2e: number }>) => {
+    return emissions.reduce(
+      (sum, val) => ({
+        co2: sum.co2 + val.co2,
+        ch4: sum.ch4 + val.ch4,
+        n2o: sum.n2o + val.n2o,
+        co2e: sum.co2e + val.co2e,
+      }),
+      { co2: 0, ch4: 0, n2o: 0, co2e: 0 }
+    );
+  };
 
-  return fuelTotal + vehicleTotal + refrigerantTotal;
+  const fuelTotal = aggregate(fuelEmissions);
+  const vehicleTotal = aggregate(vehicleEmissions);
+  const refrigerantTotal = aggregate(refrigerantEmissions);
+
+  return {
+    co2: fuelTotal.co2 + vehicleTotal.co2 + refrigerantTotal.co2,
+    ch4: fuelTotal.ch4 + vehicleTotal.ch4 + refrigerantTotal.ch4,
+    n2o: fuelTotal.n2o + vehicleTotal.n2o + refrigerantTotal.n2o,
+    co2e: fuelTotal.co2e + vehicleTotal.co2e + refrigerantTotal.co2e,
+  };
 }
 
 /**
- * Calculate total Scope 2 emissions
+ * Calculate total Scope 2 emissions (aggregates separate gases)
  */
 export function calculateScope2Total(
-  electricityEmissions: number[]
-): number {
-  return electricityEmissions.reduce((sum, val) => sum + val, 0);
+  electricityEmissions: Array<{ co2: number; ch4: number; n2o: number; co2e: number }>
+): { co2: number; ch4: number; n2o: number; co2e: number } {
+  return electricityEmissions.reduce(
+    (sum, val) => ({
+      co2: sum.co2 + val.co2,
+      ch4: sum.ch4 + val.ch4,
+      n2o: sum.n2o + val.n2o,
+      co2e: sum.co2e + val.co2e,
+    }),
+    { co2: 0, ch4: 0, n2o: 0, co2e: 0 }
+  );
 }
 
 /**
- * Calculate total Scope 3 emissions
+ * Calculate total Scope 3 emissions (aggregates separate gases)
  */
 export function calculateScope3Total(
-  commutingEmissions: number[]
-): number {
-  return commutingEmissions.reduce((sum, val) => sum + val, 0);
+  commutingEmissions: Array<{ co2: number; ch4: number; n2o: number; co2e: number }>
+): { co2: number; ch4: number; n2o: number; co2e: number } {
+  return commutingEmissions.reduce(
+    (sum, val) => ({
+      co2: sum.co2 + val.co2,
+      ch4: sum.ch4 + val.ch4,
+      n2o: sum.n2o + val.n2o,
+      co2e: sum.co2e + val.co2e,
+    }),
+    { co2: 0, ch4: 0, n2o: 0, co2e: 0 }
+  );
 }
 
 /**
