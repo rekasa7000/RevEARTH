@@ -1137,6 +1137,64 @@ function CalculationContent() {
                   </div>
                 )}
 
+                {/* Gas Breakdown Section */}
+                <div className="mt-6 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Greenhouse Gas Breakdown</h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* CO2 */}
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-orange-200 dark:border-orange-700">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
+                        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Carbon Dioxide (CO₂)</p>
+                      </div>
+                      <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                        {calculation.totalCo2
+                          ? Number(calculation.totalCo2).toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 })
+                          : "0.000"} <span className="text-base">kg</span>
+                      </p>
+                    </div>
+
+                    {/* CH4 */}
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-cyan-200 dark:border-cyan-700">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-3 h-3 bg-cyan-500 rounded-full"></div>
+                        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Methane (CH₄)</p>
+                      </div>
+                      <p className="text-2xl font-bold text-cyan-600 dark:text-cyan-400">
+                        {calculation.totalCh4
+                          ? Number(calculation.totalCh4).toLocaleString(undefined, { minimumFractionDigits: 6, maximumFractionDigits: 6 })
+                          : "0.000000"} <span className="text-base">kg</span>
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        GWP: 25 × CO₂
+                      </p>
+                    </div>
+
+                    {/* N2O */}
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-pink-200 dark:border-pink-700">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-3 h-3 bg-pink-500 rounded-full"></div>
+                        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Nitrous Oxide (N₂O)</p>
+                      </div>
+                      <p className="text-2xl font-bold text-pink-600 dark:text-pink-400">
+                        {calculation.totalN2o
+                          ? Number(calculation.totalN2o).toLocaleString(undefined, { minimumFractionDigits: 6, maximumFractionDigits: 6 })
+                          : "0.000000"} <span className="text-base">kg</span>
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        GWP: 298 × CO₂
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <p className="text-xs text-blue-700 dark:text-blue-300">
+                      <span className="font-semibold">Formula:</span> Total CO₂e = CO₂ + (CH₄ × 25) + (N₂O × 298)
+                    </p>
+                  </div>
+                </div>
+
                 <div className="mt-4 flex justify-end">
                   <Button variant="outline" asChild>
                     <a href="/reports" className="flex items-center gap-2">

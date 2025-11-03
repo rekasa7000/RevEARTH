@@ -70,10 +70,6 @@ export type EmissionData = Scope1StationaryData | Scope1MobileData | Scope1Refri
 // Column definitions for Scope 1 - Stationary Combustion
 export const scope1StationaryColumns: ColumnDef<Scope1StationaryData>[] = [
   {
-    accessorKey: "id",
-    header: "ID",
-  },
-  {
     accessorKey: "sourceDescription",
     header: "Source Description",
   },
@@ -113,10 +109,6 @@ export const scope1StationaryColumns: ColumnDef<Scope1StationaryData>[] = [
 
 // Column definitions for Scope 1 - Mobile Combustion
 export const scope1MobileColumns: ColumnDef<Scope1MobileData>[] = [
-  {
-    accessorKey: "id",
-    header: "ID",
-  },
   {
     accessorKey: "vehicleDescription",
     header: "Vehicle Description",
@@ -158,10 +150,6 @@ export const scope1MobileColumns: ColumnDef<Scope1MobileData>[] = [
 // Column definitions for Scope 1 - Refrigeration
 export const scope1RefrigerationColumns: ColumnDef<Scope1RefrigerationData>[] = [
   {
-    accessorKey: "id",
-    header: "ID",
-  },
-  {
     accessorKey: "equipmentDescription",
     header: "Equipment Description",
   },
@@ -193,10 +181,6 @@ export const scope1RefrigerationColumns: ColumnDef<Scope1RefrigerationData>[] = 
 
 // Column definitions for Scope 2
 export const scope2Columns: ColumnDef<Scope2Data>[] = [
-  {
-    accessorKey: "id",
-    header: "ID",
-  },
   {
     accessorKey: "energySourceDescription",
     header: "Energy Source Description",
@@ -233,10 +217,6 @@ export const scope2Columns: ColumnDef<Scope2Data>[] = [
 
 // Column definitions for Scope 3
 export const scope3Columns: ColumnDef<Scope3Data>[] = [
-  {
-    accessorKey: "id",
-    header: "ID",
-  },
   {
     accessorKey: "activityDescription",
     header: "Activity Description",

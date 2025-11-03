@@ -50,6 +50,38 @@ export const EMISSION_FACTORS = {
         source: "GHG Inventory Toolkit 2024",
         description: "Motor gasoline combustion",
       },
+      kerosene: {
+        co2: 0.00332, // tonnes CO2 per kg (10.2 kg/gal ÷ 3.07 kg/gal)
+        ch4: 0.000000134, // tonnes CH4 per kg (4.10E-04 kg/gal ÷ 3.07 kg/gal)
+        n2o: 0.0000000261, // tonnes N2O per kg (8.00E-05 kg/gal ÷ 3.07 kg/gal)
+        unit: "kg",
+        source: "GHG Inventory Toolkit 2024",
+        description: "Kerosene combustion (converted from kg/gal)",
+      },
+      fuel_oil: {
+        co2: 0.00332, // tonnes CO2 per kg (same as kerosene - Distillate Fuel Oil No. 2)
+        ch4: 0.000000134, // tonnes CH4 per kg
+        n2o: 0.0000000261, // tonnes N2O per kg
+        unit: "kg",
+        source: "GHG Inventory Toolkit 2024",
+        description: "Distillate fuel oil combustion",
+      },
+      biodiesel: {
+        co2: 0.00284, // tonnes CO2 per kg (9.45 kg/gal ÷ 3.33 kg/gal)
+        ch4: 0.000000042, // tonnes CH4 per kg (1.40E-04 kg/gal ÷ 3.33 kg/gal)
+        n2o: 0.000000003, // tonnes N2O per kg (1.00E-05 kg/gal ÷ 3.33 kg/gal)
+        unit: "kg",
+        source: "GHG Inventory Toolkit 2024",
+        description: "Biodiesel (B100) combustion",
+      },
+      ethanol: {
+        co2: 0.00192, // tonnes CO2 per kg (5.75 kg/gal ÷ 2.99 kg/gal)
+        ch4: 0.00000003, // tonnes CH4 per kg (9.00E-05 kg/gal ÷ 2.99 kg/gal)
+        n2o: 0.0000000033, // tonnes N2O per kg (1.00E-05 kg/gal ÷ 2.99 kg/gal)
+        unit: "kg",
+        source: "GHG Inventory Toolkit 2024",
+        description: "Ethanol (E100) combustion",
+      },
     },
 
     // Refrigerant GWP (Global Warming Potential)
