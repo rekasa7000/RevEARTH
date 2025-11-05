@@ -106,6 +106,7 @@ function CalculationContent() {
   const { organization, isLoading: orgLoading } = useOrganizationCheck();
   const [currentEmissionRecordId, setCurrentEmissionRecordId] = useState<string>("");
   const [currentScope, setCurrentScope] = useState<string>("stationary");
+  const [currentMainTab, setCurrentMainTab] = useState<string>("scope1");
   const [isCreateRecordDialogOpen, setIsCreateRecordDialogOpen] = useState(false);
   const [newRecordData, setNewRecordData] = useState({
     reportingPeriodStart: "",
@@ -442,11 +443,9 @@ function CalculationContent() {
         description: "Emissions calculated successfully",
       });
 
-      // Expand results and scroll to them
+      // Switch to Results tab and expand results
+      setCurrentMainTab("results");
       setIsResultsExpanded(true);
-      setTimeout(() => {
-        resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 100);
     } catch (error) {
       console.error("Failed to calculate emissions:", error);
       const errorMessage = error instanceof Error ? error.message : "Failed to calculate emissions. Please try again.";
@@ -1066,162 +1065,13 @@ function CalculationContent() {
         </div>
       </div>
 
-      {/* Calculation Results Display - Top Position */}
-      {calculation && currentEmissionRecordId && (
-        <div ref={resultsRef} className="mb-8">
-          <div className="bg-gradient-to-br from-[#A5C046]/5 to-[#00594D]/5 rounded-lg shadow-lg border-2 border-[#A5C046]/20 overflow-hidden">
-            {/* Header with toggle */}
-            <div
-              className="flex items-center justify-between p-6 cursor-pointer hover:bg-[#A5C046]/5 transition-colors"
-              onClick={() => setIsResultsExpanded(!isResultsExpanded)}
-            >
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-[#A5C046] rounded-lg">
-                  <TrendingUp className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold text-[#00594D] dark:text-white">Calculation Results</h2>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Last calculated: {format(new Date(calculation.calculatedAt), "PPpp")}
-                  </p>
-                </div>
-              </div>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                {isResultsExpanded ? (
-                  <ChevronUp className="h-5 w-5 text-[#00594D]" />
-                ) : (
-                  <ChevronDown className="h-5 w-5 text-[#00594D]" />
-                )}
-              </Button>
-            </div>
-
-            {/* Results Content */}
-            {isResultsExpanded && (
-              <div className="p-6 pt-0">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                  <div className="bg-white dark:bg-gray-800 rounded-lg p-5 shadow-md border border-gray-200 dark:border-gray-700">
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Total CO2e</p>
-                    <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                      {calculation.totalCo2e?.toLocaleString() || "0"} <span className="text-lg">kg</span>
-                    </p>
-                  </div>
-
-                  <div className="bg-white dark:bg-gray-800 rounded-lg p-5 shadow-md border border-blue-200 dark:border-blue-700">
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Scope 1</p>
-                    <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-                      {calculation.totalScope1Co2e?.toLocaleString() || "0"} <span className="text-lg">kg</span>
-                    </p>
-                  </div>
-
-                  <div className="bg-white dark:bg-gray-800 rounded-lg p-5 shadow-md border border-green-200 dark:border-green-700">
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Scope 2</p>
-                    <p className="text-3xl font-bold text-green-600 dark:text-green-400">
-                      {calculation.totalScope2Co2e?.toLocaleString() || "0"} <span className="text-lg">kg</span>
-                    </p>
-                  </div>
-
-                  <div className="bg-white dark:bg-gray-800 rounded-lg p-5 shadow-md border border-purple-200 dark:border-purple-700">
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Scope 3</p>
-                    <p className="text-3xl font-bold text-purple-600 dark:text-purple-400">
-                      {calculation.totalScope3Co2e?.toLocaleString() || "0"} <span className="text-lg">kg</span>
-                    </p>
-                  </div>
-                </div>
-
-                {calculation.emissionsPerEmployee && (
-                  <div className="bg-white dark:bg-gray-800 rounded-lg p-5 shadow-md border border-[#A5C046]/30">
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Emissions Per Employee</p>
-                    <p className="text-2xl font-bold text-[#00594D] dark:text-white">
-                      {calculation.emissionsPerEmployee.toLocaleString()} <span className="text-base">kg CO2e</span>
-                    </p>
-                  </div>
-                )}
-
-                {/* Gas Breakdown Section */}
-                <div className="mt-6 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Greenhouse Gas Breakdown</h3>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {/* CO2 */}
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-orange-200 dark:border-orange-700">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
-                        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Carbon Dioxide (CO₂)</p>
-                      </div>
-                      <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-                        {calculation.totalCo2
-                          ? Number(calculation.totalCo2).toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 })
-                          : "0.000"} <span className="text-base">kg</span>
-                      </p>
-                    </div>
-
-                    {/* CH4 */}
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-cyan-200 dark:border-cyan-700">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-3 h-3 bg-cyan-500 rounded-full"></div>
-                        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Methane (CH₄)</p>
-                      </div>
-                      <p className="text-2xl font-bold text-cyan-600 dark:text-cyan-400">
-                        {calculation.totalCh4
-                          ? Number(calculation.totalCh4).toLocaleString(undefined, { minimumFractionDigits: 6, maximumFractionDigits: 6 })
-                          : "0.000000"} <span className="text-base">kg</span>
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        GWP: 25 × CO₂
-                      </p>
-                    </div>
-
-                    {/* N2O */}
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-pink-200 dark:border-pink-700">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-3 h-3 bg-pink-500 rounded-full"></div>
-                        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Nitrous Oxide (N₂O)</p>
-                      </div>
-                      <p className="text-2xl font-bold text-pink-600 dark:text-pink-400">
-                        {calculation.totalN2o
-                          ? Number(calculation.totalN2o).toLocaleString(undefined, { minimumFractionDigits: 6, maximumFractionDigits: 6 })
-                          : "0.000000"} <span className="text-base">kg</span>
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        GWP: 298 × CO₂
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
-                    <p className="text-xs text-blue-700 dark:text-blue-300">
-                      <span className="font-semibold">Formula:</span> Total CO₂e = CO₂ + (CH₄ × 25) + (N₂O × 298)
-                    </p>
-                  </div>
-                </div>
-
-                <div className="mt-4 flex justify-end">
-                  <Button variant="outline" asChild>
-                    <a href="/reports" className="flex items-center gap-2">
-                      View Detailed Reports
-                    </a>
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* Scope Tabs - Horizontal */}
       {hasEmissionRecords && (
         <div className="mb-8">
           <Tabs
-            value={
-              ["stationary", "mobile", "refrigeration"].includes(currentScope)
-                ? "scope1"
-                : currentScope === "scope2"
-                  ? "scope2"
-                  : currentScope === "scope3"
-                    ? "scope3"
-                    : "scope1"
-            }
+            value={currentMainTab}
             onValueChange={(value) => {
+              setCurrentMainTab(value);
               // When changing main scope, select the first category within that scope
               if (value === "scope1") handleScopeSelection("stationary");
               else if (value === "scope2") handleScopeSelection("scope2");
@@ -1255,6 +1105,12 @@ function CalculationContent() {
                   Scope 3: Other Indirect
                 </TabsTrigger>
               )}
+              <TabsTrigger
+                value="results"
+                className="rounded-none bg-background h-full data-[state=active]:shadow-none border-0 data-[state=active]:bg-[#A5C046]/10 data-[state=active]:text-[#00594D] data-[state=active]:font-semibold px-6 py-3 transition-all hover:bg-[#A5C046]/5"
+              >
+                📊 Results
+              </TabsTrigger>
             </TabsList>
 
             {/* Scope 1 Content with Vertical Category Tabs */}
@@ -1340,6 +1196,163 @@ function CalculationContent() {
                 </Tabs>
               </TabsContent>
             )}
+
+            {/* Results Tab Content */}
+            <TabsContent value="results" className="mt-0">
+              {calculation && currentEmissionRecordId ? (
+                <div ref={resultsRef}>
+                  <div className="bg-gradient-to-br from-[#A5C046]/5 to-[#00594D]/5 rounded-lg shadow-lg border-2 border-[#A5C046]/20 overflow-hidden">
+                    {/* Header with toggle */}
+                    <div
+                      className="flex items-center justify-between p-6 cursor-pointer hover:bg-[#A5C046]/5 transition-colors"
+                      onClick={() => setIsResultsExpanded(!isResultsExpanded)}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-[#A5C046] rounded-lg">
+                          <TrendingUp className="h-6 w-6 text-white" />
+                        </div>
+                        <div>
+                          <h2 className="text-2xl font-bold text-[#00594D] dark:text-white">Calculation Results</h2>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            Last calculated: {format(new Date(calculation.calculatedAt), "PPpp")}
+                          </p>
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        {isResultsExpanded ? (
+                          <ChevronUp className="h-5 w-5 text-[#00594D]" />
+                        ) : (
+                          <ChevronDown className="h-5 w-5 text-[#00594D]" />
+                        )}
+                      </Button>
+                    </div>
+
+                    {/* Results Content */}
+                    {isResultsExpanded && (
+                      <div className="p-6 pt-0">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                          <div className="bg-white dark:bg-gray-800 rounded-lg p-5 shadow-md border border-gray-200 dark:border-gray-700">
+                            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Total CO2e</p>
+                            <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                              {calculation.totalCo2e?.toLocaleString() || "0"} <span className="text-lg">kg</span>
+                            </p>
+                          </div>
+
+                          <div className="bg-white dark:bg-gray-800 rounded-lg p-5 shadow-md border border-blue-200 dark:border-blue-700">
+                            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Scope 1</p>
+                            <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+                              {calculation.totalScope1Co2e?.toLocaleString() || "0"} <span className="text-lg">kg</span>
+                            </p>
+                          </div>
+
+                          <div className="bg-white dark:bg-gray-800 rounded-lg p-5 shadow-md border border-green-200 dark:border-green-700">
+                            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Scope 2</p>
+                            <p className="text-3xl font-bold text-green-600 dark:text-green-400">
+                              {calculation.totalScope2Co2e?.toLocaleString() || "0"} <span className="text-lg">kg</span>
+                            </p>
+                          </div>
+
+                          <div className="bg-white dark:bg-gray-800 rounded-lg p-5 shadow-md border border-purple-200 dark:border-purple-700">
+                            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Scope 3</p>
+                            <p className="text-3xl font-bold text-purple-600 dark:text-purple-400">
+                              {calculation.totalScope3Co2e?.toLocaleString() || "0"} <span className="text-lg">kg</span>
+                            </p>
+                          </div>
+                        </div>
+
+                        {calculation.emissionsPerEmployee && (
+                          <div className="bg-white dark:bg-gray-800 rounded-lg p-5 shadow-md border border-[#A5C046]/30">
+                            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Emissions Per Employee</p>
+                            <p className="text-2xl font-bold text-[#00594D] dark:text-white">
+                              {calculation.emissionsPerEmployee.toLocaleString()} <span className="text-base">kg CO2e</span>
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Gas Breakdown Section */}
+                        <div className="mt-6 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Greenhouse Gas Breakdown</h3>
+
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {/* CO2 */}
+                            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-orange-200 dark:border-orange-700">
+                              <div className="flex items-center gap-2 mb-2">
+                                <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
+                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Carbon Dioxide (CO₂)</p>
+                              </div>
+                              <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                                {calculation.totalCo2
+                                  ? Number(calculation.totalCo2).toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 })
+                                  : "0.000"} <span className="text-base">kg</span>
+                              </p>
+                            </div>
+
+                            {/* CH4 */}
+                            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-cyan-200 dark:border-cyan-700">
+                              <div className="flex items-center gap-2 mb-2">
+                                <div className="w-3 h-3 bg-cyan-500 rounded-full"></div>
+                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Methane (CH₄)</p>
+                              </div>
+                              <p className="text-2xl font-bold text-cyan-600 dark:text-cyan-400">
+                                {calculation.totalCh4
+                                  ? Number(calculation.totalCh4).toLocaleString(undefined, { minimumFractionDigits: 6, maximumFractionDigits: 6 })
+                                  : "0.000000"} <span className="text-base">kg</span>
+                              </p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                GWP: 25 × CO₂
+                              </p>
+                            </div>
+
+                            {/* N2O */}
+                            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-pink-200 dark:border-pink-700">
+                              <div className="flex items-center gap-2 mb-2">
+                                <div className="w-3 h-3 bg-pink-500 rounded-full"></div>
+                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Nitrous Oxide (N₂O)</p>
+                              </div>
+                              <p className="text-2xl font-bold text-pink-600 dark:text-pink-400">
+                                {calculation.totalN2o
+                                  ? Number(calculation.totalN2o).toLocaleString(undefined, { minimumFractionDigits: 6, maximumFractionDigits: 6 })
+                                  : "0.000000"} <span className="text-base">kg</span>
+                              </p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                GWP: 298 × CO₂
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
+                            <p className="text-xs text-blue-700 dark:text-blue-300">
+                              <span className="font-semibold">Formula:</span> Total CO₂e = CO₂ + (CH₄ × 25) + (N₂O × 298)
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 flex justify-end">
+                          <Button variant="outline" asChild>
+                            <a href="/reports" className="flex items-center gap-2">
+                              View Detailed Reports
+                            </a>
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-16 text-center">
+                  <div className="p-4 bg-gray-100 dark:bg-gray-800 rounded-full mb-4">
+                    <TrendingUp className="h-12 w-12 text-gray-400" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">No Results Yet</h3>
+                  <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md">
+                    Add emission records in the scope tabs and click "Calculate Emissions" to see your results here.
+                  </p>
+                  <Button onClick={() => setCurrentMainTab("scope1")} variant="outline">
+                    Go to Scope 1
+                  </Button>
+                </div>
+              )}
+            </TabsContent>
           </Tabs>
         </div>
       )}
