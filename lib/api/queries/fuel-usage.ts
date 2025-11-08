@@ -13,6 +13,9 @@ export interface FuelUsage {
   fuelType: FuelType;
   quantity: number;
   unit: string;
+  co2Emissions?: number | null;
+  ch4Emissions?: number | null;
+  n2oEmissions?: number | null;
   co2eCalculated?: number | null;
   entryDate: string;
   metadata?: Record<string, unknown> | null;

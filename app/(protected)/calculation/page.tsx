@@ -168,9 +168,9 @@ function CalculationContent() {
               fuelType: fuel.fuelType || "unknown",
               fuelConsumption: Number(fuel.quantity) || 0,
               unit: fuel.unit || "",
-              co2Emissions: Number(fuel.co2eCalculated) || 0,
-              ch4Emissions: 0, // Not tracked separately in current backend
-              n2oEmissions: 0, // Not tracked separately in current backend
+              co2Emissions: Number(fuel.co2Emissions) || 0,
+              ch4Emissions: Number(fuel.ch4Emissions) || 0,
+              n2oEmissions: Number(fuel.n2oEmissions) || 0,
               totalEmissions: Number(fuel.co2eCalculated) || 0,
             };
           }) as EmissionData[];
@@ -184,9 +184,9 @@ function CalculationContent() {
             fuelType: vehicle.fuelType || "unknown",
             fuelConsumption: Number(vehicle.fuelConsumed) || 0,
             unit: vehicle.unit || "",
-            co2Emissions: Number(vehicle.co2eCalculated) || 0,
-            ch4Emissions: 0, // Not tracked separately in current backend
-            n2oEmissions: 0, // Not tracked separately in current backend
+            co2Emissions: Number(vehicle.co2Emissions) || 0,
+            ch4Emissions: Number(vehicle.ch4Emissions) || 0,
+            n2oEmissions: Number(vehicle.n2oEmissions) || 0,
             totalEmissions: Number(vehicle.co2eCalculated) || 0,
           })) as EmissionData[];
         case "refrigeration":
@@ -326,6 +326,13 @@ function CalculationContent() {
       // Get today's date in ISO format for entryDate
       const today = new Date().toISOString();
 
+      // Get the current emission record's reporting period
+      const currentRecord = emissionRecordsData?.records.find((r) => r.id === currentEmissionRecordId);
+      const billingStart = currentRecord?.reportingPeriodStart
+        ? new Date(currentRecord.reportingPeriodStart)
+        : new Date();
+      const billingEnd = currentRecord?.reportingPeriodEnd ? new Date(currentRecord.reportingPeriodEnd) : new Date();
+
       switch (currentScope) {
         case "stationary":
           // Scope 1 - Stationary Combustion (Fuel Usage)
@@ -365,7 +372,7 @@ function CalculationContent() {
 
         case "refrigeration":
           // Scope 1 - Refrigeration (Refrigerant Usage)
-          await createRefrigerantUsage.mutateAsync({
+          const refrigerantPayload = {
             emissionRecordId: currentEmissionRecordId,
             equipmentId: formData.equipmentDescription || undefined,
             refrigerantType: formData.refrigerantType as RefrigerantType,
@@ -373,7 +380,9 @@ function CalculationContent() {
             quantityPurchased: formData.quantityPurchased ? parseFloat(formData.quantityPurchased) : undefined,
             unit: formData.unit || "kg",
             entryDate: today,
-          });
+          };
+          console.log("Refrigerant payload:", refrigerantPayload);
+          await createRefrigerantUsage.mutateAsync(refrigerantPayload);
           toast({
             title: "Success",
             description: "Refrigerant usage record created successfully",
@@ -381,12 +390,12 @@ function CalculationContent() {
           break;
 
         case "scope2":
-          // Scope 2 - Electricity Usage
+          // Scope 2 - Electricity Usage (use 30-day billing period)
           await createElectricityUsage.mutateAsync({
             emissionRecordId: currentEmissionRecordId,
             kwhConsumption: parseFloat(formData.energyConsumption) || 0,
-            billingPeriodStart: today,
-            billingPeriodEnd: today,
+            billingPeriodStart: billingStart.toISOString(),
+            billingPeriodEnd: billingEnd.toISOString(),
             facilityId: formData.facilityId || undefined,
             meterNumber: formData.meterNumber || undefined,
           });
@@ -682,7 +691,7 @@ function CalculationContent() {
           <div className="grid gap-4">
             <div>
               <label htmlFor="vehicleDescription" className={labelClass}>
-                Vehicle Description
+                Vehicle Description *
               </label>
               <input
                 id="vehicleDescription"
@@ -690,24 +699,28 @@ function CalculationContent() {
                 value={formData.vehicleDescription || ""}
                 onChange={(e) => handleFieldChange("vehicleDescription", e.target.value)}
                 placeholder="e.g., Company car"
-                className={inputClass}
+                className={getInputClass("vehicleDescription")}
               />
+              {formErrors.vehicleDescription && <p className={errorClass}>{formErrors.vehicleDescription}</p>}
             </div>
             <div>
-              <label htmlFor="fuelState" className={labelClass}>
-                Fuel State
+              <label htmlFor="vehicleType" className={labelClass}>
+                Vehicle Type *
               </label>
               <select
-                id="fuelState"
-                value={formData.fuelState || ""}
-                onChange={(e) => handleFieldChange("fuelState", e.target.value)}
-                className={inputClass}
+                id="vehicleType"
+                value={formData.vehicleType || ""}
+                onChange={(e) => handleFieldChange("vehicleType", e.target.value)}
+                className={getInputClass("vehicleType")}
               >
-                <option value="">Select fuel state</option>
-                <option value="Solid">Solid</option>
-                <option value="Liquid">Liquid</option>
-                <option value="Gas">Gas</option>
+                <option value="">Select vehicle type</option>
+                <option value="sedan">Sedan</option>
+                <option value="suv">SUV</option>
+                <option value="truck">Truck</option>
+                <option value="van">Van</option>
+                <option value="motorcycle">Motorcycle</option>
               </select>
+              {formErrors.vehicleType && <p className={errorClass}>{formErrors.vehicleType}</p>}
             </div>
             <div>
               <label htmlFor="fuelType" className={labelClass}>
@@ -717,7 +730,7 @@ function CalculationContent() {
                 id="fuelType"
                 value={formData.fuelType || ""}
                 onChange={(e) => handleFieldChange("fuelType", e.target.value)}
-                className={inputClass}
+                className={getInputClass("fuelType")}
               >
                 <option value="">Select fuel type</option>
                 <option value="natural_gas">Natural Gas</option>
@@ -735,22 +748,25 @@ function CalculationContent() {
                 <option value="ethanol">Ethanol</option>
                 <option value="other">Other</option>
               </select>
+              {formErrors.fuelType && <p className={errorClass}>{formErrors.fuelType}</p>}
             </div>
             <div>
               <label htmlFor="fuelConsumption" className={labelClass}>
-                Fuel Consumed
+                Fuel Consumed *
               </label>
               <input
                 id="fuelConsumption"
                 type="number"
+                step="0.01"
                 value={formData.fuelConsumption || ""}
                 onChange={(e) => handleFieldChange("fuelConsumption", e.target.value)}
-                className={inputClass}
+                className={getInputClass("fuelConsumption")}
               />
+              {formErrors.fuelConsumption && <p className={errorClass}>{formErrors.fuelConsumption}</p>}
             </div>
             <div>
               <label htmlFor="unit" className={labelClass}>
-                Unit
+                Unit *
               </label>
               <input
                 id="unit"
@@ -758,8 +774,9 @@ function CalculationContent() {
                 value={formData.unit || ""}
                 onChange={(e) => handleFieldChange("unit", e.target.value)}
                 placeholder="e.g., L"
-                className={inputClass}
+                className={getInputClass("unit")}
               />
+              {formErrors.unit && <p className={errorClass}>{formErrors.unit}</p>}
             </div>
           </div>
         );
@@ -782,53 +799,63 @@ function CalculationContent() {
             </div>
             <div>
               <label htmlFor="refrigerantType" className={labelClass}>
-                Refrigerant Type
+                Refrigerant Type *
               </label>
-              <input
+              <select
                 id="refrigerantType"
-                type="text"
                 value={formData.refrigerantType || ""}
                 onChange={(e) => handleFieldChange("refrigerantType", e.target.value)}
-                placeholder="e.g., R-410A"
+                className={getInputClass("refrigerantType")}
+              >
+                <option value="">Select refrigerant type</option>
+                <option value="R_410A">R-410A</option>
+                <option value="R_134a">R-134a</option>
+                <option value="R_32">R-32</option>
+                <option value="R_404A">R-404A</option>
+              </select>
+              {formErrors.refrigerantType && <p className={errorClass}>{formErrors.refrigerantType}</p>}
+            </div>
+            <div>
+              <label htmlFor="quantityPurchased" className={labelClass}>
+                Quantity Purchased (kg)
+              </label>
+              <input
+                id="quantityPurchased"
+                type="number"
+                step="0.01"
+                value={formData.quantityPurchased || ""}
+                onChange={(e) => handleFieldChange("quantityPurchased", e.target.value)}
+                placeholder="Initial charge or purchased amount"
                 className={inputClass}
               />
             </div>
             <div>
-              <label htmlFor="equipmentCapacity" className={labelClass}>
-                Equipment Capacity
+              <label htmlFor="quantityLeaked" className={labelClass}>
+                Quantity Leaked (kg)
               </label>
               <input
-                id="equipmentCapacity"
+                id="quantityLeaked"
                 type="number"
-                value={formData.equipmentCapacity || ""}
-                onChange={(e) => handleFieldChange("equipmentCapacity", e.target.value)}
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label htmlFor="refrigerantLeakage" className={labelClass}>
-                Refrigerant Leakage
-              </label>
-              <input
-                id="refrigerantLeakage"
-                type="number"
-                value={formData.refrigerantLeakage || ""}
-                onChange={(e) => handleFieldChange("refrigerantLeakage", e.target.value)}
+                step="0.01"
+                value={formData.quantityLeaked || ""}
+                onChange={(e) => handleFieldChange("quantityLeaked", e.target.value)}
+                placeholder="Amount leaked or recharged"
                 className={inputClass}
               />
             </div>
             <div>
               <label htmlFor="unit" className={labelClass}>
-                Unit
+                Unit *
               </label>
               <input
                 id="unit"
                 type="text"
-                value={formData.unit || ""}
+                value={formData.unit || "kg"}
                 onChange={(e) => handleFieldChange("unit", e.target.value)}
-                placeholder="e.g., kg"
-                className={inputClass}
+                placeholder="kg"
+                className={getInputClass("unit")}
               />
+              {formErrors.unit && <p className={errorClass}>{formErrors.unit}</p>}
             </div>
           </div>
         );
@@ -1109,14 +1136,19 @@ function CalculationContent() {
                 value="results"
                 className="rounded-none bg-background h-full data-[state=active]:shadow-none border-0 data-[state=active]:bg-[#A5C046]/10 data-[state=active]:text-[#00594D] data-[state=active]:font-semibold px-6 py-3 transition-all hover:bg-[#A5C046]/5"
               >
-                📊 Results
+                Results
               </TabsTrigger>
             </TabsList>
 
             {/* Scope 1 Content with Vertical Category Tabs */}
             {isScopeApplicable("stationary") && (
               <TabsContent value="scope1" className="mt-0">
-                <Tabs orientation="vertical" value={currentScope} onValueChange={handleScopeSelection} className="flex flex-row items-start gap-6">
+                <Tabs
+                  orientation="vertical"
+                  value={currentScope}
+                  onValueChange={handleScopeSelection}
+                  className="flex flex-row items-start gap-6"
+                >
                   <TabsList className="shrink-0 grid grid-cols-1 gap-1 p-0 bg-background">
                     <TabsTrigger
                       value="stationary"
@@ -1156,7 +1188,12 @@ function CalculationContent() {
             {/* Scope 2 Content with Vertical Category Tabs */}
             {isScopeApplicable("scope2") && (
               <TabsContent value="scope2" className="mt-0">
-                <Tabs orientation="vertical" value={currentScope} onValueChange={handleScopeSelection} className="flex flex-row items-start gap-6">
+                <Tabs
+                  orientation="vertical"
+                  value={currentScope}
+                  onValueChange={handleScopeSelection}
+                  className="flex flex-row items-start gap-6"
+                >
                   <TabsList className="shrink-0 grid grid-cols-1 gap-1 p-0 bg-background">
                     <TabsTrigger
                       value="scope2"
@@ -1178,7 +1215,12 @@ function CalculationContent() {
             {/* Scope 3 Content with Vertical Category Tabs */}
             {isScopeApplicable("scope3") && (
               <TabsContent value="scope3" className="mt-0">
-                <Tabs orientation="vertical" value={currentScope} onValueChange={handleScopeSelection} className="flex flex-row items-start gap-6">
+                <Tabs
+                  orientation="vertical"
+                  value={currentScope}
+                  onValueChange={handleScopeSelection}
+                  className="flex flex-row items-start gap-6"
+                >
                   <TabsList className="shrink-0 grid grid-cols-1 gap-1 p-0 bg-background">
                     <TabsTrigger
                       value="scope3"
@@ -1208,9 +1250,6 @@ function CalculationContent() {
                       onClick={() => setIsResultsExpanded(!isResultsExpanded)}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="p-2 bg-[#A5C046] rounded-lg">
-                          <TrendingUp className="h-6 w-6 text-white" />
-                        </div>
                         <div>
                           <h2 className="text-2xl font-bold text-[#00594D] dark:text-white">Calculation Results</h2>
                           <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -1234,56 +1273,94 @@ function CalculationContent() {
                           <div className="bg-white dark:bg-gray-800 rounded-lg p-5 shadow-md border border-gray-200 dark:border-gray-700">
                             <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Total CO2e</p>
                             <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                              {calculation.totalCo2e?.toLocaleString() || "0"} <span className="text-lg">kg</span>
+                              {calculation.totalCo2e
+                                ? calculation.totalCo2e.toLocaleString(undefined, {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 6,
+                                  })
+                                : "0.00"}{" "}
+                              <span className="text-lg">kg</span>
                             </p>
                           </div>
 
                           <div className="bg-white dark:bg-gray-800 rounded-lg p-5 shadow-md border border-blue-200 dark:border-blue-700">
                             <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Scope 1</p>
                             <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-                              {calculation.totalScope1Co2e?.toLocaleString() || "0"} <span className="text-lg">kg</span>
+                              {calculation.totalScope1Co2e
+                                ? calculation.totalScope1Co2e.toLocaleString(undefined, {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 6,
+                                  })
+                                : "0.00"}{" "}
+                              <span className="text-lg">kg</span>
                             </p>
                           </div>
 
                           <div className="bg-white dark:bg-gray-800 rounded-lg p-5 shadow-md border border-green-200 dark:border-green-700">
                             <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Scope 2</p>
                             <p className="text-3xl font-bold text-green-600 dark:text-green-400">
-                              {calculation.totalScope2Co2e?.toLocaleString() || "0"} <span className="text-lg">kg</span>
+                              {calculation.totalScope2Co2e
+                                ? calculation.totalScope2Co2e.toLocaleString(undefined, {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 6,
+                                  })
+                                : "0.00"}{" "}
+                              <span className="text-lg">kg</span>
                             </p>
                           </div>
 
                           <div className="bg-white dark:bg-gray-800 rounded-lg p-5 shadow-md border border-purple-200 dark:border-purple-700">
                             <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Scope 3</p>
                             <p className="text-3xl font-bold text-purple-600 dark:text-purple-400">
-                              {calculation.totalScope3Co2e?.toLocaleString() || "0"} <span className="text-lg">kg</span>
+                              {calculation.totalScope3Co2e
+                                ? calculation.totalScope3Co2e.toLocaleString(undefined, {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 6,
+                                  })
+                                : "0.00"}{" "}
+                              <span className="text-lg">kg</span>
                             </p>
                           </div>
                         </div>
 
                         {calculation.emissionsPerEmployee && (
                           <div className="bg-white dark:bg-gray-800 rounded-lg p-5 shadow-md border border-[#A5C046]/30">
-                            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Emissions Per Employee</p>
+                            <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
+                              Emissions Per Employee
+                            </p>
                             <p className="text-2xl font-bold text-[#00594D] dark:text-white">
-                              {calculation.emissionsPerEmployee.toLocaleString()} <span className="text-base">kg CO2e</span>
+                              {calculation.emissionsPerEmployee.toLocaleString(undefined, {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 6,
+                              })}{" "}
+                              <span className="text-base">kg CO2e</span>
                             </p>
                           </div>
                         )}
 
                         {/* Gas Breakdown Section */}
                         <div className="mt-6 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
-                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Greenhouse Gas Breakdown</h3>
+                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                            Greenhouse Gas Breakdown
+                          </h3>
 
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             {/* CO2 */}
                             <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-orange-200 dark:border-orange-700">
                               <div className="flex items-center gap-2 mb-2">
                                 <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
-                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Carbon Dioxide (CO₂)</p>
+                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                  Carbon Dioxide (CO₂)
+                                </p>
                               </div>
                               <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
                                 {calculation.totalCo2
-                                  ? Number(calculation.totalCo2).toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 })
-                                  : "0.000"} <span className="text-base">kg</span>
+                                  ? Number(calculation.totalCo2).toLocaleString(undefined, {
+                                      minimumFractionDigits: 3,
+                                      maximumFractionDigits: 3,
+                                    })
+                                  : "0.000"}{" "}
+                                <span className="text-base">kg</span>
                               </p>
                             </div>
 
@@ -1295,34 +1372,41 @@ function CalculationContent() {
                               </div>
                               <p className="text-2xl font-bold text-cyan-600 dark:text-cyan-400">
                                 {calculation.totalCh4
-                                  ? Number(calculation.totalCh4).toLocaleString(undefined, { minimumFractionDigits: 6, maximumFractionDigits: 6 })
-                                  : "0.000000"} <span className="text-base">kg</span>
+                                  ? Number(calculation.totalCh4).toLocaleString(undefined, {
+                                      minimumFractionDigits: 6,
+                                      maximumFractionDigits: 6,
+                                    })
+                                  : "0.000000"}{" "}
+                                <span className="text-base">kg</span>
                               </p>
-                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                GWP: 25 × CO₂
-                              </p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">GWP: 25 × CO₂</p>
                             </div>
 
                             {/* N2O */}
                             <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-pink-200 dark:border-pink-700">
                               <div className="flex items-center gap-2 mb-2">
                                 <div className="w-3 h-3 bg-pink-500 rounded-full"></div>
-                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Nitrous Oxide (N₂O)</p>
+                                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                  Nitrous Oxide (N₂O)
+                                </p>
                               </div>
                               <p className="text-2xl font-bold text-pink-600 dark:text-pink-400">
                                 {calculation.totalN2o
-                                  ? Number(calculation.totalN2o).toLocaleString(undefined, { minimumFractionDigits: 6, maximumFractionDigits: 6 })
-                                  : "0.000000"} <span className="text-base">kg</span>
+                                  ? Number(calculation.totalN2o).toLocaleString(undefined, {
+                                      minimumFractionDigits: 6,
+                                      maximumFractionDigits: 6,
+                                    })
+                                  : "0.000000"}{" "}
+                                <span className="text-base">kg</span>
                               </p>
-                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                GWP: 298 × CO₂
-                              </p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">GWP: 298 × CO₂</p>
                             </div>
                           </div>
 
                           <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
                             <p className="text-xs text-blue-700 dark:text-blue-300">
-                              <span className="font-semibold">Formula:</span> Total CO₂e = CO₂ + (CH₄ × 25) + (N₂O × 298)
+                              <span className="font-semibold">Formula:</span> Total CO₂e = CO₂ + (CH₄ × 25) + (N₂O ×
+                              298)
                             </p>
                           </div>
                         </div>

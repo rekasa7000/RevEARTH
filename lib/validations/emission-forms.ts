@@ -51,19 +51,19 @@ export type VehicleUsageFormData = z.infer<typeof vehicleUsageSchema>;
 // ============================================================================
 
 export const refrigerationSchema = z.object({
-  equipmentDescription: z.string().min(1, "Equipment description is required"),
+  equipmentDescription: z.string().optional(),
   refrigerantType: z.string().min(1, "Refrigerant type is required"),
-  equipmentCapacity: z
+  quantityPurchased: z
     .string()
-    .min(1, "Equipment capacity is required")
-    .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
-      message: "Equipment capacity must be a positive number",
+    .optional()
+    .refine((val) => !val || (!isNaN(Number(val)) && Number(val) >= 0), {
+      message: "Quantity purchased must be zero or positive",
     }),
-  refrigerantLeakage: z
+  quantityLeaked: z
     .string()
-    .min(1, "Refrigerant leakage is required")
-    .refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
-      message: "Refrigerant leakage must be zero or positive",
+    .optional()
+    .refine((val) => !val || (!isNaN(Number(val)) && Number(val) >= 0), {
+      message: "Quantity leaked must be zero or positive",
     }),
   unit: z.string().min(1, "Unit is required"),
 });

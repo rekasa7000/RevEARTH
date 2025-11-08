@@ -17,6 +17,9 @@ export interface VehicleUsage {
   fuelConsumed?: number | null;
   mileage?: number | null;
   unit: string;
+  co2Emissions?: number | null;
+  ch4Emissions?: number | null;
+  n2oEmissions?: number | null;
   co2eCalculated?: number | null;
   entryDate: string;
   createdAt: string;

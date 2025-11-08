@@ -2,6 +2,27 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 
+// Helper function to format emission values with appropriate decimal places
+const formatEmission = (value: number): string => {
+  if (value === 0) return "0";
+  if (value < 0.001) {
+    // For very small values, use scientific notation
+    return value.toExponential(3);
+  }
+  if (value < 1) {
+    // For small values (less than 1), show up to 6 decimal places
+    return value.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 6
+    });
+  }
+  // For larger values, show up to 3 decimal places
+  return value.toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 3
+  });
+};
+
 // Base data types for different scopes
 export type Scope1StationaryData = {
   id: string | number;
@@ -84,6 +105,7 @@ export const scope1StationaryColumns: ColumnDef<Scope1StationaryData>[] = [
   {
     accessorKey: "fuelConsumption",
     header: "Quantity Combusted",
+    cell: ({ row }) => formatEmission(row.getValue("fuelConsumption")),
   },
   {
     accessorKey: "unit",
@@ -92,18 +114,22 @@ export const scope1StationaryColumns: ColumnDef<Scope1StationaryData>[] = [
   {
     accessorKey: "co2Emissions",
     header: "CO2 Emissions (kg)",
+    cell: ({ row }) => formatEmission(row.getValue("co2Emissions")),
   },
   {
     accessorKey: "ch4Emissions",
     header: "CH4 Emissions (kg)",
+    cell: ({ row }) => formatEmission(row.getValue("ch4Emissions")),
   },
   {
     accessorKey: "n2oEmissions",
     header: "N2O Emissions (kg)",
+    cell: ({ row }) => formatEmission(row.getValue("n2oEmissions")),
   },
   {
     accessorKey: "totalEmissions",
     header: "Total Emissions (kg CO2e)",
+    cell: ({ row }) => formatEmission(row.getValue("totalEmissions")),
   },
 ]
 
@@ -124,6 +150,7 @@ export const scope1MobileColumns: ColumnDef<Scope1MobileData>[] = [
   {
     accessorKey: "fuelConsumption",
     header: "Fuel Consumed",
+    cell: ({ row }) => formatEmission(row.getValue("fuelConsumption")),
   },
   {
     accessorKey: "unit",
@@ -132,18 +159,22 @@ export const scope1MobileColumns: ColumnDef<Scope1MobileData>[] = [
   {
     accessorKey: "co2Emissions",
     header: "CO2 Emissions (kg)",
+    cell: ({ row }) => formatEmission(row.getValue("co2Emissions")),
   },
   {
     accessorKey: "ch4Emissions",
     header: "CH4 Emissions (kg)",
+    cell: ({ row }) => formatEmission(row.getValue("ch4Emissions")),
   },
   {
     accessorKey: "n2oEmissions",
     header: "N2O Emissions (kg)",
+    cell: ({ row }) => formatEmission(row.getValue("n2oEmissions")),
   },
   {
     accessorKey: "totalEmissions",
     header: "Total Emissions (kg CO2e)",
+    cell: ({ row }) => formatEmission(row.getValue("totalEmissions")),
   },
 ]
 
@@ -160,10 +191,12 @@ export const scope1RefrigerationColumns: ColumnDef<Scope1RefrigerationData>[] = 
   {
     accessorKey: "equipmentCapacity",
     header: "Equipment Capacity",
+    cell: ({ row }) => formatEmission(row.getValue("equipmentCapacity")),
   },
   {
     accessorKey: "refrigerantLeakage",
     header: "Refrigerant Leakage",
+    cell: ({ row }) => formatEmission(row.getValue("refrigerantLeakage")),
   },
   {
     accessorKey: "unit",
@@ -172,10 +205,12 @@ export const scope1RefrigerationColumns: ColumnDef<Scope1RefrigerationData>[] = 
   {
     accessorKey: "co2Emissions",
     header: "CO2 Equivalent (kg)",
+    cell: ({ row }) => formatEmission(row.getValue("co2Emissions")),
   },
   {
     accessorKey: "totalEmissions",
     header: "Total Emissions (kg CO2e)",
+    cell: ({ row }) => formatEmission(row.getValue("totalEmissions")),
   },
 ]
 
@@ -192,6 +227,7 @@ export const scope2Columns: ColumnDef<Scope2Data>[] = [
   {
     accessorKey: "energyConsumption",
     header: "Energy Consumption",
+    cell: ({ row }) => formatEmission(row.getValue("energyConsumption")),
   },
   {
     accessorKey: "unit",
@@ -200,6 +236,7 @@ export const scope2Columns: ColumnDef<Scope2Data>[] = [
   {
     accessorKey: "gridFactor",
     header: "Grid/Supplier Factor",
+    cell: ({ row }) => formatEmission(row.getValue("gridFactor")),
   },
   {
     accessorKey: "renewableCertificates",
@@ -208,10 +245,12 @@ export const scope2Columns: ColumnDef<Scope2Data>[] = [
   {
     accessorKey: "co2Emissions",
     header: "CO2 Emissions (kg)",
+    cell: ({ row }) => formatEmission(row.getValue("co2Emissions")),
   },
   {
     accessorKey: "totalEmissions",
     header: "Total Emissions (kg CO2e)",
+    cell: ({ row }) => formatEmission(row.getValue("totalEmissions")),
   },
 ]
 
@@ -228,6 +267,7 @@ export const scope3Columns: ColumnDef<Scope3Data>[] = [
   {
     accessorKey: "activityData",
     header: "Activity Data",
+    cell: ({ row }) => formatEmission(row.getValue("activityData")),
   },
   {
     accessorKey: "unit",
@@ -236,6 +276,7 @@ export const scope3Columns: ColumnDef<Scope3Data>[] = [
   {
     accessorKey: "emissionFactor",
     header: "Emission Factor",
+    cell: ({ row }) => formatEmission(row.getValue("emissionFactor")),
   },
   {
     accessorKey: "dataQuality",
@@ -244,10 +285,12 @@ export const scope3Columns: ColumnDef<Scope3Data>[] = [
   {
     accessorKey: "co2Emissions",
     header: "CO2 Emissions (kg)",
+    cell: ({ row }) => formatEmission(row.getValue("co2Emissions")),
   },
   {
     accessorKey: "totalEmissions",
     header: "Total Emissions (kg CO2e)",
+    cell: ({ row }) => formatEmission(row.getValue("totalEmissions")),
   },
 ]
 

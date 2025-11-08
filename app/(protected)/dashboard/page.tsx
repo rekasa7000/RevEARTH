@@ -132,11 +132,16 @@ function DashboardContent() {
           <CardContent className="flex justify-center">
             <p className="text-2xl font-bold">
               {dashboardData?.summary.totalCo2eYtd
-                ? `${(dashboardData.summary.totalCo2eYtd / 1000).toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })} tCO₂e`
-                : "0.00 tCO₂e"}
+                ? dashboardData.summary.totalCo2eYtd < 1
+                  ? `${dashboardData.summary.totalCo2eYtd.toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 6,
+                    })} kg CO₂e`
+                  : `${(dashboardData.summary.totalCo2eYtd / 1000).toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 6,
+                    })} tCO₂e`
+                : "0.00 kg CO₂e"}
             </p>
           </CardContent>
         </Card>
@@ -150,11 +155,21 @@ function DashboardContent() {
           <CardContent className="flex justify-center">
             <p className="text-2xl font-bold">
               {dashboardData?.summary.emissionsPerEmployee
-                ? (dashboardData.summary.emissionsPerEmployee / 1000).toFixed(2)
+                ? dashboardData.summary.emissionsPerEmployee < 1
+                  ? dashboardData.summary.emissionsPerEmployee.toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 6,
+                    })
+                  : (dashboardData.summary.emissionsPerEmployee / 1000).toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 6,
+                    })
                 : "0.00"}
             </p>
             <span className="ml-1 text-gray-600 dark:text-gray-400">
-              tCO₂e/employee
+              {dashboardData?.summary.emissionsPerEmployee && dashboardData.summary.emissionsPerEmployee < 1
+                ? "kg CO₂e/employee"
+                : "tCO₂e/employee"}
             </span>
           </CardContent>
         </Card>

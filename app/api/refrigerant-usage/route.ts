@@ -13,6 +13,8 @@ export const POST = withAuth(async (request, { user }) => {
   try {
     // Validate request body
     const body = await getValidatedBody(request, createRefrigerantUsageSchema);
+    console.log("Received refrigerant usage body:", body);
+
     const {
       emissionRecordId,
       equipmentId,
@@ -91,8 +93,19 @@ export const POST = withAuth(async (request, { user }) => {
     }, { status: 201 });
   } catch (error) {
     console.error("Create refrigerant usage error:", error);
+
+    // Log detailed error info for debugging
+    if (error instanceof Error) {
+      console.error("Error name:", error.name);
+      console.error("Error message:", error.message);
+      console.error("Error stack:", error.stack);
+    }
+
     return NextResponse.json(
-      { error: "Failed to create refrigerant usage" },
+      {
+        error: "Failed to create refrigerant usage",
+        details: error instanceof Error ? error.message : "Unknown error"
+      },
       { status: 500 }
     );
   }

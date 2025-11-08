@@ -180,11 +180,11 @@ export function generateBreakdown(
   commutingTotal: number
 ): Record<string, number> {
   return {
-    fuel: parseFloat(fuelTotal.toFixed(4)),
-    vehicles: parseFloat(vehicleTotal.toFixed(4)),
-    refrigerants: parseFloat(refrigerantTotal.toFixed(4)),
-    electricity: parseFloat(electricityTotal.toFixed(4)),
-    commuting: parseFloat(commutingTotal.toFixed(4)),
+    fuel: parseFloat(fuelTotal.toFixed(6)),
+    vehicles: parseFloat(vehicleTotal.toFixed(6)),
+    refrigerants: parseFloat(refrigerantTotal.toFixed(6)),
+    electricity: parseFloat(electricityTotal.toFixed(6)),
+    commuting: parseFloat(commutingTotal.toFixed(6)),
   };
 }
 
@@ -234,8 +234,64 @@ export function validateCalculationInputs(value: number): boolean {
 }
 
 /**
- * Round to 4 decimal places for storage
+ * Round to 6 decimal places for storage (to preserve very small emission values)
  */
 export function roundEmissions(value: number): number {
-  return parseFloat(value.toFixed(4));
+  return parseFloat(value.toFixed(6));
+}
+
+/**
+ * Format emission values for display (kg to tonnes conversion with proper decimal handling)
+ * - Values < 1 kg: Display in kg with up to 6 decimals
+ * - Values >= 1 kg and < 1000 kg: Display in kg with up to 3 decimals
+ * - Values >= 1000 kg: Display in tonnes with up to 6 decimals
+ */
+export function formatEmissionValue(valueInKg: number): string {
+  if (valueInKg === 0) return "0.00 kg";
+
+  if (valueInKg < 1) {
+    // Very small values - show in kg with up to 6 decimals
+    return `${valueInKg.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 6
+    })} kg`;
+  }
+
+  if (valueInKg < 1000) {
+    // Medium values - show in kg with up to 3 decimals
+    return `${valueInKg.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 3
+    })} kg`;
+  }
+
+  // Large values - convert to tonnes with up to 6 decimals
+  const tonnes = valueInKg / 1000;
+  return `${tonnes.toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 6
+  })} t`;
+}
+
+/**
+ * Format emission value as number only (for charts/tables that add units separately)
+ */
+export function formatEmissionNumber(valueInKg: number, convertToTonnes: boolean = false): string {
+  if (valueInKg === 0) return "0.00";
+
+  const value = convertToTonnes ? valueInKg / 1000 : valueInKg;
+
+  if (value < 0.01) {
+    // Very small values - use up to 6 decimals
+    return value.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 6
+    });
+  }
+
+  // Normal values - use up to 3 decimals
+  return value.toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 3
+  });
 }
