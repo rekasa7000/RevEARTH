@@ -1,0 +1,462 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// User model for authentication
+model User {
+  id                String    @id @default(cuid())
+  name              String?
+  email             String    @unique
+  emailVerified     Boolean   @default(false) @map("email_verified")
+  image             String?
+  passwordHash      String?   @map("password_hash")
+  verificationToken String?   @map("verification_token")
+  resetToken        String?   @map("reset_token")
+  resetTokenExpires DateTime? @map("reset_token_expires")
+  lastLogin         DateTime? @map("last_login")
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  accounts             Account[]
+  sessions             Session[]
+  organization         Organization?
+  organizationMembers  OrganizationMember[]
+
+  @@map("users")
+}
+
+// Account model for Better-auth
+model Account {
+  id                String   @id @default(cuid())
+  userId            String   @map("user_id")
+  accountId         String   @map("account_id")
+  providerId        String   @map("provider_id")
+  accessToken       String?  @map("access_token") @db.Text
+  refreshToken      String?  @map("refresh_token") @db.Text
+  idToken           String?  @map("id_token") @db.Text
+  expiresAt         DateTime? @map("expires_at")
+  password          String?  @db.Text
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("accounts")
+}
+
+// Session model for managing user sessions
+model Session {
+  id           String   @id @default(cuid())
+  userId       String   @map("user_id")
+  expiresAt    DateTime @map("expires_at")
+  token        String   @unique
+  ipAddress    String?  @map("ip_address")
+  userAgent    String?  @map("user_agent")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+// Verification token for email verification
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// Organization model
+model Organization {
+  id                  String        @id @default(cuid())
+  userId              String        @unique @map("user_id")
+  name                String
+  industrySector      String?       @map("industry_sector")
+  occupancyType       OccupancyType @map("occupancy_type")
+  reportingBoundaries Json?         @map("reporting_boundaries")
+  applicableScopes    Json          @default("{\"scope1\": true, \"scope2\": true, \"scope3\": false}") @map("applicable_scopes")
+  createdAt           DateTime      @default(now()) @map("created_at")
+  updatedAt           DateTime      @updatedAt @map("updated_at")
+
+  user            User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  facilities      Facility[]
+  emissionRecords EmissionRecord[]
+  commuteSurveys  EmployeeCommuteSurvey[]
+  members         OrganizationMember[]
+  invitations     InvitationToken[]
+
+  @@map("organizations")
+}
+
+enum OccupancyType {
+  residential
+  commercial
+  industrial
+  lgu
+  academic
+}
+
+enum Role {
+  owner
+  admin
+  editor
+  viewer
+}
+
+// Organization Member model - junction table for multi-user organizations
+model OrganizationMember {
+  id             String       @id @default(cuid())
+  organizationId String       @map("organization_id")
+  userId         String       @map("user_id")
+  role           Role
+  joinedAt       DateTime     @default(now()) @map("joined_at")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([organizationId])
+  @@index([userId])
+  @@map("organization_members")
+}
+
+// Invitation Token model for inviting users to organizations
+model InvitationToken {
+  id             String   @id @default(cuid())
+  organizationId String   @map("organization_id")
+  email          String
+  role           Role
+  token          String   @unique
+  expiresAt      DateTime @map("expires_at")
+  invitedBy      String   @map("invited_by")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([email])
+  @@index([token])
+  @@map("invitation_tokens")
+}
+
+// Facility model
+model Facility {
+  id             String    @id @default(cuid())
+  organizationId String    @map("organization_id")
+  name           String
+  location       String?
+  address        String?
+  areaSqm        Decimal?  @map("area_sqm") @db.Decimal(10, 2)
+  employeeCount  Int?      @map("employee_count")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  organization     Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  electricityUsage ElectricityUsage[]
+
+  @@index([organizationId])
+  @@index([createdAt])
+  @@map("facilities")
+}
+
+// Emission Record model
+model EmissionRecord {
+  id                   String       @id @default(cuid())
+  organizationId       String       @map("organization_id")
+  facilityId           String?      @map("facility_id")
+  reportingPeriodStart DateTime     @map("reporting_period_start") @db.Date
+  reportingPeriodEnd   DateTime     @map("reporting_period_end") @db.Date
+  status               RecordStatus @default(draft)
+  scopeSelection       Json         @default("{\"scope1\": true, \"scope2\": true, \"scope3\": false}") @map("scope_selection")
+  createdAt            DateTime     @default(now()) @map("created_at")
+  updatedAt            DateTime     @updatedAt @map("updated_at")
+
+  organization       Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  fuelUsage          FuelUsage[]
+  vehicleUsage       VehicleUsage[]
+  refrigerantUsage   RefrigerantUsage[]
+  electricityUsage   ElectricityUsage[]
+  commutingData      CommutingData[]
+  calculation        EmissionCalculation?
+
+  @@index([organizationId])
+  @@index([reportingPeriodStart])
+  @@index([status])
+  @@index([organizationId, reportingPeriodStart])
+  @@index([createdAt])
+  @@map("emission_records")
+}
+
+enum RecordStatus {
+  draft
+  submitted
+  validated
+  archived
+}
+
+// Fuel Usage (Scope 1)
+model FuelUsage {
+  id               String   @id @default(cuid())
+  emissionRecordId String   @map("emission_record_id")
+  fuelType         FuelType @map("fuel_type")
+  quantity         Decimal  @db.Decimal(12, 2)
+  unit             String
+  co2Emissions     Decimal? @map("co2_emissions") @db.Decimal(12, 4)
+  ch4Emissions     Decimal? @map("ch4_emissions") @db.Decimal(12, 4)
+  n2oEmissions     Decimal? @map("n2o_emissions") @db.Decimal(12, 4)
+  co2eCalculated   Decimal? @map("co2e_calculated") @db.Decimal(12, 4)
+  entryDate        DateTime @map("entry_date") @db.Date
+  metadata         Json?
+
+  emissionRecord EmissionRecord @relation(fields: [emissionRecordId], references: [id], onDelete: Cascade)
+
+  @@index([emissionRecordId])
+  @@index([entryDate])
+  @@index([fuelType])
+  @@map("fuel_usage")
+}
+
+enum FuelType {
+  natural_gas
+  heating_oil
+  propane
+  diesel
+  gasoline
+  coal
+  wood
+  biomass
+  lpg
+  kerosene
+  fuel_oil
+  biodiesel
+  ethanol
+  other
+}
+
+// Vehicle Usage (Scope 1)
+model VehicleUsage {
+  id               String      @id @default(cuid())
+  emissionRecordId String      @map("emission_record_id")
+  vehicleId        String?     @map("vehicle_id")
+  vehicleType      VehicleType @map("vehicle_type")
+  fuelType         FuelType    @map("fuel_type")
+  fuelConsumed     Decimal?    @map("fuel_consumed") @db.Decimal(10, 2)
+  mileage          Decimal?    @db.Decimal(10, 2)
+  unit             String
+  co2Emissions     Decimal?    @map("co2_emissions") @db.Decimal(12, 4)
+  ch4Emissions     Decimal?    @map("ch4_emissions") @db.Decimal(12, 4)
+  n2oEmissions     Decimal?    @map("n2o_emissions") @db.Decimal(12, 4)
+  co2eCalculated   Decimal?    @map("co2e_calculated") @db.Decimal(12, 4)
+  entryDate        DateTime    @map("entry_date") @db.Date
+
+  emissionRecord EmissionRecord @relation(fields: [emissionRecordId], references: [id], onDelete: Cascade)
+
+  @@index([emissionRecordId])
+  @@index([entryDate])
+  @@index([vehicleType])
+  @@map("vehicle_usage")
+}
+
+enum VehicleType {
+  sedan
+  suv
+  truck
+  van
+  motorcycle
+}
+
+// Refrigerant Usage (Scope 1)
+model RefrigerantUsage {
+  id                String          @id @default(cuid())
+  emissionRecordId  String          @map("emission_record_id")
+  equipmentId       String?         @map("equipment_id")
+  refrigerantType   RefrigerantType @map("refrigerant_type")
+  quantityLeaked    Decimal?        @map("quantity_leaked") @db.Decimal(10, 4)
+  quantityPurchased Decimal?        @map("quantity_purchased") @db.Decimal(10, 4)
+  unit              String
+  co2Emissions      Decimal?        @map("co2_emissions") @db.Decimal(12, 4)
+  ch4Emissions      Decimal?        @map("ch4_emissions") @db.Decimal(12, 4)
+  n2oEmissions      Decimal?        @map("n2o_emissions") @db.Decimal(12, 4)
+  co2eCalculated    Decimal?        @map("co2e_calculated") @db.Decimal(12, 4)
+  entryDate         DateTime        @map("entry_date") @db.Date
+  leakDetectionLog  Json?           @map("leak_detection_log")
+
+  emissionRecord EmissionRecord @relation(fields: [emissionRecordId], references: [id], onDelete: Cascade)
+
+  @@index([emissionRecordId])
+  @@index([entryDate])
+  @@index([refrigerantType])
+  @@map("refrigerant_usage")
+}
+
+enum RefrigerantType {
+  R_410A
+  R_134a
+  R_32
+  R_404A
+}
+
+// Electricity Usage (Scope 2)
+model ElectricityUsage {
+  id                 String   @id @default(cuid())
+  emissionRecordId   String   @map("emission_record_id")
+  facilityId         String?  @map("facility_id")
+  meterNumber        String?  @map("meter_number")
+  kwhConsumption     Decimal  @map("kwh_consumption") @db.Decimal(12, 2)
+  peakHoursKwh       Decimal? @map("peak_hours_kwh") @db.Decimal(12, 2)
+  offpeakHoursKwh    Decimal? @map("offpeak_hours_kwh") @db.Decimal(12, 2)
+  co2Emissions       Decimal? @map("co2_emissions") @db.Decimal(12, 4)
+  ch4Emissions       Decimal? @map("ch4_emissions") @db.Decimal(12, 4)
+  n2oEmissions       Decimal? @map("n2o_emissions") @db.Decimal(12, 4)
+  co2eCalculated     Decimal? @map("co2e_calculated") @db.Decimal(12, 4)
+  billingPeriodStart DateTime @map("billing_period_start") @db.Date
+  billingPeriodEnd   DateTime @map("billing_period_end") @db.Date
+  utilityBillData    Json?    @map("utility_bill_data")
+
+  emissionRecord EmissionRecord @relation(fields: [emissionRecordId], references: [id], onDelete: Cascade)
+  facility       Facility?      @relation(fields: [facilityId], references: [id])
+
+  @@index([emissionRecordId])
+  @@index([facilityId])
+  @@index([billingPeriodStart])
+  @@map("electricity_usage")
+}
+
+// Commuting Data (Scope 3)
+model CommutingData {
+  id               String        @id @default(cuid())
+  emissionRecordId String        @map("emission_record_id")
+  employeeCount    Int           @map("employee_count")
+  avgDistanceKm    Decimal?      @map("avg_distance_km") @db.Decimal(8, 2)
+  transportMode    TransportMode @map("transport_mode")
+  daysPerWeek      Int?          @map("days_per_week")
+  wfhDays          Int?          @map("wfh_days")
+  co2Emissions     Decimal?      @map("co2_emissions") @db.Decimal(12, 4)
+  ch4Emissions     Decimal?      @map("ch4_emissions") @db.Decimal(12, 4)
+  n2oEmissions     Decimal?      @map("n2o_emissions") @db.Decimal(12, 4)
+  co2eCalculated   Decimal?      @map("co2e_calculated") @db.Decimal(12, 4)
+  surveyDate       DateTime?     @map("survey_date") @db.Date
+
+  emissionRecord EmissionRecord @relation(fields: [emissionRecordId], references: [id], onDelete: Cascade)
+
+  @@index([emissionRecordId])
+  @@index([surveyDate])
+  @@index([transportMode])
+  @@map("commuting_data")
+}
+
+enum TransportMode {
+  car
+  motorcycle
+  bus
+  jeepney
+  train
+  bicycle
+  walking
+}
+
+// Employee Commute Survey model
+model EmployeeCommuteSurvey {
+  id                 String        @id @default(cuid())
+  organizationId     String        @map("organization_id")
+  employeeIdentifier String?       @map("employee_identifier")
+  distanceKm         Decimal       @map("distance_km") @db.Decimal(8, 2)
+  transportMode      TransportMode @map("transport_mode")
+  officeDaysPerWeek  Int           @map("office_days_per_week")
+  wfhDaysPerWeek     Int           @map("wfh_days_per_week")
+  surveyDate         DateTime      @map("survey_date") @db.Date
+  quarter            String?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([surveyDate])
+  @@index([quarter])
+  @@map("employee_commute_surveys")
+}
+
+// Emission Calculation model
+model EmissionCalculation {
+  id                   String   @id @default(cuid())
+  emissionRecordId     String   @unique @map("emission_record_id")
+  totalScope1Co2       Decimal? @map("total_scope1_co2") @db.Decimal(15, 4)
+  totalScope1Ch4       Decimal? @map("total_scope1_ch4") @db.Decimal(15, 4)
+  totalScope1N2o       Decimal? @map("total_scope1_n2o") @db.Decimal(15, 4)
+  totalScope1Co2e      Decimal? @map("total_scope1_co2e") @db.Decimal(15, 4)
+  totalScope2Co2       Decimal? @map("total_scope2_co2") @db.Decimal(15, 4)
+  totalScope2Ch4       Decimal? @map("total_scope2_ch4") @db.Decimal(15, 4)
+  totalScope2N2o       Decimal? @map("total_scope2_n2o") @db.Decimal(15, 4)
+  totalScope2Co2e      Decimal? @map("total_scope2_co2e") @db.Decimal(15, 4)
+  totalScope3Co2       Decimal? @map("total_scope3_co2") @db.Decimal(15, 4)
+  totalScope3Ch4       Decimal? @map("total_scope3_ch4") @db.Decimal(15, 4)
+  totalScope3N2o       Decimal? @map("total_scope3_n2o") @db.Decimal(15, 4)
+  totalScope3Co2e      Decimal? @map("total_scope3_co2e") @db.Decimal(15, 4)
+  totalCo2             Decimal? @map("total_co2") @db.Decimal(15, 4)
+  totalCh4             Decimal? @map("total_ch4") @db.Decimal(15, 4)
+  totalN2o             Decimal? @map("total_n2o") @db.Decimal(15, 4)
+  totalCo2e            Decimal? @map("total_co2e") @db.Decimal(15, 4)
+  breakdownByCategory  Json?    @map("breakdown_by_category")
+  emissionFactorsUsed  Json?    @map("emission_factors_used")
+  emissionsPerEmployee Decimal? @map("emissions_per_employee") @db.Decimal(12, 4)
+  calculatedAt         DateTime @default(now()) @map("calculated_at")
+
+  emissionRecord EmissionRecord @relation(fields: [emissionRecordId], references: [id], onDelete: Cascade)
+
+  @@index([calculatedAt])
+  @@map("emission_calculations")
+}
+
+// Error Logging model for custom error monitoring
+model ErrorLog {
+  id            String    @id @default(cuid())
+  message       String
+  stack         String?   @db.Text
+  level         ErrorLevel @default(error)
+  context       String?   // e.g., "api", "client", "server"
+  url           String?
+  userAgent     String?   @map("user_agent")
+  userId        String?   @map("user_id")
+  method        String?   // HTTP method
+  statusCode    Int?      @map("status_code")
+  requestBody   Json?     @map("request_body")
+  metadata      Json?     // Additional context data
+  resolved      Boolean   @default(false)
+  resolvedAt    DateTime? @map("resolved_at")
+  resolvedBy    String?   @map("resolved_by")
+  occurrences   Int       @default(1)
+  firstSeenAt   DateTime  @default(now()) @map("first_seen_at")
+  lastSeenAt    DateTime  @default(now()) @map("last_seen_at")
+  environment   String    @default("production") // development, staging, production
+
+  @@index([level, resolved])
+  @@index([firstSeenAt])
+  @@index([userId])
+  @@map("error_logs")
+}
+
+enum ErrorLevel {
+  error
+  warn
+  info
+  debug
+}

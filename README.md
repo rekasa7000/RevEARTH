@@ -2,7 +2,43 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
-First, run the development server:
+### 1. Environment Setup
+
+First, set up your environment variables:
+
+```bash
+# Copy the example environment file
+cp .env.example .env.local
+
+# Fill in your values in .env.local
+```
+
+See [ENVIRONMENT_SETUP.md](./ENVIRONMENT_SETUP.md) for detailed instructions on configuring all environment variables.
+
+To verify your environment setup:
+```bash
+node scripts/check-env.js
+```
+
+### 2. Database Setup
+
+Run Prisma migrations:
+```bash
+# Option 1: Push schema (quick, no migration files)
+npm run db:push
+
+# Option 2: Create proper migrations (recommended for production)
+npm run db:migrate
+
+# Option 3: Use migration helper
+node scripts/migrate-helper.js
+```
+
+See [MIGRATIONS.md](./MIGRATIONS.md) for detailed migration workflow and best practices.
+
+### 3. Run Development Server
+
+Start the dev server:
 
 ```bash
 npm run dev

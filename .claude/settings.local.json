@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__ide__getDiagnostics",
+      "Bash(npm install:*)",
+      "Bash(npx shadcn@latest add tabs)",
+      "Bash(npx shadcn@latest add:*)",
+      "Bash(printf \"n\\n\")",
+      "Bash(ls:*)",
+      "Bash(test -f \"app/facilities/page.tsx\")",
+      "Bash(tree:*)",
+      "Bash(npm run build)",
+      "Bash(npm run dev)",
+      "Bash(mkdir -p lib/emails)",
+      "Bash(find:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
