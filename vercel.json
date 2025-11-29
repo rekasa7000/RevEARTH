@@ -1,0 +1,18 @@
+{
+  "regions": ["sin1"],
+  "functions": {
+    "app/api/**/*.ts": {
+      "memory": 1024,
+      "maxDuration": 10
+    }
+  },
+  "env": {
+    "DATABASE_URL": "@database_url",
+    "DIRECT_URL": "@direct_url"
+  },
+  "build": {
+    "env": {
+      "DIRECT_URL": "@direct_url"
+    }
+  }
+}
